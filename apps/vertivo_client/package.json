@@ -1,0 +1,12 @@
+{
+  "name": "vertivo_client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "dart pub get",
+    "test": "dart test",
+    "lint": "dart analyze",
+    "format": "dart format lib/",
+    "clean": "rm -rf .dart_tool/"
+  }
+}

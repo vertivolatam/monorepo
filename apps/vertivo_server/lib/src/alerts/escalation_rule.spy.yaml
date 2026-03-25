@@ -1,0 +1,12 @@
+class: EscalationRule
+table: escalation_rules
+fields:
+  alertType: String
+  severity: String
+  escalationLevel: int
+  delayMinutes: int
+  notifyChannels: List<String>
+  notifyRoles: List<String>?
+  autoResolveAfterMinutes: int?
+  isActive: bool
+  createdAt: DateTime

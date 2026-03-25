@@ -1,0 +1,43 @@
+{
+    "temperature_input_lower_bound": 18,
+    "temperature_input_upper_bound": 25,
+    "humidity_input_lower_bound": 40,
+    "humidity_input_upper_bound": 60,
+    "co2_input_lower_bound": 400,
+    "co2_input_upper_bound": 800,
+    
+    "mqtt_client_type": "aws_sdk",
+    "mqtt_connection": {
+        "endpoint": "xxxxxxx-ats.iot.region.amazonaws.com",
+        "port": 8883,
+        "keepalive": 60,
+        "cert_dir": "certs",
+        "cert_filename": "device.pem.crt",
+        "key_filename": "private.pem.key",
+        "root_ca_filename": "AmazonRootCA1.pem",
+        "client_id_prefix": "vertivo-device"
+    },
+    "mqtt_topics": {
+        "telemetry": "device/{device_id}/telemetry",
+        "status": "device/{device_id}/status",
+        "commands": "device/{device_id}/commands",
+        
+        "environmental": {
+            "temperature": "device/{device_id}/environmental/temperature",
+            "humidity": "device/{device_id}/environmental/humidity",
+            "co2": "device/{device_id}/environmental/co2",
+            "air_quality": "device/{device_id}/environmental/air_quality",
+            "gases": "device/{device_id}/environmental/gases",
+            "particulate_matter": "device/{device_id}/environmental/particulate_matter"
+        },
+        "nutrient_solution": {
+            "temperature": "device/{device_id}/nutrient_solution/temperature",
+            "ph": "device/{device_id}/nutrient_solution/ph",
+            "ec": "device/{device_id}/nutrient_solution/ec",
+            "tds": "device/{device_id}/nutrient_solution/tds",
+            "do": "device/{device_id}/nutrient_solution/do",
+            "orp": "device/{device_id}/nutrient_solution/orp"
+        }
+    },
+    "mqtt_publish_interval": 60
+}

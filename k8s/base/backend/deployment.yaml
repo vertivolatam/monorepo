@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vertivo-backend
+  labels:
+    app: vertivo-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vertivo-backend
+  template:
+    metadata:
+      labels:
+        app: vertivo-backend
+    spec:
+      containers:
+        - name: vertivo-backend
+          image: localhost/vertivo-backend:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: api
+              containerPort: 8080
+            - name: insights
+              containerPort: 8081
+            - name: web
+              containerPort: 8082
+          env:
+            - name: runmode
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: runmode
+            - name: serverid
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: serverid
+            - name: logging
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: logging
+            - name: role
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: role
+          envFrom:
+            - secretRef:
+                name: backend-secret
+                optional: true
+          readinessProbe:
+            tcpSocket:
+              port: api
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: api
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

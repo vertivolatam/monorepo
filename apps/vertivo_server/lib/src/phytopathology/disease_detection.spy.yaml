@@ -1,0 +1,18 @@
+class: DiseaseDetection
+table: disease_detections
+fields:
+  plantId: int
+  greenhouseId: int
+  diseaseType: String  # fungal, bacterial, viral, physiological, nutritional, environmental
+  diseaseName: String
+  confidence: double
+  severity: String  # mild, moderate, severe, critical
+  affectedAreaPercent: double?
+  anatomicalParts: List<String>?  # leaf, stem, root, fruit, flower
+  imageUrl: String?
+  aiModelVersion: String?
+  isConfirmed: bool
+  confirmedBy: String?
+  notes: String?
+  detectedAt: DateTime
+  createdAt: DateTime

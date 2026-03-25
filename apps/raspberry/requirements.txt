@@ -1,0 +1,40 @@
+adafruit-ads1x15
+adafruit-circuitpython-ads1x15
+adafruit-circuitpython-bme680
+adafruit-circuitpython-mcp230xx
+adafruit-circuitpython-sgp30
+awsiotsdk
+matplotlib
+myst-parser
+numpy
+pandas
+pyserial
+seaborn
+smbus2
+sphinx==7.2.6
+sphinx-autobuild
+sphinx-rtd-theme
+# MQTT client libraries
+paho-mqtt
+# Database libraries
+sqlalchemy
+sqlite3
+# Prometheus monitoring
+prometheus-client
+# Logging and configuration
+python-json-logger
+pyyaml
+# Testing libraries
+pytest
+pytest-mock
+# Atlas Scientific sensors support
+atlas-scientific-i2c
+# Environmental sensors
+adafruit-circuitpython-pm25
+adafruit-circuitpython-scd30
+# Utilities
+python-dotenv
+requests
+schedule
+# Grafana integration
+grafanalib

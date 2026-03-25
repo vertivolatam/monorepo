@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vertivo-database-dev
+  namespace: argocd
+spec:
+  project: vertivo-dev
+  source:
+    repoURL: https://github.com/vertivolatam/monorepo.git
+    targetRevision: main
+    path: k8s/overlays/dev/database
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vertivo-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

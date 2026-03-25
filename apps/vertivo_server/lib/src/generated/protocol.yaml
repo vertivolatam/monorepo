@@ -1,0 +1,93 @@
+alert:
+  - create:
+  - getMyAlerts:
+  - getUnreadCount:
+  - markAsRead:
+  - acknowledge:
+  - resolve:
+  - getForGreenhouse:
+  - getTemplates:
+anomaly:
+  - record:
+  - getForGreenhouse:
+  - getUnresolved:
+  - classify:
+  - resolve:
+auth:
+  - createSession:
+  - revokeSession:
+  - getActiveSessions:
+  - logSecurityEvent:
+  - getSecurityEvents:
+emailIdp:
+  - login:
+  - startRegistration:
+  - verifyRegistrationCode:
+  - finishRegistration:
+  - startPasswordReset:
+  - verifyPasswordResetCode:
+  - finishPasswordReset:
+  - hasAccount:
+jwtRefresh:
+  - refreshAccessToken:
+cropCatalog:
+  - list:
+  - get:
+  - search:
+  - create:
+  - update:
+  - getGrowthStages:
+  - createGrowthStage:
+greenhouse:
+  - create:
+  - get:
+  - listByUser:
+  - update:
+  - delete:
+  - getTrays:
+  - getPlants:
+  - createTray:
+  - createPlant:
+  - recordReading:
+  - getReadings:
+  - quarantinePlant:
+  - recordIrrigation:
+greeting:
+  - hello:
+harvestPrediction:
+  - getForGreenhouse:
+  - getForPlant:
+  - create:
+  - recordActual:
+  - getQuality:
+  - createQuality:
+management:
+  - getMetrics:
+  - record:
+  - getDashboardSummary:
+  - getMetricsByUser:
+phytopathology:
+  - recordDiseaseDetection:
+  - getDetectionsForPlant:
+  - getDetectionsForGreenhouse:
+  - confirmDetection:
+  - recordPestIdentification:
+  - getPestsForGreenhouse:
+  - recordDeficiency:
+  - getTreatments:
+  - createTreatment:
+  - markTreatmentApplied:
+traceability:
+  - addRecord:
+  - getChain:
+  - verifyChain:
+  - generateReport:
+  - getReports:
+  - getTemplates:
+user:
+  - getProfile:
+  - updateProfile:
+  - getPreferences:
+  - updatePreferences:
+  - getSubscriptionPlan:
+  - listBySegment:

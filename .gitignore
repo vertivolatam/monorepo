@@ -1,0 +1,175 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+logs/**
+!logs/**/
+!logs/**/.gitkeep
+
+# Secrets
+.env
+*.key
+*.keystore
+*.jks
+key.properties
+id_rsa
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code related
+.vscode/
+
+# Node.js related
+node_modules/
+
+# Terraform related
+.terraform/
+
+# IDE-specific MCP configs (symlinks to root mcp.json)
+# Mantener solo mcp.json en la raíz
+.cline/
+.windsurf/
+.gemini/
+.idx/
+.claude/
+
+# Symlinks de skills para diferentes herramientas
+# Estos se crean localmente con scripts/create-symlinks.*
+.cursor/rules/skills
+.kilocode/rules/skills
+.claude/skills/
+codex/
+
+# Environment variables (nunca commitear tokens)
+.env
+.env.local
+
+# Backend build artifacts
+apps/backend/dist/
+apps/backend/node_modules/
+
+# Widgetbook build artifacts
+apps/widgetbook/build/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Binarios y archivos generados en apps/mobile/
+apps/mobile/.dart_tool/
+apps/mobile/.flutter-plugins
+apps/mobile/.flutter-plugins-dependencies
+apps/mobile/.packages
+apps/mobile/.pub/
+apps/mobile/build/
+apps/mobile/**/*.iml
+apps/mobile/**/*.ipr
+apps/mobile/**/*.iws
+apps/mobile/.idea/
+apps/mobile/.vscode/
+apps/mobile/*.lock
+apps/mobile/pubspec.lock
+
+# Android build artifacts
+apps/mobile/android/.gradle/
+apps/mobile/android/local.properties
+apps/mobile/android/**/build/
+apps/mobile/android/app/debug/
+apps/mobile/android/app/profile/
+apps/mobile/android/app/release/
+apps/mobile/android/.idea/
+apps/mobile/android/*.iml
+
+# iOS build artifacts
+apps/mobile/ios/**/*.mode1v3
+apps/mobile/ios/**/*.mode2v3
+apps/mobile/ios/**/*.moved-aside
+apps/mobile/ios/**/*.pbxuser
+apps/mobile/ios/**/*.perspectivev3
+apps/mobile/ios/**/*sync/
+apps/mobile/ios/**/.sconsign.dblite
+apps/mobile/ios/**/.tags*
+apps/mobile/ios/**/.vagrant/
+apps/mobile/ios/**/DerivedData/
+apps/mobile/ios/**/Icon?
+apps/mobile/ios/**/Pods/
+apps/mobile/ios/**/.symlinks/
+apps/mobile/ios/**/profile
+apps/mobile/ios/**/xcuserdata/
+apps/mobile/ios/.generated/
+apps/mobile/ios/Flutter/.last_build_id
+apps/mobile/ios/Flutter/App.framework
+apps/mobile/ios/Flutter/Flutter.framework
+apps/mobile/ios/Flutter/Flutter.podspec
+apps/mobile/ios/Flutter/Generated.xcconfig
+apps/mobile/ios/Flutter/ephemeral/
+apps/mobile/ios/Flutter/app.flx
+apps/mobile/ios/Flutter/app.zip
+apps/mobile/ios/Flutter/flutter_assets/
+apps/mobile/ios/Flutter/flutter_export_environment.sh
+apps/mobile/ios/ServiceDefinitions.json
+apps/mobile/ios/Runner/GeneratedPluginRegistrant.*
+
+# macOS build artifacts
+apps/mobile/macos/Flutter/ephemeral/
+apps/mobile/macos/Flutter/GeneratedPluginRegistrant.swift
+apps/mobile/macos/Flutter/Flutter-Debug.xcconfig
+apps/mobile/macos/Flutter/Flutter-Release.xcconfig
+
+# Windows build artifacts
+apps/mobile/windows/flutter/generated_plugin_registrant.*
+
+# Linux build artifacts
+apps/mobile/linux/flutter/generated_plugin_registrant.*
+
+# Web build artifacts
+apps/mobile/web/**/*.dart.js
+apps/mobile/web/**/*.js_
+apps/mobile/web/**/*.js.deps
+apps/mobile/web/**/*.js.map
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Examples (si decides agregar ejemplos completos)
+examples/**/build/
+examples/**/.dart_tool/
+examples/**/.packages
+.cursor/rules/byterover-rules.mdc
+.kilocode/rules/byterover-rules.md
+.cursor/mcp.json
+.clinerules/byterover-rules.md
+.roo/rules/byterover-rules.md
+.windsurf/rules/byterover-rules.md
+.kiro/steering/byterover-rules.md
+.qoder/rules/byterover-rules.md
+.augment/rules/byterover-rules.md
+
+# Preserve .gitkeep files in ignored directories
+!.gitkeep

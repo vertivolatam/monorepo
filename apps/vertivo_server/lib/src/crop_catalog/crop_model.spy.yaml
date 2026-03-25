@@ -1,0 +1,29 @@
+class: CropModel
+table: crop_models
+fields:
+  species: String
+  commonName: String
+  scientificName: String?
+  family: String?
+  category: String  # vegetable, fruit, herb, flower, grain, legume
+  idealTemperatureMin: double
+  idealTemperatureMax: double
+  idealHumidityMin: double
+  idealHumidityMax: double
+  idealLightHoursMin: double
+  idealLightHoursMax: double
+  idealPhMin: double
+  idealPhMax: double
+  idealCo2Min: double?
+  idealCo2Max: double?
+  waterRequirement: String  # low, medium, high
+  growthDurationDays: int
+  commonDiseases: List<String>?
+  commonPests: List<String>?
+  companionPlants: List<String>?  # compatible species
+  incompatiblePlants: List<String>?
+  difficulty: String  # beginner, intermediate, advanced, expert
+  segments: List<String>  # residential, commercial, industrial
+  isActive: bool
+  createdAt: DateTime
+  updatedAt: DateTime

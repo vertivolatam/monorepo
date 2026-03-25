@@ -1,0 +1,12 @@
+{
+  "name": "vertivo_dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "dart pub get && jaspr build",
+    "dev": "jaspr serve",
+    "lint": "dart analyze",
+    "format": "dart format lib/",
+    "clean": "rm -rf .dart_tool/ build/"
+  }
+}

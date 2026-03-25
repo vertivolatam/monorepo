@@ -1,0 +1,46 @@
+apiVersion: apps.emqx.io/v2beta1
+kind: EMQX
+metadata:
+  name: emqx
+  namespace: vertivo-dev
+  labels:
+    app.kubernetes.io/name: emqx
+    app.kubernetes.io/part-of: vertivo
+spec:
+  image: emqx/emqx:5.8.6
+  coreTemplate:
+    spec:
+      replicas: 1
+      volumeClaimTemplates:
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 1Gi
+        accessModes:
+          - ReadWriteOnce
+  dashboardServiceTemplate:
+    metadata:
+      name: emqx-dashboard
+    spec:
+      type: NodePort
+      ports:
+        - name: dashboard
+          port: 18083
+          targetPort: 18083
+          protocol: TCP
+  listenersServiceTemplate:
+    metadata:
+      name: emqx-listeners
+    spec:
+      type: NodePort
+      ports:
+        - name: mqtt-tcp
+          port: 1883
+          targetPort: 1883
+          nodePort: 31883
+          protocol: TCP
+        - name: mqtt-ws
+          port: 8083
+          targetPort: 8083
+          nodePort: 30083
+          protocol: TCP

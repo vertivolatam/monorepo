@@ -1,0 +1,24 @@
+class: GrowthStageDefinition
+table: growth_stage_definitions
+fields:
+  cropModelId: int
+  stageName: String  # seed, germination, seedling, vegetative, flowering, fruiting, harvest
+  stageOrder: int
+  durationDaysMin: int
+  durationDaysMax: int
+  description: String?
+  careInstructions: String?
+  expectedHeightMinCm: double?
+  expectedHeightMaxCm: double?
+  expectedLeafCountMin: int?
+  expectedLeafCountMax: int?
+  temperatureMinOverride: double?
+  temperatureMaxOverride: double?
+  humidityMinOverride: double?
+  humidityMaxOverride: double?
+  lightHoursMinOverride: double?
+  lightHoursMaxOverride: double?
+  wateringFrequencyDays: int?
+  fertilizerType: String?
+  keyIndicators: List<String>?  # visual or measurable indicators for this stage
+  createdAt: DateTime

@@ -1,0 +1,8 @@
+{
+    "temperature_input_lower_bound": 18,
+    "temperature_input_upper_bound": 25,
+    "humidity_input_lower_bound": 40,
+    "humidity_input_upper_bound": 60,
+    "co2_input_lower_bound": 400,
+    "co2_input_upper_bound": 800
+}

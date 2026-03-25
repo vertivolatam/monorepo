@@ -1,0 +1,13 @@
+class: SubscriptionPlan
+table: subscription_plans
+fields:
+  userId: String
+  planType: String  # free, basic, pro, enterprise
+  segment: String
+  isActive: bool
+  features: List<String>
+  maxGreenhouses: int
+  monthlyPriceUsd: double
+  startDate: DateTime
+  endDate: DateTime?
+  createdAt: DateTime

@@ -1,0 +1,15 @@
+class: User
+table: users
+fields:
+  authIdentifier: String  # UUID from serverpod_auth_idp, maps to session.authenticated.userIdentifier
+  email: String
+  displayName: String
+  segment: String  # residential, commercial, industrial, expert
+  isActive: bool
+  isEmailVerified: bool
+  passwordHash: String
+  twoFactorEnabled: bool
+  twoFactorSecret: String?
+  lastLoginAt: DateTime?
+  createdAt: DateTime
+  updatedAt: DateTime

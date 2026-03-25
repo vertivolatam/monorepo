@@ -1,0 +1,18 @@
+{
+  "name": "vertivo-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.30.3",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "generate": "turbo run generate",
+    "format": "turbo run format"
+  },
+  "devDependencies": {
+    "turbo": "^2"
+  }
+}

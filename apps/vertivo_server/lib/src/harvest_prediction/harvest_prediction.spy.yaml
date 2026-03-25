@@ -1,0 +1,19 @@
+class: HarvestPrediction
+table: harvest_predictions
+fields:
+  greenhouseId: int
+  plantId: int?
+  cropSpecies: String
+  predictedYieldKg: double
+  yieldConfidence: double  # 0.0–1.0
+  qualityGrade: String  # A, B, C, D
+  harvestWindowStart: DateTime
+  harvestWindowEnd: DateTime
+  daysToHarvest: int
+  scenarioType: String  # optimal, current_trend, worst_case
+  actualYieldKg: double?
+  actualQualityGrade: String?
+  actualHarvestDate: DateTime?
+  modelVersion: String?
+  notes: String?
+  createdAt: DateTime

@@ -1,0 +1,10 @@
+{
+    "pH_minimo": 6,
+    "pH_maximo": 7.6,
+    "EC_minima": 20,
+    "EC_maxima": 40,
+    "temperatura_minima": 22,
+    "temperatura_maxima": 26,
+    "fotoperiodo_minutos_minimo": 480,
+    "fotoperiodo_minutos_maximo": 720
+}

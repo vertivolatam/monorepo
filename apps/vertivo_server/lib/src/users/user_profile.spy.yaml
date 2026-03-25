@@ -1,0 +1,24 @@
+class: UserProfile
+table: user_profiles
+fields:
+  userId: String
+  segment: String
+  # Residential
+  familySize: int?
+  dietaryPreferences: List<String>?
+  gardeningExperience: String?  # beginner, intermediate, advanced
+  # Commercial
+  businessType: String?
+  businessName: String?
+  qualityRequirements: String?
+  supplyChainGoals: String?
+  # Industrial
+  complianceRequirements: List<String>?
+  sustainabilityGoals: String?
+  erpIntegration: String?
+  # Expert
+  certifications: List<String>?
+  capabilities: List<String>?
+  workSchedule: String?
+  createdAt: DateTime
+  updatedAt: DateTime

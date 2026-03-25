@@ -1,0 +1,20 @@
+class: Plant
+table: plants
+fields:
+  trayId: int
+  greenhouseId: int
+  position: int
+  species: String
+  variety: String?
+  growthStage: String  # seed, germination, seedling, vegetative, flowering, fruiting, harvest
+  healthScore: double
+  isQuarantined: bool
+  quarantineReason: String?
+  plantedAt: DateTime
+  lastInspectedAt: DateTime?
+  estimatedHarvestDate: DateTime?
+  height: double?
+  leafCount: int?
+  notes: String?
+  createdAt: DateTime
+  updatedAt: DateTime

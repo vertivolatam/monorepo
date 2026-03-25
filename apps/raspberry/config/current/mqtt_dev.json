@@ -1,0 +1,36 @@
+{
+    "mqtt_client_type": "paho",
+    "mqtt_connection": {
+        "endpoint": "localhost",
+        "port": 1883,
+        "keepalive": 60,
+        "client_id_prefix": "vertivo-rpi"
+    },
+    "mqtt_topics": {
+        "telemetry": "vertivo/{user_id}/greenhouse/{greenhouse_id}/telemetry",
+        "status": "vertivo/{user_id}/greenhouse/{greenhouse_id}/status",
+        "commands": "vertivo/{user_id}/greenhouse/{greenhouse_id}/command/#",
+
+        "environmental": {
+            "temperature": "vertivo/{user_id}/greenhouse/{greenhouse_id}/sensor/temperature",
+            "humidity": "vertivo/{user_id}/greenhouse/{greenhouse_id}/sensor/humidity",
+            "co2": "vertivo/{user_id}/greenhouse/{greenhouse_id}/sensor/co2",
+            "air_quality": "vertivo/{user_id}/greenhouse/{greenhouse_id}/sensor/air_quality",
+            "gases": "vertivo/{user_id}/greenhouse/{greenhouse_id}/sensor/gases",
+            "particulate_matter": "vertivo/{user_id}/greenhouse/{greenhouse_id}/sensor/particulate_matter"
+        },
+        "nutrient_solution": {
+            "temperature": "vertivo/{user_id}/greenhouse/{greenhouse_id}/sensor/nutrient_temperature",
+            "ph": "vertivo/{user_id}/greenhouse/{greenhouse_id}/sensor/ph",
+            "ec": "vertivo/{user_id}/greenhouse/{greenhouse_id}/sensor/ec",
+            "tds": "vertivo/{user_id}/greenhouse/{greenhouse_id}/sensor/tds",
+            "do": "vertivo/{user_id}/greenhouse/{greenhouse_id}/sensor/do",
+            "orp": "vertivo/{user_id}/greenhouse/{greenhouse_id}/sensor/orp"
+        }
+    },
+    "mqtt_publish_interval": 30,
+
+    "_comment": "Dev config: connects to EMQX via plain MQTT. Set endpoint to minikube IP or use port-forward to localhost:1883. Set user_id and greenhouse_id for your test greenhouse.",
+    "user_id": "1",
+    "greenhouse_id": "1"
+}

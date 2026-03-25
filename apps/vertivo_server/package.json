@@ -1,0 +1,15 @@
+{
+  "name": "vertivo_server",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "dart compile exe bin/main.dart -o build/server",
+    "dev": "dart bin/main.dart --apply-migrations",
+    "generate": "serverpod generate",
+    "migrate": "serverpod create-migration",
+    "test": "dart test",
+    "lint": "dart analyze",
+    "format": "dart format lib/ bin/ test/",
+    "clean": "dart pub cache clean && rm -rf build/ .dart_tool/"
+  }
+}

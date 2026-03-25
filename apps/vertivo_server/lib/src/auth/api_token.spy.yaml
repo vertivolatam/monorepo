@@ -1,0 +1,11 @@
+class: ApiToken
+table: api_tokens
+fields:
+  userId: String
+  name: String
+  token: String
+  scopes: List<String>
+  isActive: bool
+  lastUsedAt: DateTime?
+  expiresAt: DateTime?
+  createdAt: DateTime

@@ -1,0 +1,21 @@
+class: Alert
+table: alerts
+fields:
+  userId: String
+  greenhouseId: int?
+  plantId: int?
+  trayId: int?
+  alertType: String  # phytopathology, environmental, harvest_ready, maintenance, anomaly, system, security, compliance
+  severity: String  # info, low, medium, high, critical
+  title: String
+  message: String
+  sourceEntityType: String?  # disease_detection, pest_identification, environmental_reading, etc.
+  sourceEntityId: int?
+  isRead: bool
+  isAcknowledged: bool
+  acknowledgedAt: DateTime?
+  acknowledgedBy: String?
+  isResolved: bool
+  resolvedAt: DateTime?
+  escalationLevel: int
+  createdAt: DateTime

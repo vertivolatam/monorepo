@@ -1,0 +1,19 @@
+class: ComplianceReport
+table: compliance_reports
+fields:
+  greenhouseId: int
+  batchId: String?
+  templateId: int  # references compliance_templates
+  standardCode: String
+  status: String  # pending, in_progress, compliant, non_compliant, expired
+  overallScore: double?  # 0.0–100.0
+  totalChecks: int
+  passedChecks: int
+  failedChecks: int
+  findings: String?  # JSON array of non-compliance findings
+  recommendations: String?  # JSON array of corrective actions
+  reportedBy: String?
+  reviewedBy: String?
+  reviewedAt: DateTime?
+  validUntil: DateTime?
+  createdAt: DateTime

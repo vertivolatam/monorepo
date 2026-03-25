@@ -1,0 +1,13 @@
+class: AlertTemplate
+table: alert_templates
+fields:
+  name: String
+  alertType: String
+  severity: String
+  titleTemplate: String
+  messageTemplate: String
+  segmentTarget: String  # residential, commercial, industrial, all
+  channels: List<String>
+  isActive: bool
+  createdAt: DateTime
+  updatedAt: DateTime

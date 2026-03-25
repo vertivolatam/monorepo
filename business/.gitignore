@@ -1,0 +1,5 @@
+# Business confidential - trade secret materials
+# Only .gitignore itself is tracked
+
+*
+!.gitignore

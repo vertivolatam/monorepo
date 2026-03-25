@@ -1,0 +1,208 @@
+# =============================================================================
+# Zensical / Material for MkDocs - Vertivo
+# Plataforma IoT de agricultura vertical inteligente
+# =============================================================================
+
+site_name: Vertivo - Micro-Invernaderos Autonomos Aeroponicos
+site_description: "Plataforma cloud-native de agricultura vertical autonoma por nebuponia para Latinoamerica. Robot agronomo embebido + app Flutter + marketplace de insumos."
+site_url: https://vertivolatam.github.io/monorepo
+repo_url: https://github.com/vertivolatam/monorepo
+repo_name: vertivolatam/monorepo
+edit_uri: edit/main/docs/
+
+# Directorio de documentos
+docs_dir: content
+site_dir: site
+
+# =============================================================================
+# Configuracion del Tema
+# =============================================================================
+theme:
+  name: material
+  language: es
+  palette:
+    # Esquema claro - Vertivo Branding (placeholder: actualizar post-widgetbook)
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Cambiar a modo oscuro
+    # Esquema oscuro
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Cambiar a modo claro
+  font:
+    text: Poppins
+    code: Roboto Mono
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - search.highlight
+    - search.share
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.action.edit
+    - content.action.view
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+  logo: assets/images/isotipo.svg
+  favicon: assets/images/isotipo.svg
+
+# =============================================================================
+# Plugins y Extensiones
+# =============================================================================
+plugins:
+  - search:
+      lang: es
+  - mermaid2:
+      version: 11.4.1
+      zoom: true
+      theme: base
+      mermaid2_includes:
+        gantt: true
+  - git-revision-date-localized:
+      enable_creation_date: true
+  - git-committers:
+      repository: vertivolatam/monorepo
+      enabled: !ENV [ENABLE_GIT_COMMITTERS, false]
+  - minify:
+      minify_html: true
+
+# =============================================================================
+# Configuracion de Markdown
+# =============================================================================
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      title: En esta pagina
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      normalize_issue_symbols: true
+      repo_url_shorthand: true
+      user: vertivolatam
+      repo: monorepo
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+# =============================================================================
+# Navegacion
+# =============================================================================
+nav:
+  - Inicio: index.md
+  - Producto:
+    - Propuesta de valor: docs/producto/propuesta-de-valor.md
+    - Segmentos y personas: docs/producto/segmentos.md
+    - Verticales de negocio: docs/producto/verticales.md
+    - Roadmap: docs/producto/roadmap.md
+  - Empezar:
+    - Instalacion: docs/getting-started/installation.md
+    - Configuracion: docs/getting-started/setup.md
+  - Backend:
+    - Vision general: docs/backend/index.md
+    - API Reference: docs/backend/api.md
+    - Autenticacion: docs/backend/auth.md
+    - MQTT Integration: docs/backend/mqtt.md
+  - Mobile:
+    - Vision general: docs/mobile/index.md
+    - Arquitectura: docs/mobile/architecture.md
+    - Design System: docs/mobile/design-system.md
+  - IoT:
+    - Vision general: docs/iot/index.md
+    - Sensores Atlas Scientific: docs/iot/sensors.md
+    - Orquestador: docs/iot/orchestrator.md
+    - Simulacion: docs/iot/simulation.md
+    - MQTT Topics: docs/iot/mqtt-topics.md
+  - Pagos:
+    - latam_payments: docs/pagos/latam-payments.md
+    - Pasarelas LATAM: docs/pagos/pasarelas.md
+  - Arquitectura:
+    - Vision general: docs/architecture/overview.md
+    - Tecnologias: docs/architecture/technologies.md
+    - Flujo de datos: docs/architecture/data-flow.md
+  - Despliegue:
+    - Kubernetes: docs/deployment/kubernetes.md
+    - EMQX Broker: docs/deployment/emqx.md
+    - CI/CD: docs/deployment/cicd.md
+    - Balena (Raspberry Pi): docs/deployment/balena.md
+  - Desarrollo:
+    - Configuracion local: docs/development/local-setup.md
+    - Estructura del monorepo: docs/development/structure.md
+    - Testing: docs/development/testing.md
+  - Estrategia:
+    - SRD Framework: docs/estrategia/srd.md
+    - Linear y ciclos: docs/estrategia/linear.md
+
+# =============================================================================
+# Configuracion adicional
+# =============================================================================
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/vertivolatam
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/company/vertivo
+  version:
+    provider: mike
+  generator: false
+
+# =============================================================================
+# Configuracion de desarrollo
+# =============================================================================
+dev_addr: 0.0.0.0:8000
+
+# =============================================================================
+# Archivos estaticos
+# =============================================================================
+extra_css:
+  - stylesheets/vertivo-custom.css
+
+extra_javascript:
+  - javascripts/vertivo-custom.js
+  - javascripts/mermaid.mjs

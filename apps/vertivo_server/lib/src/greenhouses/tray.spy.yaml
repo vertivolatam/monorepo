@@ -1,0 +1,18 @@
+class: Tray
+table: trays
+fields:
+  greenhouseId: int
+  position: int
+  label: String?
+  cropType: String?
+  plantingDate: DateTime?
+  expectedHarvestDate: DateTime?
+  status: String  # empty, planted, growing, ready_to_harvest, harvested
+  plantCount: int
+  healthScore: double?
+  soilPh: double?
+  soilMoisture: double?
+  soilFertility: String?  # low, medium, high
+  lastIrrigatedAt: DateTime?
+  createdAt: DateTime
+  updatedAt: DateTime

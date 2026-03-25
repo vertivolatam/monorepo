@@ -1,0 +1,11 @@
+class: IrrigationEvent
+table: irrigation_events
+fields:
+  greenhouseId: int
+  trayId: int?
+  irrigationType: String
+  durationMinutes: double
+  waterVolumeLiters: double?
+  nutrientMix: String?
+  triggeredBy: String  # automatic, manual, schedule
+  createdAt: DateTime

@@ -1,0 +1,21 @@
+class: Anomaly
+table: anomalies
+fields:
+  greenhouseId: int
+  plantId: int?
+  trayId: int?
+  anomalyType: String  # temperature, humidity, light, co2, ph, soil_moisture, growth_rate, disease, pest, equipment, irrigation, ventilation
+  severity: String  # low, medium, high, critical
+  detectionMethod: String  # ai, sensor, manual, rule_based
+  measurementType: String?  # which sensor measurement triggered it
+  expectedValue: double?
+  actualValue: double?
+  deviationPercent: double?
+  description: String
+  isResolved: bool
+  resolvedAt: DateTime?
+  resolvedBy: String?
+  resolutionNotes: String?
+  sourceEntityType: String?  # environmental_reading, plant, disease_detection
+  sourceEntityId: int?
+  createdAt: DateTime

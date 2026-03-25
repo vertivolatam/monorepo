@@ -1,0 +1,25 @@
+class: Greenhouse
+table: greenhouses
+fields:
+  userId: String
+  name: String
+  description: String?
+  location: String?
+  latitude: double?
+  longitude: double?
+  climateType: String?  # tropical, temperate, arid, continental
+  irrigationType: String  # drip, spray, aeroponic, hydroponic
+  totalTrays: int
+  isActive: bool
+  temperatureMin: double?
+  temperatureMax: double?
+  humidityMin: double?
+  humidityMax: double?
+  lightMin: double?
+  lightMax: double?
+  co2Min: double?
+  co2Max: double?
+  phMin: double?
+  phMax: double?
+  createdAt: DateTime
+  updatedAt: DateTime

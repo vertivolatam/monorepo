@@ -1,0 +1,19 @@
+class: TreatmentRecommendation
+table: treatment_recommendations
+fields:
+  diseaseDetectionId: int?
+  pestIdentificationId: int?
+  plantId: int
+  treatmentType: String  # chemical, biological, cultural, mechanical, preventive
+  description: String
+  ingredients: List<String>?
+  applicationMethod: String?
+  frequencyDays: int?
+  durationDays: int?
+  estimatedCost: double?
+  segmentTarget: String  # residential, commercial, industrial, all
+  priority: String  # low, medium, high, urgent
+  isApplied: bool
+  appliedAt: DateTime?
+  effectivenessScore: double?
+  createdAt: DateTime

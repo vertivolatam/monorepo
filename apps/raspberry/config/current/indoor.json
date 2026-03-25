@@ -1,0 +1,18 @@
+{
+    "co2_input_lower_bound": 400,
+    "co2_input_upper_bound": 1000,
+    "humidity_input_lower_bound": 40,
+    "humidity_input_upper_bound": 80,
+    "nutrient_solution_do_input_lower_bound": 5,
+    "nutrient_solution_do_input_upper_bound": 8,
+    "nutrient_solution_ec_input_lower_bound": 1000,
+    "nutrient_solution_ec_input_upper_bound": 2000,
+    "nutrient_solution_orp_input_lower_bound": 300,
+    "nutrient_solution_orp_input_upper_bound": 500,
+    "nutrient_solution_ph_input_lower_bound": 5.5,
+    "nutrient_solution_ph_input_upper_bound": 6.5,
+    "nutrient_solution_tds_input_lower_bound": 500,
+    "nutrient_solution_tds_input_upper_bound": 1500,
+    "nutrient_solution_temperature_input_lower_bound": 18,
+    "nutrient_solution_temperature_input_upper_bound": 24
+}

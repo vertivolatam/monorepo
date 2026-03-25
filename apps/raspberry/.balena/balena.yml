@@ -1,0 +1,25 @@
+name: vertivo-orchestrator
+type: sw.application
+description: >-
+  Vertivo Monitoring Orchestrator — Sensor data collection and MQTT publishing
+  for indoor/outdoor agricultural and environmental monitoring.
+version: 0.1.0
+assets:
+  logo:
+    url: ""
+  repository:
+    url: "https://github.com/vertivolatam/monorepo"
+data:
+  applicationEnvironmentVariables:
+    - VERTIVO_ORCHESTRATOR_MODE: indoor
+    - VERTIVO_USER_ID: 1
+    - VERTIVO_GREENHOUSE_ID: 1
+    - VERTIVO_MQTT_ENDPOINT: localhost
+    - VERTIVO_MQTT_PORT: 1883
+    - VERTIVO_DEBUG: false
+  defaultDeviceType: raspberrypi4-64
+  supportedDeviceTypes:
+    - raspberrypi3
+    - raspberrypi3-64
+    - raspberrypi4-64
+    - raspberrypi5

@@ -1,0 +1,373 @@
+/* ============================================
+   Vertivo Custom Styles
+   Paleta de colores Vertivo.
+   Fuente: style-dictionary/tokens.json
+   ============================================ */
+
+/* ============================================
+   Design System - Brand Colors
+   ============================================ */
+
+:root {
+  /* Brand Colors */
+  --vertivo-primary: #772583;
+  --vertivo-secondary: #CEDC00;
+  --vertivo-accent: #5E7E29;
+  --vertivo-warning: #FF9E1B;
+  --vertivo-error: #F4493A;
+  --vertivo-error-soft: #F4633A;
+  --vertivo-success: #5E7E29;
+
+  /* Primary Palette (Purple) */
+  --vertivo-primary-10: #2A0033;
+  --vertivo-primary-20: #461452;
+  --vertivo-primary-30: #5E1D6B;
+  --vertivo-primary-40: #772583;
+  --vertivo-primary-50: #8F3D9B;
+  --vertivo-primary-60: #A85AB3;
+  --vertivo-primary-70: #C178CB;
+  --vertivo-primary-80: #DA99E3;
+  --vertivo-primary-90: #F0D0F5;
+  --vertivo-primary-95: #F8E8FB;
+
+  /* Secondary Palette (Lime) */
+  --vertivo-secondary-10: #1A1F00;
+  --vertivo-secondary-20: #303700;
+  --vertivo-secondary-30: #475000;
+  --vertivo-secondary-40: #5F6A00;
+  --vertivo-secondary-50: #798500;
+  --vertivo-secondary-60: #94A100;
+  --vertivo-secondary-70: #B0BE00;
+  --vertivo-secondary-80: #CEDC00;
+  --vertivo-secondary-90: #E5F04D;
+
+  /* Accent Palette (Olive Green) */
+  --vertivo-accent-10: #0F1A00;
+  --vertivo-accent-20: #213409;
+  --vertivo-accent-30: #354D15;
+  --vertivo-accent-40: #4A661F;
+  --vertivo-accent-50: #5E7E29;
+  --vertivo-accent-60: #769843;
+  --vertivo-accent-70: #8FB35D;
+  --vertivo-accent-80: #AACD78;
+  --vertivo-accent-90: #C8E89A;
+
+  /* Neutral Palette (Purple-tinted) */
+  --vertivo-neutral-10: #1C1A1E;
+  --vertivo-neutral-20: #312F34;
+  --vertivo-neutral-30: #48454B;
+  --vertivo-neutral-50: #79757C;
+  --vertivo-neutral-80: #C9C5CC;
+  --vertivo-neutral-90: #E6E1E8;
+  --vertivo-neutral-95: #F4EFF6;
+
+  /* Material for MkDocs Theme Colors */
+  --md-primary-fg-color: var(--vertivo-primary);
+  --md-primary-fg-color--light: var(--vertivo-primary-60);
+  --md-primary-fg-color--dark: var(--vertivo-primary-30);
+  --md-primary-bg-color: var(--vertivo-primary-95);
+  --md-primary-bg-color--light: var(--vertivo-primary-90);
+
+  --md-accent-fg-color: var(--vertivo-accent);
+  --md-accent-fg-color--transparent: rgba(19, 112, 166, 0.1);
+  --md-accent-bg-color: var(--vertivo-primary-95);
+  --md-accent-bg-color--light: var(--vertivo-primary-90);
+
+  /* Typography */
+  --md-text-font: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --md-code-font: "Roboto Mono", "Courier New", monospace;
+}
+
+/* Dark mode colors */
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: var(--vertivo-primary-60);
+  --md-primary-fg-color--light: var(--vertivo-primary-70);
+  --md-primary-fg-color--dark: var(--vertivo-primary-40);
+  --md-primary-bg-color: var(--vertivo-primary-20);
+  --md-primary-bg-color--light: var(--vertivo-primary-30);
+
+  --md-accent-fg-color: var(--vertivo-accent);
+  --md-accent-fg-color--transparent: rgba(19, 112, 166, 0.1);
+
+  --md-typeset-color: var(--vertivo-secondary-80);
+}
+
+[data-md-color-scheme="slate"] .md-typeset h1,
+[data-md-color-scheme="slate"] .md-typeset h2,
+[data-md-color-scheme="slate"] .md-typeset h3,
+[data-md-color-scheme="slate"] .md-typeset h4,
+[data-md-color-scheme="slate"] .md-typeset h5,
+[data-md-color-scheme="slate"] .md-typeset h6 {
+  color: var(--vertivo-secondary) !important;
+}
+
+/* ============================================
+   Header & Navigation
+   ============================================ */
+
+.md-header {
+  background-color: var(--vertivo-primary);
+  background: linear-gradient(135deg, var(--vertivo-primary) 0%, var(--vertivo-primary-40) 100%);
+  box-shadow: 0 2px 8px rgba(9, 79, 114, 0.2);
+  color: #ffffff !important;
+}
+
+.md-header__title {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #ffffff !important;
+}
+
+.md-header__topic {
+  color: #ffffff !important;
+}
+
+.md-tabs {
+  background-color: var(--vertivo-primary-30);
+  background: linear-gradient(180deg, var(--vertivo-primary-30) 0%, var(--vertivo-primary-20) 100%);
+}
+
+.md-tabs__link {
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.md-tabs__link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.md-tabs__link--active {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-bottom: 2px solid var(--vertivo-secondary);
+}
+
+/* ============================================
+   Sidebar Navigation
+   ============================================ */
+
+.md-nav__link--active {
+  color: var(--vertivo-primary);
+  font-weight: 600;
+}
+
+.md-nav__link:hover {
+  color: var(--vertivo-accent);
+}
+
+.md-nav__item--nested > .md-nav__link {
+  font-weight: 600;
+  color: var(--vertivo-primary-30);
+}
+
+/* ============================================
+   Content Styling
+   ============================================ */
+
+.md-content a {
+  color: var(--vertivo-accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.md-content a:hover {
+  color: var(--vertivo-primary);
+  border-bottom-color: var(--vertivo-primary);
+}
+
+.md-typeset h1 {
+  color: var(--vertivo-primary);
+  font-weight: 700;
+  border-bottom: 3px solid var(--vertivo-secondary);
+  padding-bottom: 0.5rem;
+}
+
+.md-typeset h2 {
+  color: var(--vertivo-primary-30);
+  font-weight: 600;
+  border-bottom: 2px solid var(--vertivo-primary-90);
+  padding-bottom: 0.3rem;
+}
+
+.md-typeset h3 {
+  color: var(--vertivo-primary-40);
+  font-weight: 600;
+}
+
+/* Code blocks */
+.md-typeset code {
+  background-color: var(--vertivo-primary-95);
+  color: var(--vertivo-primary-30);
+  border: 1px solid var(--vertivo-primary-90);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+}
+
+.md-typeset pre > code {
+  background-color: var(--vertivo-neutral-95);
+  border: 1px solid var(--vertivo-neutral-90);
+}
+
+[data-md-color-scheme="slate"] .md-typeset code {
+  background-color: var(--vertivo-primary-20);
+  color: var(--vertivo-primary-80);
+  border-color: var(--vertivo-primary-30);
+}
+
+/* Tables */
+.md-typeset table:not([class]) {
+  border: 2px solid var(--vertivo-primary-90);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--vertivo-primary);
+  color: white;
+  font-weight: 600;
+  padding: 1rem;
+}
+
+.md-typeset table:not([class]) tr:hover {
+  background-color: var(--vertivo-primary-95);
+}
+
+/* Admonitions */
+.md-typeset .admonition {
+  border-left: 4px solid var(--vertivo-accent);
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.md-typeset .admonition.note    { border-left-color: var(--vertivo-accent); }
+.md-typeset .admonition.warning { border-left-color: var(--vertivo-warning); }
+.md-typeset .admonition.danger  { border-left-color: var(--vertivo-error); }
+.md-typeset .admonition.success { border-left-color: var(--vertivo-success); }
+
+/* Buttons */
+.md-button {
+  background-color: var(--vertivo-primary);
+  color: white;
+  border-radius: 8px;
+  padding: 0.6em 1.2em;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(9, 79, 114, 0.2);
+}
+
+.md-button:hover {
+  background-color: var(--vertivo-primary-40);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(9, 79, 114, 0.3);
+}
+
+.md-button--primary { background-color: var(--vertivo-secondary); }
+.md-button--primary:hover { background-color: var(--vertivo-secondary-60); }
+
+/* Search */
+.md-search__input {
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+.md-search__input:focus {
+  background-color: white;
+  border-color: var(--vertivo-accent);
+}
+
+/* Footer */
+.md-footer      { background-color: var(--vertivo-primary-20); color: var(--vertivo-neutral-90); }
+.md-footer-meta { background-color: var(--vertivo-primary-10); }
+
+/* ============================================
+   Mermaid Diagram Styles
+   ============================================ */
+
+.mermaid {
+  margin: 1.5em 0;
+  border: 2px solid var(--vertivo-primary-90);
+  border-radius: 8px;
+  padding: 1.5em;
+  background-color: var(--vertivo-primary-95);
+  box-shadow: 0 2px 4px rgba(9, 79, 114, 0.1);
+  cursor: zoom-in;
+  transition: all 0.2s ease;
+}
+
+.mermaid:hover {
+  border-color: var(--vertivo-primary-80);
+  box-shadow: 0 4px 8px rgba(9, 79, 114, 0.15);
+}
+
+[data-md-color-scheme="slate"] .mermaid {
+  background-color: var(--vertivo-primary-20);
+  border-color: var(--vertivo-primary-30);
+}
+
+[data-md-color-scheme="slate"] .mermaid svg text,
+[data-md-color-scheme="slate"] .mermaid svg .nodeLabel,
+[data-md-color-scheme="slate"] .mermaid svg .edgeLabel,
+[data-md-color-scheme="slate"] .mermaid svg .label {
+  fill: #e0e0e0 !important;
+  color: #e0e0e0 !important;
+}
+
+[data-md-color-scheme="slate"] .mermaid svg .edgePath .path,
+[data-md-color-scheme="slate"] .mermaid svg .flowchart-link {
+  stroke: #e0e0e0 !important;
+}
+
+[data-md-color-scheme="slate"] .mermaid svg .node rect,
+[data-md-color-scheme="slate"] .mermaid svg .node circle,
+[data-md-color-scheme="slate"] .mermaid svg .node polygon {
+  fill: #2d2d44 !important;
+  stroke: var(--vertivo-secondary) !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid svg { cursor: grab; transition: transform 0.1s ease-out; }
+.mermaid svg:active { cursor: grabbing; }
+
+.mermaid::after {
+  content: "Click para hacer zoom, arrastra para mover";
+  display: block;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--vertivo-neutral-50);
+  margin-top: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.mermaid:hover::after { opacity: 1; }
+
+/* ============================================
+   Animations
+   ============================================ */
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.7; }
+}
+
+.md-nav__link--active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background-color: var(--vertivo-secondary);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+.text-primary   { color: var(--vertivo-primary) !important; }
+.text-secondary { color: var(--vertivo-secondary) !important; }
+.text-accent    { color: var(--vertivo-accent) !important; }
+.bg-primary     { background-color: var(--vertivo-primary) !important; }
+.bg-secondary   { background-color: var(--vertivo-secondary) !important; }
+.border-primary { border-color: var(--vertivo-primary) !important; }

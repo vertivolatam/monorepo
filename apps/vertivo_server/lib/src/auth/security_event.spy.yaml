@@ -1,0 +1,10 @@
+class: SecurityEvent
+table: security_events
+fields:
+  userId: String?
+  eventType: String  # login, logout, failed_login, password_change, 2fa_enabled, etc.
+  severity: String  # info, warning, critical
+  ipAddress: String?
+  deviceId: String?
+  details: String?
+  createdAt: DateTime

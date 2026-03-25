@@ -1,0 +1,17 @@
+class: KpiMetric
+table: kpi_metrics
+fields:
+  userId: String
+  greenhouseId: int?
+  metricType: String  # yield_rate, health_score_avg, disease_rate, pest_rate, mortality_rate, water_efficiency, energy_efficiency, harvest_success_rate, growth_rate_avg, roi, revenue, cost_per_kg, compliance_score, anomaly_frequency
+  value: double
+  unit: String?
+  periodStart: DateTime
+  periodEnd: DateTime
+  periodType: String  # daily, weekly, monthly, quarterly, yearly
+  previousValue: double?
+  changePercent: double?
+  targetValue: double?
+  segment: String?  # residential, commercial, industrial
+  notes: String?
+  createdAt: DateTime

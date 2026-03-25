@@ -1,0 +1,10 @@
+class: EnvironmentalReading
+table: environmental_readings
+fields:
+  greenhouseId: int
+  measurementType: String  # temperature, humidity, light, co2, ph, soil_moisture, wind_speed, rainfall
+  value: double
+  unit: String
+  source: String?  # sensor_id or manual
+  isAnomaly: bool
+  createdAt: DateTime

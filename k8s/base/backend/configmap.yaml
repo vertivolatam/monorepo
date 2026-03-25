@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  labels:
+    app: vertivo-backend
+data:
+  runmode: "development"
+  serverid: "default"
+  logging: "normal"
+  role: "monolith"
+  DB_HOST: "postgres-service.vertivo-dev.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "vertivo"
+  DB_USER: "postgres"
+  MQTT_HOST: "emqx-listeners.vertivo-dev.svc.cluster.local"
+  MQTT_PORT: "1883"

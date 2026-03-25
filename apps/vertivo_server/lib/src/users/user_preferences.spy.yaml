@@ -1,0 +1,15 @@
+class: UserPreferences
+table: user_preferences
+fields:
+  userId: String
+  notificationEmail: bool
+  notificationPush: bool
+  notificationSms: bool
+  notificationWhatsapp: bool
+  displayLanguage: String
+  displayTimezone: String
+  displayTemperatureUnit: String  # celsius, fahrenheit
+  privacyShareData: bool
+  privacyAnalytics: bool
+  createdAt: DateTime
+  updatedAt: DateTime

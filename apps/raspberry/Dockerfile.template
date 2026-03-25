@@ -1,0 +1,61 @@
+# Vertivo Raspberry Pi — Balena Dockerfile
+# ==========================================
+# Uses %%BALENA_MACHINE_NAME%% for multi-arch support (Pi 3, Pi 4, Pi 5)
+# https://docs.balena.io/learn/develop/dockerfile/
+
+FROM balenalib/%%BALENA_MACHINE_NAME%%-python:3.11-bookworm-run AS base
+
+# Enable I2C and serial in the container
+ENV UDEV=1
+ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+
+WORKDIR /app
+
+# Install system dependencies for I2C, GPIO, and sensor libs
+RUN install_packages \
+    i2c-tools \
+    python3-smbus \
+    libgpiod2 \
+    libatlas-base-dev \
+    libopenblas-dev \
+    gcc \
+    python3-dev
+
+# Copy and install Python dependencies (layer cached unless requirements change)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt || \
+    pip install --no-cache-dir \
+        paho-mqtt \
+        python-dotenv \
+        pyyaml \
+        requests \
+        schedule \
+        smbus2 \
+        numpy \
+        prometheus-client \
+        python-json-logger
+
+# Copy application code
+COPY src/ ./src/
+COPY config/ ./config/
+
+# Balena env vars (overridden at fleet/device level)
+# VERTIVO_ORCHESTRATOR_MODE: indoor | outdoor | soil | environmental
+# VERTIVO_USER_ID: client user ID for MQTT topics
+# VERTIVO_GREENHOUSE_ID: greenhouse ID for MQTT topics
+# VERTIVO_MQTT_ENDPOINT: EMQX broker host
+# VERTIVO_MQTT_PORT: EMQX broker port
+# VERTIVO_DEBUG: enable debug logging
+
+ENV VERTIVO_ORCHESTRATOR_MODE=indoor
+ENV VERTIVO_USER_ID=1
+ENV VERTIVO_GREENHOUSE_ID=1
+ENV VERTIVO_MQTT_ENDPOINT=localhost
+ENV VERTIVO_MQTT_PORT=1883
+ENV VERTIVO_DEBUG=false
+
+# Entrypoint script handles env → config and starts the orchestrator
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+CMD ["/app/start.sh"]

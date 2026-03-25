@@ -1,0 +1,13 @@
+{
+  "name": "vertivo_flutter",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "flutter build web",
+    "dev": "flutter run",
+    "test": "flutter test",
+    "lint": "dart analyze",
+    "format": "dart format lib/",
+    "clean": "flutter clean"
+  }
+}

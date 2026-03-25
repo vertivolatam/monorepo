@@ -1,0 +1,14 @@
+class: NutritionalDeficiency
+table: nutritional_deficiencies
+fields:
+  plantId: int
+  greenhouseId: int
+  nutrient: String  # nitrogen, phosphorus, potassium, calcium, magnesium, sulfur, iron, manganese, zinc, boron, copper, molybdenum
+  severity: String  # mild, moderate, severe
+  symptoms: List<String>?
+  confidence: double
+  recommendedAction: String?
+  isResolved: bool
+  resolvedAt: DateTime?
+  detectedAt: DateTime
+  createdAt: DateTime

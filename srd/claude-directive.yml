@@ -1,0 +1,426 @@
+# Section 5 — Claude Directive
+# Machine-readable SRD rules for development prioritization.
+# Used by srd-guardian agent and any Claude session working on this monorepo.
+#
+# Source: srd/gap-audit.md, srd/journeys.md, srd/business-model-canvas.md, srd/success-reality.md
+
+meta:
+  product: Vertivo — Micro-invernaderos Autónomos Aeropónicos Urbanos
+  target: [MRR target] MRR at 18 months
+  geo_launch_order: [CR, PA, CO, MX, BR]
+  monorepo_version: 0.1.0
+  last_updated: "2026-03-09"
+
+# ─── PRIORITY RULES ──────────────────────────────────────────────────────────
+
+priority_rules:
+
+  - rule: billing_first
+    description: >
+      Billing (latam_payments) is the #1 priority. Without payment processing,
+      revenue = $0. Every other feature depends on the ability to charge.
+    linear_issue: VRTV-5
+    tier: T0
+    blocks: [VRTV-8]
+    journeys: [J1, J4]
+    revenue_at_risk: "100%"
+
+  - rule: flutter_screens_before_new_endpoints
+    description: >
+      The backend has 13 endpoint classes with 0 Flutter screens consuming them.
+      Anti-pattern: "backend-ahead syndrome". Prioritize connecting existing
+      endpoints to UI over building new backend features.
+    anti_pattern: backend_ahead_syndrome
+    tier: T0
+    linear_issues: [VRTV-6, VRTV-7]
+
+  - rule: push_before_features
+    description: >
+      32% of conversions come from "first harvest" push. 24% from "robot saved
+      your plants" push. FCM integration should be prioritized over new features
+      because it multiplies the value of everything already built.
+    linear_issue: VRTV-9
+    tier: T1
+    journeys: [J1, J2, J3, J4, J8]
+
+  - rule: marketplace_is_36_percent
+    description: >
+      Marketplace (Caja Vertivo + on-demand) represents 36% of MRR target.
+      It must ship within T0 timeline. Reuse billing from VRTV-5.
+    linear_issue: VRTV-8
+    tier: T0
+    revenue_at_risk: "[monto redactado]/mo"
+
+  - rule: never_ship_dashboard_without_real_data
+    description: >
+      The Jaspr dashboard has 6 pages with hardcoded synthetic data. Never demo
+      to enterprise prospects (Roberto) without connecting to real API first.
+      Anti-pattern: "dashboard theater".
+    anti_pattern: dashboard_theater
+    linear_issue: VRTV-13
+    tier: T1
+
+  - rule: referral_before_paid_acquisition
+    description: >
+      18% referral rate target. 40% of device sales via referral. Build organic
+      growth engine before spending on paid acquisition channels.
+    linear_issue: VRTV-12
+    tier: T1
+
+# ─── PERSONA ROUTING ─────────────────────────────────────────────────────────
+# When developing a feature, check which personas it serves. If it doesn't
+# serve a T0/T1 persona, it can probably wait.
+
+persona_routing:
+
+  high_priority_personas:
+    - name: "María — Mamá Urbana Consciente"
+      id: 1
+      segment: residential_b2c
+      plan: basic
+      user_percent: 22
+      revenue_percent: 12
+      critical_moments:
+        - first_harvest_push
+        - caja_subscription
+        - share_harvest
+      tolerance_to_friction: low
+
+    - name: "Diego — Restaurante Farm-to-Table"
+      id: 4
+      segment: commercial_b2b
+      plan: commercial
+      user_percent: 12
+      revenue_percent: 20
+      critical_moments:
+        - roi_report
+        - api_integration_pos
+        - fleet_dashboard
+      tolerance_to_friction: medium
+
+    - name: "Roberto — Director Ops Agroindustrial"
+      id: 6
+      segment: industrial_b2b
+      plan: industrial
+      user_percent: 4
+      revenue_percent: 22
+      critical_moments:
+        - poc_with_real_data
+        - compliance_report
+        - erp_integration
+      tolerance_to_friction: high_if_data_driven
+
+    - name: "Carlos — Techie Entusiasta"
+      id: 2
+      segment: residential_b2c
+      plan: pro
+      user_percent: 15
+      revenue_percent: 10
+      critical_moments:
+        - api_access
+        - real_time_data
+        - sensor_export
+      tolerance_to_friction: high
+      note: "Most tolerant to UX gaps. Could be early adopter with API-only."
+
+  medium_priority_personas:
+    - name: "Valentina — Emprendedora Bienestar"
+      id: 5
+      segment: commercial_b2b
+      plan: commercial
+      user_percent: 8
+      revenue_percent: 12
+
+    - name: "Andrés — Influencer de Barrio"
+      id: 8
+      segment: residential_b2c
+      plan: pro
+      user_percent: 10
+      revenue_percent: 6
+      note: "Value is as growth multiplier, not direct revenue."
+
+    - name: "Rosa — Abuela Jardinera"
+      id: 3
+      segment: residential_b2c
+      plan: basic
+      user_percent: 8
+      revenue_percent: 4
+      note: "Lowest friction tolerance. If Rosa can use it, anyone can."
+      accessibility_requirement: true
+
+  lower_priority_personas:
+    - name: "Lucía — Agrónoma Consultora"
+      id: 7
+      segment: expert
+      user_percent: 3
+      revenue_percent: 4
+      note: "Acquisition channel multiplier. Fleet view is T2."
+
+    - name: "Directora Comedor Escolar"
+      id: 9
+      segment: b2g
+      user_percent: 3
+      revenue_percent: 3
+      note: "Phase 2-3. Not target for first 18 months except pilots."
+
+    - name: "AgriData Corp"
+      id: 10
+      segment: ecosystem
+      user_percent: 1
+      revenue_percent: 5
+      note: "Requires critical mass (50+ devices/metro). Not viable until month 9-12."
+
+# ─── JOURNEY DEPENDENCIES ────────────────────────────────────────────────────
+
+journey_dependencies:
+  critical_path: [J1, J2, J3, J4, J8, J5, J6, J7]
+
+  journeys:
+    J1_compra_onboarding:
+      requires: [VRTV-5, VRTV-6, VRTV-7]
+      unlocks: [J2, J3, J4, J8]
+      revenue_gate: true
+      note: "Without J1, no users enter the funnel."
+
+    J2_monitoreo_diario:
+      requires: [VRTV-6]
+      unlocks: [retention]
+      note: "Daily loop that justifies monthly SaaS payment."
+
+    J3_alerta_critica:
+      requires: [VRTV-9]
+      unlocks: [trust, conversion_free_to_paid]
+      note: "24% of conversions come from robot-saved-my-plants moment."
+
+    J4_marketplace:
+      requires: [VRTV-5, VRTV-8]
+      unlocks: ["36% MRR"]
+      note: "Second largest revenue stream."
+
+    J8_referral:
+      requires: [VRTV-12]
+      unlocks: [organic_growth]
+      note: "40% of device sales should come from referrals."
+
+    J5_roi_fleet:
+      requires: [VRTV-13, VRTV-14, VRTV-15, VRTV-17]
+      unlocks: [commercial_industrial_retention]
+      note: "54% of revenue comes from commercial + industrial."
+
+# ─── ANTI-PATTERNS ────────────────────────────────────────────────────────────
+
+anti_patterns:
+
+  - name: backend_ahead_syndrome
+    description: >
+      Building more backend endpoints when existing ones have no frontend.
+      13 Serverpod endpoint classes exist; 0 Flutter screens consume them.
+    detection: "New endpoint created without corresponding Flutter screen in same PR."
+    fix: "Create Flutter screen + provider that consumes the endpoint."
+    severity: high
+
+  - name: dashboard_theater
+    description: >
+      Jaspr dashboard pages with hardcoded D3.js synthetic data presented as real.
+      6 pages, all hardcoded. Roberto would discover the farce in a POC.
+    detection: "Dashboard page modified without connecting to Serverpod API."
+    fix: "Connect page to real endpoint before adding new visualizations."
+    severity: high
+
+  - name: sensor_rich_action_poor
+    description: >
+      8 Atlas Scientific EZO sensors read data, 0 actuators control anything.
+      The 'robot agrónomo' is actually a 'monitor agrónomo'.
+    detection: "New sensor/monitor added without corresponding actuator control."
+    fix: "Prioritize T2.1 (PID controllers, GPIO relay, dosing)."
+    severity: medium
+
+  - name: notification_model_without_delivery
+    description: >
+      NotificationDelivery table supports 7 channels (push, email, SMS, webhook,
+      in_app, Slack, WhatsApp) but none actually send.
+    detection: "NotificationDelivery record created without FCM/email/SMS send call."
+    fix: "Implement at least FCM (T1.1) and email (T1.2)."
+    severity: high
+
+  - name: auth_without_identity
+    description: >
+      User can login but can't see profile, plan, or preferences in the app.
+    detection: "Auth flow modified without profile screen existing."
+    fix: "Include profile screen in T0.2 core screens."
+    severity: medium
+
+  - name: marketplace_zero
+    description: >
+      36% of MRR target has neither backend nor frontend.
+      No order, product, or cart endpoints exist.
+    detection: "Marketplace/order features discussed but not prioritized."
+    fix: "VRTV-8 is T0 — must ship before T1 features."
+    severity: critical
+
+# ─── ACCEPTANCE CRITERIA ──────────────────────────────────────────────────────
+# Minimum criteria for each tier to be considered "done".
+
+acceptance_criteria:
+
+  v0_2_0:
+    label: "T0 — Billing + App MVP"
+    deadline: "2026-06-22"
+    must_have:
+      - "User can purchase Vertivo Home ([precio redactado]) via OnvoPay/Tilopay"
+      - "User can subscribe to SaaS plan ([ver pricing]) with recurring billing"
+      - "Flutter app has 5 functional screens: home, greenhouse list, greenhouse detail, alerts, profile"
+      - "GoRouter + Riverpod installed and working"
+      - "Onboarding wizard: create account → pair device (QR) → name greenhouse → choose first crop"
+      - "Greenhouse detail shows real sensor data from Serverpod (pH, temp, humidity, EC minimum)"
+      - "Marketplace: browse Caja Vertivo tiers, subscribe, checkout"
+      - "User can see their subscription plan in profile"
+    nice_to_have:
+      - "Push notification for first harvest"
+      - "Email verification works (not just console.log)"
+    test_with_persona: "María — can she buy, set up, monitor, and reorder without help?"
+
+  v0_3_0:
+    label: "T1 — Scale & Growth"
+    deadline: "2026-08-31"
+    must_have:
+      - "FCM push notifications working (foreground + background)"
+      - "Push templates: alert_critical, harvest_ready, reorder_reminder"
+      - "Email sending real (SendGrid/SES) for verification + receipts"
+      - "Landing page live at vertivo.com with pricing and checkout CTA"
+      - "Referral system: generate link, track conversions, apply credits"
+      - "Dashboard connected to real Serverpod API (0 hardcoded pages)"
+      - "API key management for Commercial/Industrial plans"
+      - "Multi-user roles: owner, admin, viewer"
+      - "Order management: order status tracking, fulfillment flow"
+      - "Fleet management screens in Flutter for multi-greenhouse users"
+    nice_to_have:
+      - "WhatsApp Business integration for support"
+      - "Grafana dashboard for internal monitoring"
+    test_with_persona: "Diego — can he manage 5 greenhouses, see ROI, invite his chef?"
+
+  v0_4_0:
+    label: "T2 — Differentiation"
+    deadline: "2026-11-09"
+    must_have:
+      - "Robot agrónomo controls at least: pH dosing pump + LED photo-period"
+      - "Harvest card generator with photo + data + Vertivo branding + share"
+      - "Robot-calculated Caja recommendation based on sensor consumption data"
+      - "ROI report PDF generation for Commercial/Industrial"
+      - "Compliance report UI (traceability chain visualization)"
+      - "Cross-user fleet view for agrónomo consultores"
+      - "Expert Mode: robot suggests → agrónomo approves"
+      - "WebSocket/SSE for real-time sensor data in Flutter"
+    nice_to_have:
+      - "Timelapse auto-generation from plant photos"
+      - "Community feed of harvests"
+    test_with_persona: "Lucía — can she monitor 20 clients and approve robot actions remotely?"
+
+  v1_0_0:
+    label: "T3 — Full Vision"
+    deadline: "2026-12-14"
+    must_have:
+      - "Enjambre Data API with OpenAPI docs and SLA"
+      - "At least 1 paying Data API customer"
+      - "Product-as-a-Service billing flow (rental)"
+      - "Bulk device provisioning for enterprise"
+    nice_to_have:
+      - "Urban-Farming-as-a-Service (food subscription)"
+      - "Digital twins simulation engine"
+      - "B2G procurement flow"
+    test_with_persona: "Roberto — can he roll out to 15 locations and export data to SAP?"
+
+# ─── DEVELOPMENT GUARDRAILS ──────────────────────────────────────────────────
+
+guardrails:
+
+  - name: no_new_endpoints_without_flutter_screen
+    rule: >
+      Do not create new Serverpod endpoints unless a Flutter screen or dashboard
+      page will consume them in the same PR or the immediately following one.
+    exceptions: ["MQTT ingestion endpoints", "background jobs", "webhook receivers"]
+
+  - name: no_hardcoded_data_in_dashboard
+    rule: >
+      Every new dashboard page must connect to a real Serverpod endpoint.
+      D3.js charts must be fed with API data, not synthetic generators.
+    exceptions: ["Local development with --mock flag"]
+
+  - name: rosa_test
+    rule: >
+      If Rosa (63yo, low tech savviness, WhatsApp only) cannot complete the flow
+      with large text and simple language, the UX needs revision.
+    applies_to: [onboarding, alerts, marketplace_checkout]
+
+  - name: latam_payments_only
+    rule: >
+      Never integrate Stripe/PayPal as primary. Use latam_payments SDK:
+      OnvoPay/Tilopay (CR/PA), Wompi (CO), SPEI/OXXO (MX), PIX (BR).
+    reference: "altrupets-monorepo/apps/mobile/lib/core/payments/latam_payments.dart"
+
+  - name: aeroponic_not_hydroponic
+    rule: >
+      The product uses nebuponía (aeroponics by nebulization), NOT hydroponics.
+      Never refer to the system as hydroponic in code, UI, docs, or comments.
+
+  - name: semver_gate
+    rule: >
+      Do not merge T1 features until all T0 issues are Done.
+      Do not merge T2 features until all T1 issues are Done.
+      Exceptions require explicit product owner approval.
+
+  - name: linear_taxonomy
+    rule: >
+      All Linear issues must have at minimum: Type label + Size label (from
+      AGENTS.md taxonomy). T0-T3 tier labels are additive, not replacement.
+    reference: "AGENTS.md section 'Linear MCP — Taxonomía Obligatoria de Labels'"
+
+# ─── CODEBASE MAP ─────────────────────────────────────────────────────────────
+# Quick reference for where to make changes per domain.
+
+codebase_map:
+  billing: "apps/backend/lib/src/billing/ (NEW)"
+  flutter_screens: "apps/vertivo_flutter/lib/screens/"
+  flutter_router: "apps/vertivo_flutter/lib/router.dart (NEW)"
+  flutter_providers: "apps/vertivo_flutter/lib/providers/ (NEW)"
+  flutter_theme: "apps/vertivo_flutter/lib/core/theme/"
+  serverpod_endpoints: "apps/backend/lib/src/"
+  serverpod_protocols: "apps/backend/lib/src/*/protocol/"
+  mqtt_ingestion: "apps/backend/lib/src/greenhouses/sensor_ingestion_service.dart"
+  mqtt_topics: "apps/backend/lib/src/data/data_sources/mqtt_topics.dart"
+  dashboard_pages: "apps/dashboard/lib/pages/"
+  dashboard_components: "apps/dashboard/lib/components/"
+  dashboard_js: "apps/dashboard/web/dashboard.js"
+  raspberry_orchestrators: "apps/raspberry/src/orchestrators/"
+  raspberry_sensors: "apps/raspberry/src/hardware/sensors/atlas_scientific/"
+  raspberry_monitors: "apps/raspberry/src/monitors/atlas_scientific/"
+  raspberry_mqtt: "apps/raspberry/src/networking/mqtt.py"
+  raspberry_config: "apps/raspberry/config/defaults/"
+  raspberry_actuators: "apps/raspberry/src/actuators/ (NEW — T2.1)"
+  infrastructure: "infrastructure/"
+  k8s: "k8s/"
+  terraform: "infrastructure/terraform/"
+  srd: "srd/"
+
+# ─── LINEAR PROJECT REFERENCE ────────────────────────────────────────────────
+
+linear:
+  project: "Vertivo → [MRR target]"
+  project_url: "https://linear.app/vertivolatam/project/vertivo-dollar500k-mrr-9b6ce5d7223c"
+  team: Vertivolatam
+  team_key: VRTV
+  issues_range: "VRTV-5 to VRTV-32"
+  cycles:
+    cycle_1: { number: 1, tier: T0, dates: "Mar 16 - Apr 13, 2026" }
+    cycle_2: { number: 2, tier: T0, dates: "Apr 20 - May 18, 2026" }
+    cycle_3: { number: 3, tier: T0, dates: "May 25 - Jun 22, 2026" }
+    cycle_4: { number: 4, tier: T1, dates: "Jun 29 - Jul 27, 2026" }
+    cycle_5: { number: 5, tier: T1, dates: "Aug 3 - Aug 31, 2026" }
+    cycle_6: { number: 6, tier: T2, dates: "Sep 7 - Oct 5, 2026" }
+    cycle_7: { number: 7, tier: T2, dates: "Oct 12 - Nov 9, 2026" }
+    cycle_8: { number: 8, tier: T3, dates: "Nov 16 - Dec 14, 2026" }
+  milestones:
+    v0.2.0: "Billing + App MVP (T0)"
+    v0.3.0: "Scale & Growth (T1)"
+    v0.4.0: "Differentiation (T2)"
+    v1.0.0: "Full Vision (T3)"

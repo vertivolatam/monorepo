@@ -1,0 +1,9 @@
+Sensor;Default I2C Address
+pH;0x63
+Conductivity (EC);0x64
+Dissolved Oxygen (DO);0x61
+ORP;0x62
+RTD Temperature;0x66
+CO2;0x67
+Humidity;0x6F
+Total Dissolved Solids (TDS);0x68

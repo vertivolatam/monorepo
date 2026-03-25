@@ -1,0 +1,16 @@
+.venv/
+.cache/
+.vscode/
+.vscode-server/
+__pycache__/
+*.pyc
+tests/
+docs/
+*.md
+*.ps1
+*.xlsx
+.git/
+.gitignore
+.pytest_cache/
+.ruff_cache/
+htmlcov/

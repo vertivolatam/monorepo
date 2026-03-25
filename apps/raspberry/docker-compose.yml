@@ -1,0 +1,26 @@
+# Vertivo Raspberry Pi — Balena docker-compose
+# ==============================================
+# Single-service container for the monitoring orchestrator.
+# Balena uses this to build and deploy to the fleet.
+# https://docs.balena.io/learn/develop/multicontainer/
+
+version: "2.1"
+
+services:
+  orchestrator:
+    build: .
+    privileged: true
+    restart: always
+    labels:
+      io.balena.features.dbus: "1"
+      io.balena.features.kernel-modules: "1"
+    devices:
+      - "/dev/i2c-1:/dev/i2c-1"
+      - "/dev/mem:/dev/mem"
+    environment:
+      - VERTIVO_ORCHESTRATOR_MODE=indoor
+      - VERTIVO_USER_ID=1
+      - VERTIVO_GREENHOUSE_ID=1
+      - VERTIVO_MQTT_ENDPOINT=localhost
+      - VERTIVO_MQTT_PORT=1883
+      - VERTIVO_DEBUG=false

@@ -1,0 +1,16 @@
+class: TraceabilityRecord
+table: traceability_records
+fields:
+  greenhouseId: int
+  batchId: String
+  eventType: String  # planting, germination, transplant, fertilization, irrigation, pesticide_application, pruning, inspection, disease_detected, treatment_applied, harvest, washing, packaging, storage, transport, quality_check, certification, sale
+  description: String
+  performedBy: String?  # userId
+  metadata: String?  # JSON string for flexible event-specific data
+  recordHash: String  # SHA256 hash of this record
+  previousHash: String  # SHA256 hash of previous record in chain (genesis: "0")
+  sequenceNumber: int
+  isVerified: bool
+  verifiedAt: DateTime?
+  verifiedBy: String?
+  createdAt: DateTime

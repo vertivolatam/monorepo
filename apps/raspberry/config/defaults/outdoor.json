@@ -1,0 +1,8 @@
+{
+    "temperature_input_lower_bound": 15,
+    "temperature_input_upper_bound": 30,
+    "humidity_input_lower_bound": 30,
+    "humidity_input_upper_bound": 70,
+    "light_intensity_input_lower_bound": 10000,
+    "light_intensity_input_upper_bound": 50000
+}

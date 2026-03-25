@@ -1,0 +1,20 @@
+class: QualityPrediction
+table: quality_predictions
+fields:
+  harvestPredictionId: int
+  plantId: int?
+  greenhouseId: int
+  vitaminAScore: double?
+  vitaminCScore: double?
+  vitaminKScore: double?
+  ironScore: double?
+  calciumScore: double?
+  potassiumScore: double?
+  overallNutritionalScore: double  # 0.0–100.0
+  appearanceColorScore: double?  # 0.0–10.0
+  appearanceSizeScore: double?  # 0.0–10.0
+  appearanceUniformityScore: double?  # 0.0–10.0
+  overallAppearanceScore: double  # 0.0–10.0
+  shelfLifeDays: int?
+  modelVersion: String?
+  createdAt: DateTime

@@ -1,0 +1,8 @@
+{
+    "moisture_input_lower_bound": 20,
+    "moisture_input_upper_bound": 60,
+    "ph_input_lower_bound": 6.0,
+    "ph_input_upper_bound": 7.5,
+    "nutrient_input_lower_bound": 500,
+    "nutrient_input_upper_bound": 1500
+}

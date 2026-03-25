@@ -1,0 +1,16 @@
+class: ComplianceTemplate
+table: compliance_templates
+fields:
+  standardCode: String  # ISO_22000, SENASA, ANVISA, GLOBAL_GAP, USDA_ORGANIC, EU_ORGANIC, HACCP, BPA, BPM, JAS, IFOAM, FAIR_TRADE, RAINFOREST_ALLIANCE, SQF, BRC, IFS, FSSC_22000, TESCO_NURTURE, LEAF_MARQUE, PRIMUS_GFS
+  standardName: String
+  version: String
+  region: String  # LATAM, EU, US, GLOBAL, BR, AR, CL, MX, CO, PE
+  category: String  # food_safety, organic, sustainability, quality, traceability, environmental
+  requiredEventTypes: List<String>  # traceability event types that must be present
+  requiredDocuments: List<String>?
+  validationRules: String?  # JSON with validation criteria
+  isActive: bool
+  effectiveFrom: DateTime
+  expiresAt: DateTime?
+  createdAt: DateTime
+  updatedAt: DateTime

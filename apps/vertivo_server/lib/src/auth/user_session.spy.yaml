@@ -1,0 +1,16 @@
+class: UserSession
+table: user_sessions
+fields:
+  userId: String
+  deviceId: String
+  deviceName: String?
+  deviceType: String?  # mobile, desktop, tablet, web
+  ipAddress: String?
+  userAgent: String?
+  accessToken: String
+  refreshToken: String
+  securityLevel: String  # standard, elevated, maximum
+  isActive: bool
+  expiresAt: DateTime
+  lastActivityAt: DateTime
+  createdAt: DateTime

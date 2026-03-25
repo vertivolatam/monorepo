@@ -1,0 +1,618 @@
+# ============================================================
+# Vertivo — Synthetic Personas
+# ============================================================
+# 10 personas spanning residential, commercial, industrial,
+# expert, and ecosystem roles. Each persona has a 6-month
+# lifecycle, wallet profile, and churn risk moments.
+#
+# Revenue allocation: all persona revenue% must sum to ~100%
+# User allocation: all persona user% must sum to ~100%
+# ============================================================
+
+personas:
+
+  # ── RESIDENTIAL SEGMENT ────────────────────────────────
+
+  - id: maria-urban-mom
+    name: "María — La Mamá Urbana Consciente"
+    segment: residential
+    plan: basic
+    archetype: "Health-conscious urban mother"
+    age: 34
+    location: "San José, Costa Rica"
+    occupation: "Marketing manager at a mid-size agency"
+    household: "Married, 2 kids (6 and 9)"
+    tech_savviness: "Medium — uses iPhone daily, comfortable with apps, not technical"
+
+    motivation: >
+      Wants her kids to eat pesticide-free herbs and greens. Tired of overpriced
+      organic produce at AutoMercado. Saw a friend's Vertivo on Instagram and
+      thought "my kids would love watching basil grow."
+
+    pain_before_vertivo: >
+      Tried a windowsill herb garden twice — both died. Doesn't have outdoor space
+      (apartment in Escazú). No time to research hydroponics. Doesn't trust
+      supermarket "organic" labels.
+
+    wallet:
+      hardware_investment: REDACTED
+      saas_monthly: REDACTED
+      marketplace_monthly: REDACTED
+      annual_value: REDACTED
+      payment_method: REDACTED
+      price_sensitivity: REDACTED
+
+    lifecycle:
+      month_0: "Buys Vertivo Home after seeing friend's Instagram story. Excited but nervous about the price."
+      month_1: "Sets up with help from onboarding video. Plants basil, cilantro, lettuce. Kids name the plants."
+      month_2: "First harvest — makes pesto with her kids. Takes photos, shares on WhatsApp group. Peak emotional moment."
+      month_3: "Subscribes to Caja Básica ($25/mo) after running low on nutrients. Converts from free trial to Basic SaaS."
+      month_4: "Gets pH alert at 2am — robot auto-corrected. Tells husband 'this thing is amazing.' Refers her sister."
+      month_5: "Starts growing cherry tomatoes. Orders seeds on-demand. Active marketplace buyer."
+      month_6: "Stable monthly user. SaaS + Caja subscriber. Shares harvest photos monthly. Low churn risk."
+
+    scores:
+      revenue_impact: 6     # /10 — high volume persona, moderate individual spend
+      engagement: 8          # /10 — daily app checks, photo sharing
+      virality: 9            # /10 — primary referral engine (WhatsApp, Instagram)
+      churn_risk: 3          # /10 — emotional attachment + kids involved
+
+    churn_risk_moments:
+      - trigger: "First plant dies within 30 days"
+        severity: critical
+        mitigation: "Proactive push notification with rescue instructions + free replacement seedlings"
+      - trigger: "App feels confusing or overwhelming"
+        severity: high
+        mitigation: "Simplified 'Mom mode' dashboard — only show what matters (water level, next harvest, alerts)"
+      - trigger: "Husband questions the [precio redactado] expense"
+        severity: medium
+        mitigation: "Monthly ROI summary: 'This month you harvested $X worth of organic produce'"
+
+    user_percent: REDACTED
+    revenue_percent: REDACTED
+
+  # ──────────────────────────────────────────────────────
+
+  - id: carlos-tech-enthusiast
+    name: "Carlos — El Techie Entusiasta"
+    segment: residential
+    plan: pro
+    archetype: "Early adopter, IoT hobbyist"
+    age: 28
+    location: "Medellín, Colombia"
+    occupation: "Software developer at a fintech startup"
+    household: "Single, rents an apartment in El Poblado"
+    tech_savviness: "Very high — builds home automation with Home Assistant, has a 3D printer"
+
+    motivation: >
+      Fascinated by the IoT + hydroponics intersection. Wants to optimize his
+      grow setup with data. Bought it partly as a cool tech project, partly because
+      he genuinely wants fresh microgreens for his smoothies.
+
+    pain_before_vertivo: >
+      Built a DIY Arduino hydroponic setup — worked for 2 months, then the pH sensor
+      drifted and everything died. Doesn't want to maintain hardware himself anymore.
+      Wants a polished system that he can still geek out on via API.
+
+    wallet:
+      hardware_investment: REDACTED
+      saas_monthly: REDACTED
+      marketplace_monthly: REDACTED
+      annual_value: REDACTED
+      payment_method: REDACTED
+      price_sensitivity: REDACTED
+
+    lifecycle:
+      month_0: "Pre-orders after reading the tech specs. Immediately asks about API documentation."
+      month_1: "Sets up, connects to Home Assistant. Starts logging sensor data to Grafana."
+      month_2: "First harvest (microgreens in 14 days). Posts a detailed review on Reddit r/hydroponics."
+      month_3: "Upgrades to Pro for AI predictions. Experiments with custom growth recipes."
+      month_4: "Refers 3 friends from his dev community. Requests API access (available in Commercial but he stays Pro)."
+      month_5: "Adds second module. Grows jalapeños. Active in community forums."
+      month_6: "Power user. Provides detailed bug reports. Potential beta tester for new features."
+
+    scores:
+      revenue_impact: 5
+      engagement: 10
+      virality: 7      # Tech community amplifier, but niche audience
+      churn_risk: 2    # Deeply invested in the tech ecosystem
+
+    churn_risk_moments:
+      - trigger: "API not available on Pro plan"
+        severity: high
+        mitigation: "Commercial plan includes API — but consider a 'Developer' add-on for Pro users"
+      - trigger: "Sensor data feels inaccurate or inconsistent"
+        severity: critical
+        mitigation: "Transparent calibration tools + raw data export. Techies tolerate complexity, not opacity."
+      - trigger: "Firmware update breaks his Home Assistant integration"
+        severity: high
+        mitigation: "Changelog + rollback option + stable MQTT topic schema"
+
+    user_percent: REDACTED
+    revenue_percent: REDACTED
+
+  # ──────────────────────────────────────────────────────
+
+  - id: abuela-rosa
+    name: "Rosa — La Abuela Jardinera"
+    segment: residential
+    plan: basic
+    archetype: "Retired gardener, low-tech but passionate"
+    age: 63
+    location: "Heredia, Costa Rica"
+    occupation: "Retired teacher"
+    household: "Lives alone, children visit weekends"
+    tech_savviness: "Low — uses WhatsApp and Facebook. Struggles with new apps."
+
+    motivation: >
+      Has gardened her whole life but arthritis makes outdoor gardening painful.
+      Her son bought her a Vertivo Home for Christmas. She's skeptical but
+      curious. Misses the daily ritual of tending plants.
+
+    pain_before_vertivo: >
+      Outdoor garden was overtaken by insects. Kneeling hurts. Can't lift heavy
+      soil bags anymore. Feels disconnected from nature since she stopped gardening.
+
+    wallet:
+      hardware_investment: REDACTED
+      saas_monthly: REDACTED
+      marketplace_monthly: REDACTED
+      annual_value: REDACTED
+      payment_method: REDACTED
+      price_sensitivity: REDACTED
+
+    lifecycle:
+      month_0: "Receives Vertivo as gift. Son does initial setup. She's cautious but intrigued."
+      month_1: "Starts checking plants daily. Calls son when she gets push notifications. Learns to use the app basics."
+      month_2: "First harvest — culantro and chile dulce. Cries a little. Calls her daughter in Panama."
+      month_3: "Son subscribes her to Caja Básica. She tells everyone at church about her 'little garden.'"
+      month_4: "Becomes surprisingly active — checks app 3x/day. Lowest churn risk in the entire base."
+      month_5: "Daughter in Panama buys a Vertivo. Referral complete."
+      month_6: "Emotional anchor user. Zero churn risk. Her story is perfect for video testimonial."
+
+    scores:
+      revenue_impact: 3
+      engagement: 7
+      virality: 8       # Word-of-mouth queen — church, family, neighborhood
+      churn_risk: 1     # Emotional attachment is extreme. She will never cancel.
+
+    churn_risk_moments:
+      - trigger: "App is too complex for her"
+        severity: critical
+        mitigation: "Accessibility mode: large fonts, simplified dashboard, voice notifications via WhatsApp"
+      - trigger: "Push notification is alarming ('CRITICAL: pH out of range')"
+        severity: high
+        mitigation: "Gentle language mode: 'Your plants need a little attention' + auto-resolution by robot"
+      - trigger: "Son stops paying the subscription"
+        severity: medium
+        mitigation: "Family plan or gift subscription option"
+
+    user_percent: REDACTED
+    revenue_percent: REDACTED
+
+  # ── COMMERCIAL SEGMENT ─────────────────────────────────
+
+  - id: diego-restaurant-owner
+    name: "Diego — El Dueño de Restaurante Farm-to-Table"
+    segment: commercial
+    plan: commercial
+    archetype: "SMB owner, cost-conscious but quality-driven"
+    age: 41
+    location: "Ciudad de Panamá, Panamá"
+    occupation: "Owner of a 40-seat restaurant in Casco Viejo"
+    household: "Married, 1 kid"
+    tech_savviness: "Medium — uses POS system daily, comfortable with business dashboards"
+
+    motivation: >
+      Spends $800/month on herbs and microgreens from suppliers with inconsistent
+      quality. Wants "harvested today, served tonight" branding for his restaurant.
+      Saw a competitor's Instagram post about their in-house vertical farm.
+
+    pain_before_vertivo: >
+      Suppliers deliver wilted herbs. Prices fluctuate 30% seasonally. Can't guarantee
+      "organic" to customers. Kitchen space is limited — needs a compact solution.
+
+    wallet:
+      hardware_investment: REDACTED
+      saas_monthly: REDACTED
+      marketplace_monthly: REDACTED
+      annual_value: REDACTED
+      payment_method: REDACTED
+      price_sensitivity: REDACTED
+
+    lifecycle:
+      month_0: "Buys Vertivo Pro after ROI consultation with sales team. Sets up in kitchen storage room."
+      month_1: "Grows basil, cilantro, microgreens, edible flowers. Trains kitchen staff on harvesting."
+      month_2: "First full month of self-supply. Cuts herb supplier spend by 40%. Adds 'Grown In-House' to menu."
+      month_3: "Subscribes to Caja Comercial. Uses API to connect harvest data to his POS for menu planning."
+      month_4: "Local food blogger features his 'farm-to-table' kitchen. Instagram followers +25%."
+      month_5: "Considers adding a second Vertivo Pro for dining room display (customer-visible growing)."
+      month_6: "Stable commercial user. Refers two restaurant owner friends. Requests branded partnership."
+
+    scores:
+      revenue_impact: 9
+      engagement: 7
+      virality: 6       # B2B referral is slower but higher value
+      churn_risk: 3     # ROI is tangible and visible
+
+    churn_risk_moments:
+      - trigger: "ROI not visible within 3 months"
+        severity: critical
+        mitigation: "Automated monthly ROI report: 'You saved $X vs. supplier costs this month'"
+      - trigger: "System downtime during dinner service"
+        severity: critical
+        mitigation: "Commercial SLA: 99.5% uptime, priority support, local spare parts inventory"
+      - trigger: "Staff doesn't know how to use the system"
+        severity: high
+        mitigation: "Multi-user accounts with role-based access. 'Kitchen Staff' simplified view."
+
+    user_percent: REDACTED
+    revenue_percent: REDACTED
+
+  # ──────────────────────────────────────────────────────
+
+  - id: valentina-wellness-studio
+    name: "Valentina — La Emprendedora de Bienestar"
+    segment: commercial
+    plan: commercial
+    archetype: "Wellness business owner, brand-conscious"
+    age: 36
+    location: "Bogotá, Colombia"
+    occupation: "Owns a yoga studio + juice bar"
+    household: "Single, lives with her dog"
+    tech_savviness: "Medium — manages social media for her business, uses Canva and Instagram professionally"
+
+    motivation: >
+      Wants fresh herbs and microgreens for her juice bar smoothies. Sees the
+      Vertivo as a brand differentiator — customers can see their smoothie
+      ingredients growing while they wait. Marketing + product in one.
+
+    pain_before_vertivo: >
+      Buys organic produce at a premium from Corabastos. Quality varies wildly.
+      Refrigeration costs are high for herbs that wilt in 2 days. Can't guarantee
+      "truly organic" to her health-conscious clientele.
+
+    wallet:
+      hardware_investment: REDACTED
+      saas_monthly: REDACTED
+      marketplace_monthly: REDACTED
+      annual_value: REDACTED
+      payment_method: REDACTED
+      price_sensitivity: REDACTED
+
+    lifecycle:
+      month_0: "Buys Vertivo Pro for her juice bar's lobby. Instagram post gets 500 likes."
+      month_1: "Customers love watching the greens grow. 'Harvested-in-front-of-you' becomes her signature."
+      month_2: "Reduces organic herb costs by 35%. Adds 'Vertivo-powered' badge to her menu."
+      month_3: "Subscribes to Caja Comercial. Starts growing wheatgrass and mint for signature juices."
+      month_4: "Featured in a local wellness magazine. Tags Vertivo. Co-marketing opportunity."
+      month_5: "Two yoga studio friends buy Vertivo Pro. Referral rate is high in her network."
+      month_6: "Brand ambassador potential. Requests co-branded content. Very low churn."
+
+    scores:
+      revenue_impact: 7
+      engagement: 8
+      virality: 9        # Wellness community is tight-knit and aspirational
+      churn_risk: 2
+
+    churn_risk_moments:
+      - trigger: "The Vertivo doesn't look aesthetic enough for her studio"
+        severity: high
+        mitigation: "Premium finish options, customizable LED colors, branded panels"
+      - trigger: "Customers ask questions she can't answer about the tech"
+        severity: medium
+        mitigation: "QR code on device → customer-facing 'How it works' landing page"
+      - trigger: "Herb variety is too limited"
+        severity: medium
+        mitigation: "Expand seed catalog: wheatgrass, mint, lemongrass, edible flowers"
+
+    user_percent: REDACTED
+    revenue_percent: REDACTED
+
+  # ── INDUSTRIAL SEGMENT ─────────────────────────────────
+
+  - id: roberto-agribusiness
+    name: "Roberto — El Director de Operaciones Agroindustrial"
+    segment: industrial
+    plan: industrial
+    archetype: "Corporate decision maker, data-driven"
+    age: 48
+    location: "Ciudad de México, México"
+    occupation: "COO at a regional restaurant chain (15 locations)"
+    household: "Married, 3 kids (teenagers)"
+    tech_savviness: "High for business tools — uses ERP, BI dashboards, procurement systems"
+
+    motivation: >
+      Centralize herb and microgreen production for 15 restaurant locations.
+      Current supplier contracts cost $12,000/month with quality inconsistencies.
+      Board wants vertical integration of fresh produce supply chain.
+
+    pain_before_vertivo: >
+      Managing 6 different suppliers across 3 cities. Quality audits are manual.
+      Food safety compliance (SENASA/COFEPRIS) documentation is a nightmare.
+      Waste rate is 22% on fresh herbs — they wilt before reaching locations.
+
+    wallet:
+      hardware_investment: REDACTED
+      saas_monthly: REDACTED
+      marketplace_monthly: REDACTED
+      annual_value: REDACTED
+      payment_method: REDACTED
+      price_sensitivity: REDACTED
+
+    lifecycle:
+      month_0: "Pilot approved for 1 location in CDMX. Vertivo Scale installed with white-glove onboarding."
+      month_1: "Integration with ERP (SAP) via Commercial API. Automated procurement dashboards."
+      month_2: "Pilot shows 45% cost reduction vs. supplier. Waste drops from 22% to 3%."
+      month_3: "Board approves rollout to 4 locations. Orders 3 more Vertivo Scale units."
+      month_4: "Traceability reports generated for COFEPRIS compliance. Audit passes first try."
+      month_5: "Data from enjambre feeds into menu optimization. Predictive harvesting aligned to demand."
+      month_6: "Full rollout. Requests dedicated account manager. Explores white-label for their own franchise brand."
+
+    scores:
+      revenue_impact: 10
+      engagement: 6
+      virality: 4        # B2B sales cycle, not social sharing
+      churn_risk: 2      # Deep operational integration = extreme lock-in
+
+    churn_risk_moments:
+      - trigger: "ERP/API integration fails or is unstable"
+        severity: critical
+        mitigation: "Dedicated integration engineer during onboarding. Webhook monitoring + alerts."
+      - trigger: "Compliance reports don't meet local regulatory format"
+        severity: critical
+        mitigation: "Country-specific compliance templates (COFEPRIS, SENASA, INVIMA, GlobalGAP)"
+      - trigger: "ROI doesn't materialize in pilot phase"
+        severity: critical
+        mitigation: "90-day ROI guarantee with performance benchmarks in the contract"
+
+    user_percent: REDACTED
+    revenue_percent: REDACTED
+
+  # ── EXPERT SEGMENT ─────────────────────────────────────
+
+  - id: prof-lucia-agronoma
+    name: "Lucía — La Ingeniera Agrónoma Consultora"
+    segment: expert
+    plan: commercial  # Uses Commercial for API + fleet view across her clients
+    archetype: "Domain expert, consultant, multiplier"
+    age: 39
+    location: "Cartago, Costa Rica"
+    occupation: "Independent agronomist, consults for 12 farms and urban growers"
+    household: "Married, 1 kid"
+    tech_savviness: "High in agronomy software, medium in general tech"
+
+    motivation: >
+      Manages 12 clients' growing operations remotely. Currently visits each
+      client weekly for pH checks and nutrient adjustments. Vertivo could let
+      her monitor all clients from one dashboard and only visit when truly needed.
+
+    pain_before_vertivo: >
+      Spends 60% of her time driving between client sites for routine checks.
+      Can't scale beyond 12 clients without hiring. Manual data collection
+      means she can't do trend analysis across her portfolio.
+
+    wallet:
+      hardware_investment: REDACTED
+      saas_monthly: REDACTED
+      marketplace_monthly: REDACTED
+      annual_value: REDACTED
+      payment_method: REDACTED
+      price_sensitivity: REDACTED
+
+    lifecycle:
+      month_0: "Recommends Vertivo to 3 existing clients. Gets Commercial plan for fleet monitoring."
+      month_1: "Monitors 3 client greenhouses remotely. Cuts weekly visits to biweekly."
+      month_2: "Identifies pH drift pattern across clients — recommends batch nutrient adjustment. Clients love it."
+      month_3: "Adds 4 more clients to her Vertivo fleet. Each client buys their own device."
+      month_4: "Uses AI predictions to advise on harvest timing. Her accuracy improves 30%."
+      month_5: "Writes a case study for her university alumni network. Refers 5 new device purchases."
+      month_6: "Managing 10+ Vertivo clients. Requests 'Agronomist Dashboard' with cross-client analytics."
+
+    scores:
+      revenue_impact: 8      # Low direct spend, but each of her clients buys a device + SaaS
+      engagement: 9
+      virality: 10           # Every client she adds = 1 device + 1 SaaS subscriber
+      churn_risk: 2
+
+    churn_risk_moments:
+      - trigger: "Can't see all client greenhouses in one view"
+        severity: critical
+        mitigation: "Fleet management dashboard is essential for this persona. Must ship early."
+      - trigger: "Recommendations from robot agrónomo contradict her expertise"
+        severity: high
+        mitigation: "Expert mode: robot suggests, agronomist overrides. Show confidence scores."
+      - trigger: "Clients don't renew SaaS because they think 'my agronomist already monitors me'"
+        severity: medium
+        mitigation: "Position SaaS as 'the tool your agronomist uses' — not a replacement"
+
+    user_percent: REDACTED
+    revenue_percent: REDACTED
+
+  # ── ECOSYSTEM ROLES ────────────────────────────────────
+
+  - id: andres-referral-champion
+    name: "Andrés — El Influencer de Barrio"
+    segment: residential
+    plan: pro
+    archetype: "Community connector, social proof generator"
+    age: 31
+    location: "Envigado, Colombia"
+    occupation: "Architect, part-time content creator (15K Instagram followers)"
+    household: "Lives with girlfriend"
+    tech_savviness: "High — curates content, understands engagement metrics"
+
+    motivation: >
+      Saw Vertivo at a friend's house. Sees content potential: "urban farming
+      aesthetic" for his architecture + lifestyle Instagram. Wants to be the
+      local Vertivo authority in his community.
+
+    pain_before_vertivo: >
+      Balcony garden keeps dying from Medellín's humidity. Wants the aesthetic
+      of fresh herbs without the maintenance headache.
+
+    wallet:
+      hardware_investment: REDACTED
+      saas_monthly: REDACTED
+      marketplace_monthly: REDACTED
+      annual_value: REDACTED
+      payment_method: REDACTED
+      price_sensitivity: REDACTED
+
+    lifecycle:
+      month_0: "Buys Vertivo Home. Immediately starts documenting the unboxing on Instagram Stories."
+      month_1: "Posts weekly 'grow updates.' Followers ask where to buy. 8 DMs per week."
+      month_2: "First harvest → Reel gets 12K views. Vertivo reposts. 3 followers buy devices."
+      month_3: "Becomes unofficial brand ambassador. Requests referral code."
+      month_4: "Hosts a 'Vertivo cooking night' at his apartment. 6 attendees, 2 convert."
+      month_5: "Upgraded to Pro. Exploring advanced analytics for content ('data-driven gardening')."
+      month_6: "Top referrer in Colombia. 11 devices sold through his network."
+
+    scores:
+      revenue_impact: 4
+      engagement: 10
+      virality: 10       # Entire value is in acquisition multiplier
+      churn_risk: 3      # Will leave if content engagement drops
+
+    churn_risk_moments:
+      - trigger: "No referral incentive program exists"
+        severity: critical
+        mitigation: "Referral program: credit toward SaaS or marketplace for each successful referral"
+      - trigger: "Content creation tools (shareable harvest cards, growth timelapse) are missing"
+        severity: high
+        mitigation: "Built-in 'share your harvest' feature with branded templates"
+      - trigger: "His followers can't easily buy — purchase flow is complex"
+        severity: high
+        mitigation: "Referral links with pre-filled checkout. Mobile-first purchase flow."
+
+    user_percent: REDACTED
+    revenue_percent: REDACTED
+
+  # ──────────────────────────────────────────────────────
+
+  - id: supplier-partner
+    name: "Proveedor Asociado — El Partner de Insumos"
+    segment: ecosystem
+    plan: none  # Revenue share, not SaaS subscriber
+    archetype: "Third-party supplier on the marketplace"
+    age: null
+    location: "Various — LATAM"
+    occupation: "Seed companies, organic nutrient manufacturers, equipment suppliers"
+    household: null
+    tech_savviness: "Variable"
+
+    motivation: >
+      Access Vertivo's captive user base. Every Vertivo owner needs seeds,
+      nutrients, and replacements — and the robot can recommend their products.
+
+    pain_before_vertivo: >
+      Hard to reach urban growers. Fragmented market. No data on what growers
+      actually need or when they need it.
+
+    wallet:
+      hardware_investment: REDACTED
+      saas_monthly: REDACTED
+      marketplace_monthly: REDACTED
+      annual_value: REDACTED
+      payment_method: REDACTED
+      price_sensitivity: REDACTED
+
+    lifecycle:
+      month_0: "Onboarded as 3P supplier. Lists 15 SKUs on marketplace."
+      month_1: "Robot agrónomo starts recommending their seeds to users in matching climate zones."
+      month_2: "First 50 orders. Adjusts pricing based on platform data."
+      month_3: "Vertivo data shows their organic nutrient has 12% better yield than competitors."
+      month_4: "Gets featured as 'Recommended Supplier' badge. Sales 3x."
+      month_5: "Requests API for inventory sync. Becomes integrated partner."
+      month_6: "Stable revenue channel. Low maintenance for Vertivo — supplier handles fulfillment."
+
+    scores:
+      revenue_impact: 7      # Enables marketplace GMV
+      engagement: 5
+      virality: 2
+      churn_risk: 4          # Will leave if volume doesn't justify commission
+
+    churn_risk_moments:
+      - trigger: "Sales volume doesn't justify 25% commission"
+        severity: critical
+        mitigation: "Tiered commission: 25% → 20% → 15% based on volume milestones"
+      - trigger: "No visibility into what products users need"
+        severity: high
+        mitigation: "Supplier dashboard: demand signals, trending SKUs, restock alerts"
+      - trigger: "Competitor supplier gets 'Recommended' badge"
+        severity: medium
+        mitigation: "Transparent ranking criteria: quality, price, fulfillment speed, yield data"
+
+    user_percent: REDACTED
+    revenue_percent: REDACTED
+
+  # ──────────────────────────────────────────────────────
+
+  - id: data-buyer
+    name: "AgriData Corp — El Comprador de Datos del Enjambre"
+    segment: b2b
+    plan: custom  # Enterprise data contracts
+    archetype: "Agricultural data consumer"
+    age: null
+    location: "Various — LATAM + Global"
+    occupation: "AgTech companies, universities, government agriculture ministries, seed R&D labs"
+    household: null
+    tech_savviness: "High — data engineers, agronomists with analytics capabilities"
+
+    motivation: >
+      Vertivo's enjambre generates granular, geo-tagged crop yield data across
+      LATAM that doesn't exist anywhere else. For a seed company, knowing that
+      basil variety X yields 23% more in Medellín's altitude than in San José
+      is worth millions in R&D savings.
+
+    pain_before_vertivo: >
+      Agricultural data in LATAM is fragmented, unreliable, or government-only.
+      Running field trials is expensive ($50K+ per crop per location). No
+      continuous monitoring data exists for urban micro-growing environments.
+
+    wallet:
+      hardware_investment: REDACTED
+      saas_monthly: REDACTED
+      marketplace_monthly: REDACTED
+      annual_value: REDACTED
+      payment_method: REDACTED
+      price_sensitivity: REDACTED
+
+    lifecycle:
+      month_0: "Discovers Vertivo's data offering at an AgTech conference. Requests sample dataset."
+      month_1: "Data quality review — validates against their own field trial results. Impressed."
+      month_2: "Signs 12-month contract for Enjambre Data API access to 3 crop species."
+      month_3: "Integrates data into their R&D pipeline. Identifies 2 growth pattern anomalies."
+      month_4: "Publishes a paper citing Vertivo data. Free credibility for Vertivo."
+      month_5: "Expands contract to 8 crop species. Requests custom data cuts."
+      month_6: "Stable enterprise customer. Low touch, high margin. Annual renewal expected."
+
+    scores:
+      revenue_impact: 8
+      engagement: 3
+      virality: 3        # Academic citations and conference mentions
+      churn_risk: 3      # Switching cost is low, but data uniqueness is high
+
+    churn_risk_moments:
+      - trigger: "Data coverage (devices per region) is too sparse for statistical significance"
+        severity: critical
+        mitigation: "Minimum viable density: 50+ devices per metro area before selling data for that region"
+      - trigger: "Anonymization strips too much useful context"
+        severity: high
+        mitigation: "Tiered data access: anonymized (standard) vs. enriched (premium, with consent)"
+      - trigger: "Competitor builds a similar sensor network"
+        severity: long_term
+        mitigation: "Network effect moat: more devices = better data = better recommendations = more devices"
+
+    user_percent: REDACTED
+    revenue_percent: REDACTED
+
+# ============================================================
+# Allocation Summary
+# ============================================================
+# user_percent total: REDACTED
+#   (remaining 14% = inactive/churned/trial users not represented by active personas)
+#
+# revenue_percent total: REDACTED
+#   (remaining 2% = misc: late payments, one-off consulting, etc.)
+# ============================================================

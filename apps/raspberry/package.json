@@ -1,0 +1,19 @@
+{
+  "name": "raspberry",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'No build step for Python project'",
+    "dev": "python3 -m src.main --orchestrator-mode indoor --debug",
+    "simulate": "python3 -m src.main --orchestrator-mode indoor --simulate --debug",
+    "simulate:scenario": "python3 -m src.main --orchestrator-mode indoor --simulate --debug --scenario",
+    "simulate:list": "python3 -m src.main --orchestrator-mode indoor --list-scenarios",
+    "test": "python3 -m pytest tests/ -v",
+    "lint": "python3 -m ruff check src/ tests/ || python3 -m flake8 src/ tests/ || echo 'Install ruff or flake8 for linting'",
+    "format": "python3 -m ruff format src/ tests/ || python3 -m black src/ tests/ || echo 'Install ruff or black for formatting'",
+    "clean": "find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; rm -rf .pytest_cache htmlcov .ruff_cache",
+    "install-deps": "pip3 install -r requirements.txt",
+    "config-editor": "python3 src/config.py",
+    "docs": "cd docs && make html"
+  }
+}

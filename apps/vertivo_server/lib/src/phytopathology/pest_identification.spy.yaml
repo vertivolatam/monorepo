@@ -1,0 +1,15 @@
+class: PestIdentification
+table: pest_identifications
+fields:
+  plantId: int
+  greenhouseId: int
+  pestType: String  # aphids, spider_mites, whiteflies, thrips, caterpillars, fungus_gnats, mealybugs, scale_insects
+  confidence: double
+  infestationLevel: String  # low, moderate, high, severe
+  affectedPlantCount: int?
+  imageUrl: String?
+  aiModelVersion: String?
+  isConfirmed: bool
+  confirmedBy: String?
+  detectedAt: DateTime
+  createdAt: DateTime

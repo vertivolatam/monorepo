@@ -1,0 +1,13 @@
+class: NotificationDelivery
+table: notification_deliveries
+fields:
+  alertId: int
+  userId: String
+  channel: String  # push, email, sms, webhook, in_app, slack, whatsapp
+  status: String  # pending, sent, delivered, failed, read
+  sentAt: DateTime?
+  deliveredAt: DateTime?
+  readAt: DateTime?
+  failureReason: String?
+  retryCount: int
+  createdAt: DateTime
