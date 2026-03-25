@@ -96,8 +96,14 @@ Step 07 (EMQX Swarm Routing)        --> depends on 04 + 06
 
 ### Phase 0: Prerequisites (must complete before this epic)
 - [ ] T0: Billing/latam_payments (VRTV-5) — Revenue = $0 without it
-- [ ] T0: Flutter screens consuming 13 endpoints (VRTV-6, VRTV-7)
+- [ ] T0: Flutter core screens consuming 13 endpoints (VRTV-6)
+- [ ] T0: Greenhouse Configurator + Onboarding wizard (VRTV-7) — 5-step web wizard (top-of-funnel) + mobile onboarding (post-purchase), 10 unique screens sharing 3 steps, 6 new Serverpod endpoints. See `business-model/13-greenhouse-configurator.md`
 - [ ] T1: Push notifications (VRTV-9)
+
+**Note:** The Greenhouse Configurator serves dual purpose:
+1. **Pre-sale (web):** vertivo.com/configurar → lead generation + pre-order with 50% deposit
+2. **Post-sale (mobile):** device pairing QR → reuses Steps 1-3 → crop plan → first Caja order
+Both share Flutter widgets and Serverpod endpoints. Build once, deploy twice.
 
 ### Phase 1: Foundation (Steps 01 + 04 in parallel)
 - **Step 01**: Set up Vertivochain devnet (Madara) — adapted from keikolatam
