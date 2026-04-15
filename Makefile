@@ -232,6 +232,9 @@ bootstrap-dev-clean: ## Destroy + rebuild DEV from zero (nuclear option)
 # DEV - Minikube
 # ==========================================
 
+images-pull: ## Pull all third-party container images required by minikube/k8s (run after `podman system prune`)
+	podman pull gcr.io/k8s-minikube/kicbase:v0.0.50
+
 dev-minikube-deploy: ## Create minikube cluster (Podman + containerd)
 	@$(SCRIPTS_DIR)/start-minikube.sh
 
