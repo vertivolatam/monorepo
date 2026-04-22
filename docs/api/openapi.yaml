@@ -1,0 +1,74 @@
+# TODO: placeholder. El spec real se debe regenerar desde los endpoints Serverpod
+# en apps/vertivo_server/ (hoy hay ~13 endpoints declarados en código). Cuando
+# Serverpod no exponga OpenAPI nativo, generar con un script que introspeccione
+# los Endpoint<T> o documentar manualmente hasta que haya un gateway REST formal
+# (por ejemplo, para latam_payments/OnvoPay/Tilopay/Wompi, o para el stream MQTT
+# → REST para el dashboard).
+openapi: 3.1.0
+info:
+  title: Vertivo API
+  version: 0.0.1-placeholder
+  summary: Plataforma cloud-native de agricultura vertical autónoma por nebuponía para LATAM.
+  description: |
+    Placeholder OpenAPI spec. Aún no hay superficie REST pública estable.
+
+    Vertivo hoy expone ~13 endpoints Serverpod (Dart) en `apps/vertivo_server/`,
+    consumidos por el cliente Flutter vía el SDK generado por Serverpod — no vía
+    REST puro. Este spec debe regenerarse cuando:
+
+    - Se documente la primera API REST pública (por ejemplo, webhooks de
+      `latam_payments` de OnvoPay / Tilopay / Wompi).
+    - Se añada un gateway REST sobre los endpoints Serverpod para integraciones
+      externas (marketplace de insumos, partners agrónomos, etc.).
+    - Se exponga el flujo MQTT → REST para dashboards de terceros.
+  contact:
+    name: Vertivo
+    url: https://github.com/vertivolatam/monorepo
+  license:
+    name: BSL 1.1
+    url: https://github.com/vertivolatam/monorepo/blob/main/LICENSE.md
+servers:
+  - url: https://api.vertivo.example.com
+    description: Placeholder — el host real se define cuando se despliegue vertivo_server.
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Healthcheck del servicio
+      description: |
+        Devuelve 200 si el servidor Vertivo está vivo. Stub sin dependencias —
+        no toca postgres ni EMQX ni sensores.
+      tags:
+        - system
+      responses:
+        "200":
+          description: Servicio operativo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+              examples:
+                ok:
+                  value:
+                    status: ok
+                    version: 0.0.1-placeholder
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+            - degraded
+            - down
+          description: Estado general del servicio.
+        version:
+          type: string
+          description: Versión del servicio en ejecución.
+tags:
+  - name: system
+    description: Endpoints de salud y diagnóstico.
