@@ -164,63 +164,8 @@ setup: ## Check prerequisites
 # ==========================================
 
 bootstrap-dev: ## Full GitOps dev environment from scratch (one-liner)
-	@echo ""
-	@echo "$(BLUE)╔════════════════════════════════════════════════════════════════╗$(NC)"
-	@echo "$(BLUE)║  Vertivo DEV Bootstrap — GitOps + EMQX + Serverpod + Dashboard ║$(NC)"
-	@echo "$(BLUE)╚════════════════════════════════════════════════════════════════╝$(NC)"
-	@echo ""
-	@echo "$(RED)Phase 0/7: Cleaning previous environment...$(NC)"
-	@$(MAKE) dev-minikube-destroy 2>/dev/null || true
-	@echo ""
-	@echo "$(BLUE)Phase 1/7: Prerequisites check...$(NC)"
-	@$(MAKE) setup
-	@echo ""
-	@echo "$(BLUE)Phase 2/7: Minikube cluster (Podman + containerd)...$(NC)"
-	@$(MAKE) dev-minikube-deploy
-	@echo ""
-	@echo "$(BLUE)Phase 3/7: PostgreSQL 16 + pgvector...$(NC)"
-	@$(MAKE) dev-postgres-deploy
-	@echo ""
-	@echo "$(BLUE)Phase 4/7: EMQX MQTT Broker (Operator + Cluster)...$(NC)"
-	@$(MAKE) dev-emqx-deploy
-	@echo ""
-	@echo "$(BLUE)Phase 5/7: Serverpod backend (generate + build + deploy)...$(NC)"
-	@$(MAKE) dev-backend-generate 2>/dev/null || echo "$(YELLOW)  Serverpod generate skipped (install serverpod_cli: dart pub global activate serverpod_cli)$(NC)"
-	@$(MAKE) dev-backend-build
-	@$(MAKE) dev-backend-deploy
-	@echo ""
-	@echo "$(BLUE)Phase 6/7: ArgoCD GitOps...$(NC)"
-	@$(MAKE) dev-argocd-deploy 2>/dev/null || echo "$(YELLOW)  ArgoCD skipped (optional, deploy manually: make dev-argocd-deploy)$(NC)"
-	@echo ""
-	@echo "$(BLUE)Phase 7/7: Dashboard + Docs (Dart tooling)...$(NC)"
-	@$(MAKE) dev-dashboard-install 2>/dev/null || echo "$(YELLOW)  Dashboard install skipped (install jaspr_cli: dart pub global activate jaspr_cli)$(NC)"
-	@echo ""
-	@echo "$(GREEN)╔════════════════════════════════════════════════════════════════╗$(NC)"
-	@echo "$(GREEN)║  Vertivo DEV environment ready!                                ║$(NC)"
-	@echo "$(GREEN)╠════════════════════════════════════════════════════════════════╣$(NC)"
-	@echo "$(GREEN)║                                                                ║$(NC)"
-	@echo "$(GREEN)║  Services deployed in vertivo-dev namespace:                   ║$(NC)"
-	@echo "$(GREEN)║    PostgreSQL 16    — ClusterIP :5432                          ║$(NC)"
-	@echo "$(GREEN)║    EMQX 5.x        — ClusterIP :1883 (MQTT), :18083 (UI)      ║$(NC)"
-	@echo "$(GREEN)║    Serverpod        — ClusterIP :8080 (API), :8081 (Insights)  ║$(NC)"
-	@echo "$(GREEN)║    ArgoCD           — argocd namespace                         ║$(NC)"
-	@echo "$(GREEN)║                                                                ║$(NC)"
-	@echo "$(GREEN)╚════════════════════════════════════════════════════════════════╝$(NC)"
-	@echo ""
-	@echo "$(BLUE)Open services:$(NC)"
-	@echo "  make dev-all-port-forward  $(YELLOW)# Expose all ports at once (background)$(NC)"
-	@echo ""
-	@echo "$(BLUE)Or one-by-one:$(NC)"
-	@echo "  make dev-emqx-dashboard    $(YELLOW)# EMQX Dashboard   → localhost:18083 (admin/public)$(NC)"
-	@echo "  make dev-mqtt-forward      $(YELLOW)# MQTT Broker       → localhost:1883  (Raspberry Pi)$(NC)"
-	@echo "  make dev-postgres-port-forward $(YELLOW)# PostgreSQL    → localhost:5432  (DBeaver)$(NC)"
-	@echo "  make dev-dashboard-serve   $(YELLOW)# Jaspr Dashboard   → localhost:8080  (D3.js)$(NC)"
-	@echo "  make dev-flutter-start     $(YELLOW)# Flutter App       → mobile/desktop$(NC)"
-	@echo ""
-	@echo "$(BLUE)Monitor:$(NC)"
-	@echo "  make dev-all-status        $(YELLOW)# Show all pods, services, EMQX status$(NC)"
-	@echo "  make dev-argocd-password   $(YELLOW)# Get ArgoCD admin password$(NC)"
-	@echo ""
+	@chmod +x $(SCRIPTS_DIR)/bootstrap-dev.sh 2>/dev/null || true
+	@$(SCRIPTS_DIR)/bootstrap-dev.sh
 
 bootstrap-dev-clean: ## Destroy + rebuild DEV from zero (nuclear option)
 	@echo "$(RED)Nuclear clean: destroying everything and rebuilding...$(NC)"
