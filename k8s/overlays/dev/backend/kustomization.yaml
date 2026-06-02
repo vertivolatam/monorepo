@@ -17,3 +17,7 @@ patches:
       - op: add
         path: /spec/template/metadata/labels/environment
         value: dev
+  # Wire the in-cluster Postgres (postgres-service:5432) into Serverpod via
+  # SERVERPOD_DATABASE_* / SERVERPOD_PASSWORD_database env overrides. The baked
+  # config/development.yaml points at localhost, which crash-loops in-cluster.
+  - path: patch-db-wiring.yaml
