@@ -4,6 +4,8 @@ description: Vertivo IoT Admin Dashboard — Jaspr SSR + D3.js
 environment:
   sdk: ^3.8.0
 
+resolution: workspace
+
 dependencies:
   jaspr: ^0.22.1
   jaspr_router: ^0.6.0
