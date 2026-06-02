@@ -1,0 +1,45 @@
+# Build context for apps/vertivo_server/Dockerfile is the monorepo root, but the
+# Dockerfile only needs apps/vertivo_server + the root pubspec.lock. Keep the
+# context small by excluding everything else.
+
+# Node / JS tooling
+node_modules
+**/node_modules
+.turbo
+**/.turbo
+pnpm-lock.yaml
+package.json
+**/package.json
+
+# VCS / CI / editor / local
+.git
+.github
+.claude
+.env
+logs
+**/*.log
+
+# Dart/Flutter build artifacts (regenerated inside the image)
+**/.dart_tool
+**/build
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+
+# Other monorepo apps not part of the server build
+apps/mobile
+apps/raspberry
+apps/widgetbook
+apps/vertivo_flutter
+apps/vertivo_dashboard
+apps/vertivo_client
+
+# Docs / non-code trees
+docs
+business
+specs
+srd
+openspec
+skills
+style-dictionary
+linear-todo-templates
+libs
