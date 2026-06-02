@@ -1,0 +1,53 @@
+# Dev cluster DB wiring for the Serverpod backend.
+#
+# Root cause: the backend image bakes config/development.yaml with
+# `database.host: localhost` (and port 8090). In the cluster Postgres lives at
+# `postgres-service:5432`, so Serverpod crash-loops with
+# "Retrying to connect to the database" (Connection refused to localhost).
+#
+# Fix (Serverpod 3.4.1, no image rebuild): environment variables take precedence
+# over the baked yaml config. Serverpod reads:
+#   - SERVERPOD_DATABASE_HOST / _PORT / _NAME / _USER  -> database.* overrides
+#   - SERVERPOD_PASSWORD_database                      -> overrides passwords.yaml `database`
+# Values come from the existing `backend-config` ConfigMap (DB_*) and the
+# `backend-secret` Secret (DB_PASSWORD). Runmode stays `development`.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vertivo-backend
+spec:
+  template:
+    spec:
+      containers:
+        - name: vertivo-backend
+          env:
+            - name: SERVERPOD_DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: DB_HOST
+            - name: SERVERPOD_DATABASE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: DB_PORT
+            - name: SERVERPOD_DATABASE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: DB_NAME
+            - name: SERVERPOD_DATABASE_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: backend-config
+                  key: DB_USER
+            - name: SERVERPOD_PASSWORD_database
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: DB_PASSWORD
+            # The dev DB starts empty; apply the baked-in migrations on startup
+            # so the schema exists (otherwise Serverpod exits with code 1 on the
+            # "tables missing" check). Migrations ship in the image.
+            - name: SERVERPOD_APPLY_MIGRATIONS
+              value: "true"
