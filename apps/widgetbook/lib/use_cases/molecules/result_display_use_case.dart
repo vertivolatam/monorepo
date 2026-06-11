@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
-import 'package:vertivo_flutter/core/widgets/molecules/result_display.dart';
+import 'package:vertivo_ui/vertivo_ui.dart';
 
 @widgetbook.UseCase(name: 'Default', type: ResultDisplay, path: '[molecules]')
 Widget buildResultDisplayUseCase(BuildContext context) {

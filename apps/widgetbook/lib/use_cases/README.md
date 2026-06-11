@@ -5,11 +5,10 @@ widgetbook canónico de altrupets (`apps/widgetbook/lib/use_cases/`).
 
 ## Estado actual
 
-- `molecules/` — `ResultDisplay` (único widget reutilizable extraíble de
-  `apps/vertivo_flutter` hoy; las screens dependen del `client` global de Serverpod).
-- `atoms/` y `organisms/` — vacíos: **Vertivo aún no tiene package UI compartido ni
-  widgets atómicos propios**. Cuando se extraigan widgets de las pantallas T0
-  (ver `srd/gap-audit.md`), cada uno debe nacer con su story aquí.
+- `molecules/` — `ResultDisplay` (vive en `packages/vertivo_ui`; las screens de
+  la app dependen del `client` global de Serverpod y no son catalogables).
+- `atoms/` y `organisms/` — vacíos: los próximos widgets deben nacer en
+  `packages/vertivo_ui` con su story aquí.
 
 ## Convención
 

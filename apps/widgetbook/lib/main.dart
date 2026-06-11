@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:vertivo_ui/vertivo_ui.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
-import 'package:vertivo_flutter/core/theme/app_theme.dart';
-import 'package:vertivo_flutter/core/theme/token_service.dart';
 
 import 'showcase/design_system_showcase.dart';
 
