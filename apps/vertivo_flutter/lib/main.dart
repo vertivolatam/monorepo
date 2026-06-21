@@ -39,7 +39,7 @@ void main() async {
     ..connectivityMonitor = FlutterConnectivityMonitor()
     ..authSessionManager = FlutterAuthSessionManager();
 
-  client.auth.initialize();
+  client.authSessionManager.initialize();
 
   runApp(const MyApp());
 }
