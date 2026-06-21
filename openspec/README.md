@@ -8,6 +8,7 @@ Convention ported from `dojocoding/dojo-os` / `chimeranext/better-microservices`
 | Change | Records | Status |
 |---|---|---|
 | [`2026-06-01-vertivo-nvidia-physical-ai`](./changes/2026-06-01-vertivo-nvidia-physical-ai/) | proposal · design · tasks | Research spike — 2 digital twins (factory + greenhouse) + synthetic data for vision-core + NVIDIA Inception/Marketplace path |
+| [`2026-06-21-canonical-flutter-app`](./changes/2026-06-21-canonical-flutter-app/) | proposal · design · tasks | Proposed — `vertivo_flutter` canonical; retire empty `apps/mobile` stub; fix stale `STRUCTURE.md`; mobile arch = Clean Arch + Atomic + Riverpod |
 
 > Note: the AI vision engine `vision-core` lives in the `chimeranext/better-microservices`
 > monorepo (`openspec/changes/2026-06-01-vision-core/`); this spike is Vertivo's strategy

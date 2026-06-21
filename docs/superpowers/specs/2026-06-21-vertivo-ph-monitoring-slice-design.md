@@ -155,6 +155,8 @@ Secuencia manual reproducible (irá al plan de implementación):
 - Los demás sensores (EC, TDS, DO, ORP, CO₂, temperatura, humedad…) — se replican con el
   mismo patrón una vez probado el slice.
 - Pantallas de plantas/bandejas, predicción de cosecha, fitopatología, trazabilidad.
-- Eliminar/renombrar el stub `apps/mobile` (`vertivo_mobile`) — decisión aparte.
+- ~~Eliminar/renombrar el stub `apps/mobile` (`vertivo_mobile`)~~ — **RESUELTO** en
+  `openspec/changes/2026-06-21-canonical-flutter-app/` (stub eliminado, `vertivo_flutter`
+  canonizado, `STRUCTURE.md` corregido).
 - Pulido de la app móvil (target `dev-flutter-mobile` queda funcional pero sin device-setup
   tipo `launch_flutter_debug.sh` de altrupets; eso es una mejora de ergonomía futura).
