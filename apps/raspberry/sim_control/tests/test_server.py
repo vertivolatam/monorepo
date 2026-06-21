@@ -105,8 +105,18 @@ class TestConfigEndpoint:
         assert resp.status_code == 200
         body = resp.json()
         assert body["greenhouse_id"] == "1"
-        assert body["user_id"] == "1"
         assert body["connected"] is True
+        # Security: /config must not leak user_id to (localhost) callers.
+        assert "user_id" not in body
+
+    def test_control_rejects_non_json_content_type(self, client):
+        # CSRF mitigation: only application/json is accepted.
+        resp = client.post(
+            "/control",
+            content=b'{"action":"kill_all"}',
+            headers={"content-type": "text/plain"},
+        )
+        assert resp.status_code == 415
 
 
 class TestStaticRoutes:
