@@ -14,8 +14,24 @@ fields:
   idealLightHoursMax: double
   idealPhMin: double
   idealPhMax: double
+  idealPhIdeal: double?  # crops.json v2 profile.ph.ideal (e.g. 6.6)
   idealCo2Min: double?
   idealCo2Max: double?
+  idealEcMinDsM: double?  # profile.ec_dS_m.min (dS/m = mS/cm)
+  idealEcMaxDsM: double?  # profile.ec_dS_m.max
+  idealNightTemperatureMin: double?  # profile.ambient_temp_c.night.min
+  idealNightTemperatureMax: double?  # profile.ambient_temp_c.night.max
+  idealOrpMinMv: double?  # profile.orp_mv.min (mV)
+  idealOrpMaxMv: double?  # profile.orp_mv.max
+  ppfdMin: double?  # profile.ppfd_umol_m2_s.min (µmol/m²/s)
+  ppfdMax: double?  # profile.ppfd_umol_m2_s.max
+  photoperiodHours: double?  # profile.photoperiod_h.value
+  lightSpectrum: String?  # profile.light_spectrum.value (e.g. FSMUV)
+  ediblePart: String?  # crop.edible_part
+  priority: int?  # crop.priority (1 = highest)
+  aeroponicSuitable: bool?  # crop.aeroponic
+  profileKey: String?  # which crops.json profile was resolved
+  nutrientRecipeJson: String?  # profile.nutrient_recipe_g_per_1000ml serialized as JSON
   waterRequirement: String  # low, medium, high
   growthDurationDays: int
   commonDiseases: List<String>?

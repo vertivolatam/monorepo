@@ -75,8 +75,11 @@ class CropCatalogSeeder {
       final profileName = crop['profile'] as String?;
       final profile =
           (profiles[profileName] as Map<String, dynamic>?) ?? const {};
+      // Only record the profile key when it actually resolved to a profile;
+      // crops with `profile: null` (non-aeroponic) keep profileKey null.
+      final profileKey = profile.isEmpty ? null : profileName;
 
-      final model = _mapCrop(crop, profile, now);
+      final model = _mapCrop(crop, profile, profileKey, now);
       await CropModel.db.insertRow(session, model);
       inserted++;
     }
@@ -89,18 +92,31 @@ class CropCatalogSeeder {
   ///
   /// Fields the model supports but crops.json does not yet carry are filled
   /// with documented defaults (see VRTV-96 follow-up): `growthDurationDays`,
-  /// `difficulty`, `waterRequirement`, `category`, `segments`. The EC and the
-  /// nutrient recipe from the profile have **no home** on [CropModel] and are
-  /// intentionally dropped here — see the seed report / follow-up issue.
+  /// `difficulty`, `waterRequirement`, `category`, `segments`.
+  ///
+  /// The full agronomic setpoints from the resolved profile (pH ideal, EC in
+  /// dS/m, night temperatures, ORP, PPFD, photoperiod, light spectrum) and the
+  /// nutrient recipe (serialized as a JSON string in `nutrientRecipeJson`) are
+  /// now persisted on [CropModel]. Crops with no aeroponic profile
+  /// (`profile: null`) leave every one of those new fields `null` — no defaults
+  /// are invented.
   static CropModel _mapCrop(
     Map<String, dynamic> crop,
     Map<String, dynamic> profile,
+    String? profileKey,
     DateTime now,
   ) {
     final ph = (profile['ph'] as Map<String, dynamic>?) ?? const {};
+    final ec = (profile['ec_dS_m'] as Map<String, dynamic>?) ?? const {};
+    final orp = (profile['orp_mv'] as Map<String, dynamic>?) ?? const {};
+    final ppfd =
+        (profile['ppfd_umol_m2_s'] as Map<String, dynamic>?) ?? const {};
     final temp = _dayRange(profile['ambient_temp_c']);
+    final nightTemp = _nightRange(profile['ambient_temp_c']);
     final humidity = _dayRange(profile['relative_humidity_pct']);
     final photoperiod = _photoperiodHours(profile['photoperiod_h']);
+    final spectrum = _wrappedValue(profile['light_spectrum']);
+    final recipeJson = _recipeJson(profile['nutrient_recipe_g_per_1000ml']);
 
     return CropModel(
       species: crop['species'] as String,
@@ -116,6 +132,22 @@ class CropCatalogSeeder {
       idealLightHoursMax: photoperiod ?? 18.0,
       idealPhMin: _asDouble(ph['min']) ?? 6.0,
       idealPhMax: _asDouble(ph['max']) ?? 7.0,
+      idealPhIdeal: _asDouble(ph['ideal']),
+      idealEcMinDsM: _asDouble(ec['min']),
+      idealEcMaxDsM: _asDouble(ec['max']),
+      idealNightTemperatureMin: nightTemp.$1,
+      idealNightTemperatureMax: nightTemp.$2,
+      idealOrpMinMv: _asDouble(orp['min']),
+      idealOrpMaxMv: _asDouble(orp['max']),
+      ppfdMin: _asDouble(ppfd['min']),
+      ppfdMax: _asDouble(ppfd['max']),
+      photoperiodHours: photoperiod,
+      lightSpectrum: spectrum,
+      ediblePart: crop['edible_part'] as String?,
+      priority: _asInt(crop['priority']),
+      aeroponicSuitable: crop['aeroponic'] as bool?,
+      profileKey: profileKey,
+      nutrientRecipeJson: recipeJson,
       waterRequirement: 'high', // aeroponic / nebuponía
       growthDurationDays: 0, // unknown in crops.json v2 — see follow-up VRTV-97
       difficulty: 'beginner',
@@ -147,6 +179,15 @@ class CropCatalogSeeder {
     return (_asDouble(day['min']), _asDouble(day['max']));
   }
 
+  /// Extracts a (min, max) tuple from the `night` sub-range of a field shaped
+  /// like `{ "day": {...}, "night": { "min": .., "max": .. } }`.
+  static (double?, double?) _nightRange(Object? field) {
+    if (field is! Map<String, dynamic>) return (null, null);
+    final night = field['night'];
+    if (night is! Map<String, dynamic>) return (null, null);
+    return (_asDouble(night['min']), _asDouble(night['max']));
+  }
+
   /// Extracts the photoperiod in hours from the v2 `photoperiod_h` field.
   ///
   /// In crops.json v2 it is wrapped as `{ "value": 18, "source": "sheet" }`
@@ -157,8 +198,35 @@ class CropCatalogSeeder {
     return null;
   }
 
+  /// Unwraps a v2 provenance-wrapped string field shaped like
+  /// `{ "value": "FSMUV", "source": "sheet" }`, tolerating a bare string.
+  static String? _wrappedValue(Object? field) {
+    if (field is String) return field;
+    if (field is Map<String, dynamic>) {
+      final value = field['value'];
+      return value is String ? value : null;
+    }
+    return null;
+  }
+
+  /// Serializes the profile's `nutrient_recipe_g_per_1000ml` map to a JSON
+  /// string for storage in `nutrientRecipeJson`. Drops the `source` provenance
+  /// key (metadata, not part of the recipe). Returns null when absent.
+  static String? _recipeJson(Object? field) {
+    if (field is! Map<String, dynamic>) return null;
+    final recipe = Map<String, dynamic>.of(field)..remove('source');
+    if (recipe.isEmpty) return null;
+    return jsonEncode(recipe);
+  }
+
   static double? _asDouble(Object? value) {
     if (value is num) return value.toDouble();
+    return null;
+  }
+
+  static int? _asInt(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
     return null;
   }
 }
