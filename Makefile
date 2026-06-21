@@ -23,6 +23,7 @@ TIMEOUT ?= 900000
         dev-argocd-deploy dev-argocd-status dev-argocd-password \
         dev-raspberry-install dev-raspberry-start dev-raspberry-test dev-raspberry-lint \
         dev-raspberry-emqx-sim dev-raspberry-i2c-sim dev-raspberry-i2c-sim-scenarios \
+        dev-crop-explorer \
         bootstrap-raspberry dev-raspberry-balena-push dev-raspberry-balena-local \
         dev-raspberry-balena-preload dev-raspberry-balena-build dev-raspberry-balena-status \
         dev-docs-install dev-docs-serve dev-docs-build \
@@ -114,6 +115,7 @@ help: ## Show this help message
 	@echo "  $(YELLOW)dev-raspberry-emqx-sim$(NC)      Simulate sensor data to EMQX (mosquitto_pub)"
 	@echo "  $(YELLOW)dev-raspberry-i2c-sim$(NC)       Full pipeline simulation (no I2C needed)"
 	@echo "  $(YELLOW)dev-raspberry-i2c-sim-scenarios$(NC) List simulation scenarios"
+	@echo "  $(YELLOW)dev-crop-explorer$(NC)           Build crops.db (seed-if-empty) + launch Qt crop explorer"
 	@echo ""
 	@echo "$(GREEN)DEV - Raspberry Pi Balena (Deployment):$(NC)"
 	@echo "  $(YELLOW)bootstrap-raspberry$(NC)             Interactive wizard → fleet + deploy (step by step)"
@@ -397,6 +399,13 @@ dev-raspberry-i2c-sim: ## Full pipeline simulation — simulated sensors → mon
 
 dev-raspberry-i2c-sim-scenarios: ## List available simulation scenarios
 	@cd apps/raspberry && .venv/bin/python3 -m src.main --orchestrator-mode indoor --list-scenarios
+
+dev-crop-explorer: ## Build crops.db (seed-if-empty from crops.json) + launch PySide6 crop explorer
+	@echo "$(BLUE)Building local crop catalog DB (seed-if-empty)...$(NC)"
+	@cd apps/raspberry && ( [ -d .venv ] || python3 -m venv .venv )
+	@cd apps/raspberry && .venv/bin/python3 tools/crop_explorer/build_db.py
+	@echo "$(BLUE)Launching crop explorer (Qt)...$(NC)"
+	@cd apps/raspberry && .venv/bin/python3 tools/crop_explorer/crop_explorer.py
 
 # ==========================================
 # DEV - Raspberry Pi Balena (Deployment)
