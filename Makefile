@@ -404,7 +404,7 @@ dev-raspberry-sim-ui: ## Launch the simulator control web panel (FastAPI, port 8
 	@echo "$(BLUE)Starting simulator control panel...$(NC)"
 	@echo "$(GREEN)→ http://localhost:$${SIM_UI_PORT:-8090}$(NC)  (commands the running simulator over MQTT)"
 	@cd apps/raspberry && .venv/bin/python3 -m uvicorn sim_control.server:app \
-		--host 0.0.0.0 --port $${SIM_UI_PORT:-8090}
+		--host 127.0.0.1 --port $${SIM_UI_PORT:-8090}
 
 # ==========================================
 # DEV - Raspberry Pi Balena (Deployment)

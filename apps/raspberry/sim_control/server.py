@@ -141,12 +141,25 @@ def create_app(bridge=None, hub=None):
 
     @app.get("/config")
     def config():
+        # Dev/QA panel bound to localhost (Makefile: --host 127.0.0.1). Only
+        # expose what the panel renders; never leak user_id to callers.
         cfg = dict(app.state.config)
-        cfg["connected"] = bool(getattr(app.state.bridge, "connected", False))
-        return cfg
+        return {
+            "host": cfg.get("host"),
+            "port": cfg.get("port"),
+            "greenhouse_id": cfg.get("greenhouse_id"),
+            "connected": bool(getattr(app.state.bridge, "connected", False)),
+        }
 
     @app.post("/control")
     async def control(request: Request):
+        # CSRF mitigation: a cross-origin simple form/POST can't set this
+        # content-type without a CORS preflight it can't satisfy.
+        ctype = request.headers.get("content-type", "").split(";")[0].strip()
+        if ctype != "application/json":
+            return JSONResponse(
+                {"error": "content-type must be application/json"}, status_code=415
+            )
         try:
             body = await request.json()
         except (ValueError, json.JSONDecodeError):
