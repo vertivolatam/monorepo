@@ -43,12 +43,22 @@ vía el patrón `InstrumentCard`.
                                         │  anomaly / cropCatalog│       │  (userIdentifier)    │
                                         │  / user               │       └──────────────────────┘
                                         └───────────────────────┘
-  * puerto a confirmar (open question #2): hoy el dashboard colisiona con Serverpod en :8080.
+  * RESUELTO: Serverpod se queda con :8080; el dashboard Jaspr se mueve a :8090 (jaspr.port en
+    pubspec.yaml). Hoy ambos declaran :8080 — colisión que este change elimina.
 ```
 
 El cableado de este change es el tramo **`vertivo_client` → repositories → pages**. El tramo
 edge→backend ya existe (lo prueba `vertivo_flutter`); el dashboard solo se engancha al mismo
-backend que el cliente Flutter.
+backend que el cliente Flutter. La vista admin lo hace cross-tenant vía `adminFleet.listAll`
+(§2.5).
+
+### Puerto: Serverpod :8080, dashboard :8090
+
+`apps/vertivo_dashboard/pubspec.yaml` declara hoy `jaspr: { mode: server, port: 8080 }` — el
+mismo puerto donde corre Serverpod (`localhost:8080`, ver `vertivo_flutter/lib/main.dart` y
+`getServerUrl()` default). El SSR del dashboard no puede levantar en un puerto ocupado por el
+backend al que llama. **Resolución (aprobada):** el dashboard Jaspr pasa a `port: 8090`;
+Serverpod conserva `:8080`. El `Client` del dashboard apunta a `http://localhost:8080/`.
 
 ## 2. Dependencia y capa de repositories
 
@@ -77,19 +87,72 @@ class FleetRepository {
   const FleetRepository(this.client);
 
   Future<FleetSnapshot> fetch() async {
-    final ghs = await client.greenhouse.listByUser();
+    // Vista admin: flota cross-tenant (todos los clientes). Ver §2.5.
+    final ghs = await client.adminFleet.listAll();
     final unread = await client.alert.getUnreadCount();
     return FleetSnapshot(greenhouses: ghs, unreadAlerts: unread);
   }
 }
 ```
 
-## 3. Mapa page → endpoint (solo endpoints que existen hoy)
+## 2.5 Endpoint admin cross-tenant (NUEVO — scope ampliado)
 
-| Page | Componentes | Endpoint(s) real(es) | Notas |
-|------|-------------|----------------------|-------|
-| `home_page` | kpi_card×4, sensor_chart, alert_item, data_table | `greenhouse.listByUser`, `alert.getUnreadCount`, `alert.getMyAlerts(limit)`, por greenhouse `greenhouse.getReadings(id, type, limit)` | KPIs "invernaderos activos" = `listByUser().length`; "alertas activas" = `getUnreadCount`. KPI "sensores online" y "anomalías globales" **no tienen endpoint agregado** → gap (open q#1). |
-| `greenhouses_page` | gh-card grid, filtros | `greenhouse.listByUser` | Filtros segmento/estado/búsqueda en cliente sobre la lista. "Todos los clientes" depende de open q#1. |
+El cockpit aprobado es un **panel de operador interno** que ve **toda la flota de todos los
+tenants**. Los 13 endpoints existentes son per-tenant (`listByUser` filtra por
+`session.authenticated.userIdentifier`) o per-greenhouse; ninguno lista la flota completa. Se
+añade **un** método nuevo al `GreenhouseEndpoint`, protegido admin-only con el `Scope.admin`
+nativo de Serverpod 3.4 (`requiredScopes` implica `requireLogin`):
+
+```dart
+// apps/vertivo_server/lib/src/greenhouses/greenhouse_endpoint.dart  (patrón)
+class GreenhouseEndpoint extends Endpoint {
+  // Admin-only: sólo sesiones con Scope.admin pueden listar la flota cross-tenant.
+  // Serverpod rechaza automáticamente cualquier sesión sin el scope.
+  @override
+  Set<Scope> get requiredScopes => const {}; // (ver nota: NO global)
+
+  /// (NUEVO) Lista toda la flota de TODOS los tenants — operador/admin.
+  Future<List<Greenhouse>> listAllForAdmin(
+    Session session, {
+    int limit = 500,
+    int offset = 0,
+  }) async {
+    // requireScope manual por-método: el resto del endpoint sigue per-tenant.
+    final auth = await session.authenticated;
+    if (auth == null || !auth.scopes.contains(Scope.admin)) {
+      throw Exception('admin scope required');
+    }
+    return await Greenhouse.db.find(
+      session,
+      where: (t) => t.isActive.equals(true),
+      limit: limit, offset: offset,
+      orderBy: (t) => t.userId,
+    );
+  }
+}
+```
+
+**Decisión de aislamiento:** como `GreenhouseEndpoint` mezcla métodos per-tenant
+(`listByUser`, `getReadings`) con este admin-only, el override de clase `requiredScopes` NO
+sirve (aplicaría a todos los métodos). Dos opciones a evaluar en implementación:
+- **(A, preferida)** un endpoint nuevo aparte `AdminFleetEndpoint extends Endpoint` con
+  `requiredScopes => {Scope.admin}` a nivel de clase (Serverpod recomienda base classes
+  admin) — mantiene `greenhouse.*` intacto.
+- **(B)** chequeo manual de scope dentro del método (como el snippet) si se prefiere un solo
+  endpoint. Menos idiomático.
+La impl arranca por **(A)**: `client.adminFleet.listAll()`.
+
+**Supuesto de roles documentado:** NO existe tabla de roles ni campo `isAdmin` en `User`
+(`User.segment` es residential/commercial/industrial/expert, no un rol de autorización). El
+`Scope.admin` se otorga vía el auth token de Serverpod. Una gestión de roles real (asignar
+admin desde UI, tabla `roles`) es un change aparte — ver `proposal.md` out-of-scope.
+
+## 3. Mapa page → endpoint
+
+| Page | Componentes | Endpoint(s) | Notas |
+|------|-------------|-------------|-------|
+| `home_page` (admin) | kpi_card×4, sensor_chart, alert_item, data_table | **`adminFleet.listAll`** (flota cross-tenant), `alert.getMyAlerts(limit)`, por greenhouse `greenhouse.getReadings(id, type, limit)` | KPI "invernaderos activos" = `listAll().length` (todos los tenants). "sensores online"/"anomalías globales" sin endpoint agregado → **"N/D"**, no inventar. |
+| `greenhouses_page` (admin) | gh-card grid, filtros | **`adminFleet.listAll`** | Vista operador: toda la flota. Filtros segmento/estado/búsqueda en cliente. Modo cliente (futuro) usaría `listByUser`. |
 | `greenhouse_detail_page` | gauge_chart×8, sensor_chart×8 | `greenhouse.get(id)`, `greenhouse.getReadings(id, measurementType, limit)` ×N tipos, `greenhouse.getTrays(id)` | Un `getReadings` por measurementType (co2/humidity/ph/temperature/ec/do/tds/orp). Rangos del gauge → InstrumentCard (§4). |
 | `alerts_page` | alert_item, summary, filtros | `alert.getMyAlerts(limit, offset)` (o `alert.getForGreenhouse` si se filtra por uno) | Summary por severidad = agregación cliente. Acciones `markAsRead`/`acknowledge`/`resolve` disponibles para fase interactiva (out of scope inicial). |
 | `anomalies_page` | data_table, stat-card, method-card | por greenhouse `anomaly.getForGreenhouse(id, limit)` / `anomaly.getUnresolved(id)` | **No hay** `anomaly.getAll` multi-greenhouse → para la tabla global se itera la flota o se documenta gap (open q#1). |
@@ -127,23 +190,29 @@ Cada page pasa por tres estados explícitos (no más mock silencioso):
 
 ## 6. Fases (resumen; detalle en `tasks.md`)
 
-1. **Fundación** — dep `vertivo_client`, init del `Client`, resolver puerto (open q#2),
-   `FleetRepository` + `instrument_range` con tests. Validar SSR vs client-side (open q#3).
-2. **home + greenhouses** — las dos vistas de flota agregada (menor riesgo, endpoints simples).
-3. **greenhouse_detail** — la más densa: 8 gauges + 8 charts cableados, InstrumentCard real.
+0. **Backend admin endpoint** — `AdminFleetEndpoint.listAll` (admin-only, TDD) + `serverpod
+   generate` + regenerar `vertivo_client`. Habilita la vista cross-tenant.
+1. **Fundación dashboard** — mover puerto a :8090, dep `vertivo_client`, init `Client`,
+   `FleetRepository` + `instrument_range` con tests. **Spike SSR vs client-side** antes de auth.
+2. **home + greenhouses** (admin) — flota cross-tenant vía `adminFleet.listAll`.
+3. **greenhouse_detail** — la más densa: 8 gauges + 8 charts, InstrumentCard real.
 4. **alerts + anomalies** — agregados; documentar gaps de endpoints multi-greenhouse.
-5. **users** — vista admin; depende de la respuesta a open q#1.
+5. **users** — vista admin (`user.listBySegment`).
 
 ## 7. Riesgos
 
-- **Conflicto de puerto :8080** (dashboard Jaspr vs Serverpod) — bloqueante; resolver en fase 1.
+- **Endpoint nuevo vs regla AGENTS.md** — añadir `adminFleet.listAll` rompe "do not build new
+  endpoints"; es excepción **aprobada** y trazada en `proposal.md` §Tensión. Mantenerlo mínimo
+  y admin-only.
+- **Fuga cross-tenant** — el endpoint admin expone la flota de TODOS los clientes. Debe ser
+  admin-only por `Scope.admin` (Serverpod rechaza sin scope). Test obligatorio: sesión sin
+  admin → rechazada; sesión sin auth → rechazada.
 - **`vertivo_client` en contexto Jaspr SSR** — el client se diseñó para Flutter; validar que
-  corre en el server de Jaspr (Dart VM) y dónde vive la sesión auth. Spike en fase 1.
-- **Gaps de endpoints agregados** (KPIs globales, anomalías multi-greenhouse, flota
-  all-tenants) — algunos KPIs del mock **no tienen** endpoint hoy. No inventar valores:
-  mostrarlos como "N/D" o iterar, y registrar el gap para un change de backend (regla #2).
-- **Multi-tenant mal entendido** — si el cockpit debe ver TODA la flota (operador interno),
-  `listByUser` no basta; ver open q#1 antes de cablear `users`/`greenhouses` all-tenant.
+  corre en el server de Jaspr (Dart VM) y dónde vive la sesión auth admin. **Spike** en fase 1.
+- **Gaps de endpoints agregados** (KPIs globales "sensores online", anomalías multi-greenhouse)
+  — sin endpoint hoy. No inventar: **"N/D"** explícito + registrar gap para change futuro.
+- **Nomenclatura (regla #6)** — el mock dice "Hydroponics/Hidroponico"; al cablear data real,
+  `Greenhouse.irrigationType` usa `aeroponic`/nebuponía. Eliminar los literales "hydroponic".
 
 ## References
 

@@ -1,12 +1,29 @@
 # Dashboard fleet cockpit — Tasks
 
-> Decisión registrada 2026-06-21. **Pendiente aprobación** antes de ejecutar.
-> TDD donde haya lógica (resolución de rangos). Rutas relativas a la raíz del monorepo.
-> Todas las llamadas usan endpoints que YA existen — este change no toca `vertivo_server`.
+> Aprobado 2026-06-21 — scope ampliado a **vista admin cross-tenant**. En implementación.
+> TDD donde haya lógica (resolución de rangos + autorización del endpoint admin).
+> Rutas relativas a la raíz del monorepo. Disciplina make-no-mistakes: 1 commit por sub-task.
+> **Excepción trazada:** este change añade 1 endpoint a `vertivo_server` (ver proposal §Tensión).
 
-## Fase 0 — Fundación (dep + cliente + helper testeado)
+## Fase 0a — Backend: endpoint admin cross-tenant (TDD)
 
-- [ ] **0.1** Añadir dep a `apps/vertivo_dashboard/pubspec.yaml`:
+- [ ] **0a.1** [TDD] Test primero: `apps/vertivo_server/test/integration/admin_fleet_test.dart`
+  — (1) sesión SIN auth → rechazada; (2) sesión autenticada SIN `Scope.admin` → rechazada;
+  (3) sesión con `Scope.admin` → devuelve greenhouses de >1 tenant.
+  → commit: `test(server): admin fleet listAll authorization (red)`
+- [ ] **0a.2** Crear `apps/vertivo_server/lib/src/greenhouses/admin_fleet_endpoint.dart`:
+  `class AdminFleetEndpoint extends Endpoint` con `requiredScopes => {Scope.admin}` (implica
+  `requireLogin`) y `listAll(session, {limit=500, offset=0})` → `Greenhouse.db.find` activos,
+  cross-tenant, `orderBy userId`. Opción (A) del design §2.5 (endpoint aparte, no tocar
+  `GreenhouseEndpoint`).
+  → commit: `feat(server): AdminFleetEndpoint.listAll (admin-only, green)`
+- [ ] **0a.3** `dart run serverpod_cli generate` en `apps/vertivo_server` → regenera protocol +
+  `vertivo_client`. Verificar que `client.adminFleet.listAll` existe en el client generado.
+  → commit: `chore(server): serverpod generate — admin fleet endpoint in client`
+
+## Fase 0b — Fundación dashboard (dep + cliente + helper testeado)
+
+- [ ] **0b.1** Añadir dep a `apps/vertivo_dashboard/pubspec.yaml`:
   ```yaml
   dependencies:
     vertivo_client:
@@ -14,35 +31,41 @@
   ```
   y resolver con el pnpm/dart workspace (lock único en raíz).
   → commit: `build(dashboard): add vertivo_client dependency`
-- [ ] **0.2** Resolver el **conflicto de puerto** (open q#2): mover `jaspr.port` de `8080` a
-  `8090` en `pubspec.yaml` (o el que confirme el owner), para no colisionar con Serverpod.
+- [ ] **0b.2** Resolver el **conflicto de puerto**: mover `jaspr.port` de `8080` a `8090` en
+  `pubspec.yaml` (Serverpod conserva :8080).
   → commit: `fix(dashboard): move jaspr server to :8090 to free Serverpod :8080`
-- [ ] **0.3** Crear init del `Client` Serverpod en `apps/vertivo_dashboard/lib/data/client.dart`
-  (espejo de `vertivo_flutter/lib/main.dart`: `Client(serverUrl)` apuntando a
-  `http://localhost:8080/`). **Spike** (open q#3): confirmar que el client corre en el server
-  Jaspr (Dart VM) y dónde vive la sesión auth. Documentar el hallazgo en `design.md` §7.
-  → commit: `feat(dashboard): wire Serverpod Client init`
+- [ ] **0b.3** Crear init del `Client` Serverpod en `apps/vertivo_dashboard/lib/data/client.dart`
+  (espejo de `vertivo_flutter/lib/main.dart`: `Client(serverUrl)` → `http://localhost:8080/`).
+  **Spike (bloqueante para auth):** confirmar que el client corre en el server Jaspr (Dart VM)
+  y dónde vive la sesión admin (cookie/header SSR vs hidratación client-side). Documentar el
+  hallazgo en `design.md` §7.
+  → commit: `feat(dashboard): wire Serverpod Client init + SSR spike notes`
 - [ ] **0.4** [TDD] Test primero: `apps/vertivo_dashboard/test/instrument_range_test.dart` —
   cubre las 3 capas de resolución (greenhouse setpoint → CropModel ideal → fallback estático)
   y el coloreo in/out-of-range por measurementType.
   → commit: `test(dashboard): instrument range resolution (red)`
 - [ ] **0.5** Implementar `apps/vertivo_dashboard/lib/data/instrument_range.dart` hasta verde.
   → commit: `feat(dashboard): instrument range resolver (green)`
-- [ ] **0.6** Crear `apps/vertivo_dashboard/lib/data/fleet_repository.dart` (snapshot tipado +
-  `fetch()` agregando `greenhouse.listByUser` + `alert.getUnreadCount`), patrón
+- [ ] **0b.4** [TDD] Test primero `apps/vertivo_dashboard/test/instrument_range_test.dart`
+  (3 capas + coloreo) → commit `test(dashboard): instrument range resolution (red)`; luego
+  `lib/data/instrument_range.dart` → commit `feat(dashboard): instrument range resolver (green)`.
+- [ ] **0b.5** Crear `apps/vertivo_dashboard/lib/data/fleet_repository.dart` (snapshot tipado +
+  `fetch()` agregando **`adminFleet.listAll`** (cross-tenant) + `alert.getUnreadCount`), patrón
   `PhMonitorRepository`.
-  → commit: `feat(dashboard): FleetRepository over Serverpod client`
+  → commit: `feat(dashboard): FleetRepository over admin fleet endpoint`
 
-## Fase 1 — home + greenhouses (flota agregada, menor riesgo)
+## Fase 1 — home + greenhouses (vista admin cross-tenant)
 
 - [ ] **1.1** Cablear `apps/vertivo_dashboard/lib/pages/home_page.dart`: KPIs reales
-  (`listByUser().length`, `getUnreadCount`), alertas recientes (`alert.getMyAlerts`), tabla de
-  estado desde `listByUser`. KPIs sin endpoint ("sensores online", "anomalías globales") →
-  mostrar "N/D" + TODO con referencia al gap, **nunca** un literal inventado.
-  → commit: `feat(dashboard): wire home_page to fleet endpoints`
+  (`adminFleet.listAll().length`, `getUnreadCount`), alertas recientes (`alert.getMyAlerts`),
+  tabla de estado desde `adminFleet.listAll`. KPIs sin endpoint ("sensores online", "anomalías
+  globales") → mostrar "N/D" + TODO con referencia al gap, **nunca** un literal inventado.
+  → commit: `feat(dashboard): wire home_page to admin fleet endpoints`
 - [ ] **1.2** Cablear `apps/vertivo_dashboard/lib/pages/greenhouses_page.dart` a
-  `greenhouse.listByUser`; filtros segmento/estado/búsqueda en cliente sobre la lista.
-  → commit: `feat(dashboard): wire greenhouses_page to listByUser`
+  `adminFleet.listAll`; filtros segmento/estado/búsqueda en cliente sobre la lista. **Eliminar
+  los literales "Hydroponics/Hidroponico"** del mock (regla #6 aeroponic-only): los nombres y
+  `irrigationType` vienen de la DB.
+  → commit: `feat(dashboard): wire greenhouses_page to admin fleet (drop hydroponic literals)`
 - [ ] **1.3** Estados loading/error/empty en ambas pages (banner de error + retry; empty state
   cuando la flota está vacía). Sin silent-failure.
   → commit: `feat(dashboard): loading/error/empty states for fleet views`
@@ -73,20 +96,25 @@
 - [ ] **3.3** Estados loading/error/empty en ambas.
   → commit: `feat(dashboard): loading/error/empty states for alerts & anomalies`
 
-## Fase 4 — users (vista admin; depende de open q#1)
+## Fase 4 — users (vista admin)
 
-- [ ] **4.1** Resolver open q#1 con el owner (cockpit per-tenant vs operador all-tenants) antes
-  de cablear. Si admin: `user.listBySegment`. Si falta endpoint de conteo de greenhouses por
-  usuario, documentar gap.
+- [ ] **4.1** Cablear `apps/vertivo_dashboard/lib/pages/users_page.dart` a
+  `user.listBySegment` (vista operador). Conteo de greenhouses por usuario no tiene endpoint
+  directo → "N/D" + gap registrado. Estados loading/error/empty.
   → commit: `feat(dashboard): wire users_page (admin segment view)`
 
 ## Done when
 
-- [ ] `vertivo_dashboard` depende de `vertivo_client` y arranca sin colisionar con Serverpod.
+- [ ] `AdminFleetEndpoint.listAll` existe, es admin-only (test: sin-auth y sin-admin rechazados,
+  con-admin devuelve >1 tenant), y `client.adminFleet.listAll` está en el `vertivo_client`
+  regenerado.
+- [ ] `vertivo_dashboard` depende de `vertivo_client` y arranca en :8090 sin colisionar con
+  Serverpod (:8080).
 - [ ] Las 6 pages renderizan data de PostgreSQL (o "N/D" explícito donde no hay endpoint),
-  cero literales `'24'`/`GH-001`/etc.
+  cero literales `'24'`/`GH-001`/"Hydroponics"/etc.
 - [ ] `instrument_range` tiene tests verdes; los gauges usan setpoints reales.
 - [ ] Cada page tiene loading/error/empty; sin valores inventados ante fallo de backend.
-- [ ] Gaps de endpoints (KPIs globales, anomalías multi-gh, flota all-tenants) documentados
-  como items de un change de backend separado (regla #2 — connect before create).
-- [ ] `openspec/README.md` Active Changes incluye este change.
+- [ ] Spike SSR documentado: dónde vive la sesión admin en Jaspr.
+- [ ] Gaps de endpoints agregados (KPIs globales, anomalías multi-gh) documentados como items
+  de un change de backend separado.
+- [ ] `openspec/README.md` Active Changes refleja el scope cross-tenant.

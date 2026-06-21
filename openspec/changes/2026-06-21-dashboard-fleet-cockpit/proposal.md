@@ -2,8 +2,8 @@
 
 **Date:** 2026-06-21
 **Owner:** Andrés (andres@dojocoding.io)
-**Status:** Proposed — pendiente aprobación
-**Domain:** `vertivo_dashboard` (Jaspr + D3) + `vertivo_client` (Serverpod client)
+**Status:** Approved (2026-06-21) — scope **ampliado a vista admin cross-tenant**. En implementación.
+**Domain:** `vertivo_dashboard` (Jaspr + D3) + `vertivo_client` (Serverpod client) + `vertivo_server` (1 endpoint admin nuevo)
 **Tracking issue:** VRTV-99 (Linear) — https://linear.app/vertivolatam/issue/VRTV-99
 
 ---
@@ -43,35 +43,44 @@ cockpit central sobre esa data — hoy es una maqueta desconectada de ella.
 | 3 | **Cablear cada page a endpoints REALES** (ver mapa en `design.md`): `greenhouse.listByUser`, `greenhouse.get`, `greenhouse.getReadings`, `alert.getForGreenhouse`/`getMyAlerts`, `anomaly.getForGreenhouse`/`getUnresolved`, `cropCatalog.*`, `user.*`. | Reemplaza los literales por data de PostgreSQL. Solo se usan endpoints que existen hoy. |
 | 4 | **Scope multi-tenant vía sesión autenticada de Serverpod**, no por param. `greenhouse.listByUser` ya filtra por `session.authenticated.userIdentifier`. | El backend ya es la fuente de verdad del ownership; el dashboard hereda el tenant de la sesión. |
 | 5 | **Colorear in/out-of-range con el concepto `InstrumentCard`** (de VRTV-96 / crop_explorer): cada gauge usa los setpoints del greenhouse (`phMin/phMax`, `temperatureMin/Max`, …) con fallback a los `ideal*` del `CropModel` del cultivo. | Hoy los rangos del gauge están hardcoded en cada page; deben venir de la data real del invernadero/cultivo. |
+| 6 | **(NUEVO — scope ampliado)** Añadir **un endpoint admin cross-tenant** en `vertivo_server`: `greenhouse.listAllForAdmin` (lista toda la flota de todos los tenants), restringido con `requiredScopes => {Scope.admin}`. La vista admin (`home`/`greenhouses` modo operador, `users`) lo consume; el modo cliente sigue usando `listByUser`. | El cockpit aprobado es un **panel de operador interno** que ve toda la flota, no solo un tenant. `listByUser` no basta. Ver §"Tensión con AGENTS.md". |
 
 **In scope (este change):** la dep `vertivo_client`; la capa de repositories; el cableado
-page-por-page de las 6 pages a endpoints existentes; el InstrumentCard de rangos; manejo de
-loading/error/empty.
+page-por-page de las 6 pages; el InstrumentCard de rangos; manejo de loading/error/empty; **un
+endpoint admin cross-tenant nuevo** (`greenhouse.listAllForAdmin`, admin-only) + regeneración
+del `vertivo_client`.
 
 **Out of scope:**
-- **Nuevos endpoints de backend.** Si una page necesita un agregado que no existe (p.ej.
-  "todos los invernaderos de TODOS los clientes" para la vista admin, o conteos KPI globales),
-  se documenta como gap pero **no se construye aquí** (sería otro change, regla #1/#2).
-- **Auth/login del dashboard.** Se asume sesión Serverpod disponible; el flujo de sign-in del
-  cockpit es un change aparte.
+- **Sistema de roles/RBAC completo.** No hay tabla de roles hoy. El endpoint admin se protege
+  con el `Scope.admin` nativo de Serverpod (el scope se otorga vía el auth token). Una gestión
+  de roles real (asignar/revocar admin en UI) es un change aparte. **Supuesto documentado.**
+- **Auth/login del dashboard.** Se valida en un spike (§SSR) pero el flujo de sign-in completo
+  del cockpit es un change aparte.
 - **Rediseño visual / nuevos componentes D3.** Se reusa la UI existente tal cual.
 - **Realtime/streaming (MQTT push al browser).** El cableado inicial es fetch/polling, igual
   que `PhMonitorRepository`. Streaming es fase futura.
+- **KPIs globales agregados sin endpoint** (p.ej. "sensores online"): se muestran como "N/D"
+  explícito, no se inventan ni se construye su endpoint aquí.
 
-## Open questions para el owner
+## Tensión con AGENTS.md (decisión consciente, no descuido)
 
-1. **Vista admin multi-cliente:** las pages `users` y el "todos los clientes" de `greenhouses`
-   asumen ver la flota de *todos* los usuarios. Hoy solo existe `greenhouse.listByUser` (un
-   tenant) y `user.listBySegment` (admin). ¿El cockpit es (a) per-tenant —cada cliente ve su
-   flota— o (b) panel de operador interno que ve toda la flota? La respuesta define si hace
-   falta un endpoint nuevo `greenhouse.listAll`/agregados (otro change). **Recomendación:**
-   fase 1 per-tenant con lo que existe; vista admin como change separado.
-2. **Conflicto de puerto:** el dashboard Jaspr corre `mode: server, port: 8080` — el **mismo
-   puerto** que Serverpod (`localhost:8080`). Hay que mover uno (p.ej. dashboard a `:8090`)
-   antes de que el SSR pueda llamar al backend. ¿Confirmas el puerto destino del dashboard?
-3. **SSR vs client-side fetch:** `vertivo_client` está pensado para Flutter/Dart VM. ¿Las
-   llamadas se hacen server-side en el render Jaspr, o se hidratan client-side? Afecta dónde
-   vive la sesión auth. **Recomendación:** validar en un spike chico en la fase 1.
+`AGENTS.md` → "What NOT to do yet" dice literalmente: *"Do not build new Serverpod endpoints —
+13 exist with 0 Flutter screens consuming them."* Este change **añade 1 endpoint**
+(`greenhouse.listAllForAdmin`), lo cual entra en tensión con esa regla. La decisión de
+ampliar el scope a cross-tenant fue **aprobada explícitamente por el owner** sabiendo esto. El
+endpoint es el **mínimo imprescindible** para la vista admin (no se puede derivar de los 13
+existentes, que son todos per-tenant o per-greenhouse) y se mantiene **seguro por defecto**
+(admin-only vía `Scope.admin`). Se registra aquí para que la excepción quede trazable, no
+silenciosa.
+
+## Open questions — resueltas por el owner (2026-06-21)
+
+1. **Vista admin multi-cliente:** RESUELTO → **(b) panel de operador interno cross-tenant**.
+   Implica el endpoint nuevo `greenhouse.listAllForAdmin` (decisión #6).
+2. **Conflicto de puerto:** RESUELTO → **Serverpod se queda con `:8080`; el dashboard Jaspr se
+   mueve** a otro puerto (`:8090`). Documentado en `design.md` §puerto.
+3. **SSR vs client-side fetch:** se valida con un **spike chico** antes de cablear la auth
+   (fase 0). Define dónde vive la sesión admin.
 
 ## References
 
