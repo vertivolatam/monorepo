@@ -4,8 +4,10 @@ import 'package:serverpod/serverpod.dart';
 import 'package:serverpod_auth_idp_server/core.dart';
 import 'package:serverpod_auth_idp_server/providers/email.dart';
 
+import 'src/data/data_sources/mqtt_data_source.dart';
 import 'src/generated/endpoints.dart';
 import 'src/generated/protocol.dart';
+import 'src/greenhouses/sensor_ingestion_service.dart';
 import 'src/web/routes/app_config_route.dart';
 import 'src/web/routes/root.dart';
 
@@ -75,6 +77,11 @@ void run(List<String> args) async {
 
   // Start the server.
   await pod.start();
+
+  // Connect to the EMQX broker and start ingesting sensor telemetry.
+  // In-cluster the broker resolves as 'emqx-listeners:1883' (MqttDataSource default).
+  await MqttDataSource.instance.initialize(pod.runMode);
+  SensorIngestionService(pod).start();
 }
 
 void _sendRegistrationCode(

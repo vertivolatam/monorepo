@@ -1,4 +1,5 @@
 import 'package:jaspr/jaspr.dart';
+import 'package:jaspr/dom.dart';
 
 class DataTable extends StatelessComponent {
   final List<String> headers;
@@ -13,13 +14,12 @@ class DataTable extends StatelessComponent {
   });
 
   @override
-  Iterable<Component> build(BuildContext context) sync* {
-    yield div(classes: 'table-wrapper', [
+  Component build(BuildContext context) {
+    return div(classes: 'table-wrapper', [
       table(classes: 'data-table', [
         thead([
           tr([
-            for (final header in headers)
-              th([text(header)]),
+            for (final header in headers) th([Component.text(header)]),
           ]),
         ]),
         tbody([
@@ -28,14 +28,13 @@ class DataTable extends StatelessComponent {
               td(
                 attributes: {'colspan': '${headers.length}'},
                 classes: 'data-table__empty',
-                [text(emptyMessage ?? 'Sin datos')],
+                [Component.text(emptyMessage ?? 'Sin datos')],
               ),
             ])
           else
             for (final row in rows)
               tr([
-                for (final cell in row)
-                  td([cell]),
+                for (final cell in row) td([cell]),
               ]),
         ]),
       ]),

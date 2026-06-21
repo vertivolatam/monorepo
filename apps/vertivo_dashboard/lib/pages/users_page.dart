@@ -1,14 +1,17 @@
 import 'package:jaspr/jaspr.dart';
+import 'package:jaspr/dom.dart';
 
 class UsersPage extends StatelessComponent {
   const UsersPage({super.key});
 
   @override
-  Iterable<Component> build(BuildContext context) sync* {
-    yield div(classes: 'page', [
+  Component build(BuildContext context) {
+    return div(classes: 'page', [
       div(classes: 'page__header', [
-        h1([text('Usuarios')]),
-        p(classes: 'page__subtitle', [text('Gestion de clientes por segmento')]),
+        h1([Component.text('Usuarios')]),
+        p(classes: 'page__subtitle', [
+          Component.text('Gestion de clientes por segmento'),
+        ]),
       ]),
 
       // Segment summary
@@ -22,29 +25,34 @@ class UsersPage extends StatelessComponent {
       // Users table
       div(classes: 'section', [
         div(classes: 'section__header', [
-          h2(classes: 'section__title', [text('Usuarios Activos')]),
+          h2(classes: 'section__title', [Component.text('Usuarios Activos')]),
         ]),
 
         // Filters
         div(classes: 'filters', [
           div(classes: 'filter-group', [
-            label(attributes: {'for': 'user-segment'}, [text('Segmento')]),
+            label(
+              attributes: {'for': 'user-segment'},
+              [Component.text('Segmento')],
+            ),
             select(classes: 'filter-select', id: 'user-segment', [
-              option(value: 'all', [text('Todos')]),
-              option(value: 'residential', [text('Residencial')]),
-              option(value: 'commercial', [text('Comercial')]),
-              option(value: 'industrial', [text('Industrial')]),
-              option(value: 'expert', [text('Experto')]),
+              option(value: 'all', [Component.text('Todos')]),
+              option(value: 'residential', [Component.text('Residencial')]),
+              option(value: 'commercial', [Component.text('Comercial')]),
+              option(value: 'industrial', [Component.text('Industrial')]),
+              option(value: 'expert', [Component.text('Experto')]),
             ]),
           ]),
           div(classes: 'filter-group', [
-            label(attributes: {'for': 'user-search'}, [text('Buscar')]),
+            label(
+              attributes: {'for': 'user-search'},
+              [Component.text('Buscar')],
+            ),
             input(
               classes: 'filter-input',
               id: 'user-search',
               type: InputType.text,
               attributes: {'placeholder': 'Email o nombre...'},
-              [],
             ),
           ]),
         ]),
@@ -53,24 +61,87 @@ class UsersPage extends StatelessComponent {
           table(classes: 'data-table', [
             thead([
               tr([
-                th([text('ID')]),
-                th([text('Nombre')]),
-                th([text('Email')]),
-                th([text('Segmento')]),
-                th([text('Invernaderos')]),
-                th([text('2FA')]),
-                th([text('Ultimo Login')]),
-                th([text('Estado')]),
+                th([Component.text('ID')]),
+                th([Component.text('Nombre')]),
+                th([Component.text('Email')]),
+                th([Component.text('Segmento')]),
+                th([Component.text('Invernaderos')]),
+                th([Component.text('2FA')]),
+                th([Component.text('Ultimo Login')]),
+                th([Component.text('Estado')]),
               ]),
             ]),
             tbody([
-              _userRow('1', 'Carlos Mendez', 'carlos@gmail.com', 'residential', '2', false, 'Hace 2h', true),
-              _userRow('2', 'Maria Rodriguez', 'maria@lacosechafresca.com', 'commercial', '3', true, 'Hace 30min', true),
-              _userRow('3', 'Inversiones Agro SA', 'ops@invagro.com', 'industrial', '6', true, 'Hace 5min', true),
-              _userRow('4', 'Ana Torres', 'ana@gmail.com', 'residential', '1', false, 'Hace 3 dias', true),
-              _userRow('5', 'Dr. Felipe Vargas', 'fvargas@agro.edu', 'expert', '0', true, 'Hace 1h', true),
-              _userRow('6', 'Restaurante Nativo', 'chef@nativo.co', 'commercial', '2', true, 'Hace 4h', true),
-              _userRow('7', 'Pedro Gonzalez', 'pedro@hotmail.com', 'residential', '1', false, 'Hace 15 dias', false),
+              _userRow(
+                '1',
+                'Carlos Mendez',
+                'carlos@gmail.com',
+                'residential',
+                '2',
+                false,
+                'Hace 2h',
+                true,
+              ),
+              _userRow(
+                '2',
+                'Maria Rodriguez',
+                'maria@lacosechafresca.com',
+                'commercial',
+                '3',
+                true,
+                'Hace 30min',
+                true,
+              ),
+              _userRow(
+                '3',
+                'Inversiones Agro SA',
+                'ops@invagro.com',
+                'industrial',
+                '6',
+                true,
+                'Hace 5min',
+                true,
+              ),
+              _userRow(
+                '4',
+                'Ana Torres',
+                'ana@gmail.com',
+                'residential',
+                '1',
+                false,
+                'Hace 3 dias',
+                true,
+              ),
+              _userRow(
+                '5',
+                'Dr. Felipe Vargas',
+                'fvargas@agro.edu',
+                'expert',
+                '0',
+                true,
+                'Hace 1h',
+                true,
+              ),
+              _userRow(
+                '6',
+                'Restaurante Nativo',
+                'chef@nativo.co',
+                'commercial',
+                '2',
+                true,
+                'Hace 4h',
+                true,
+              ),
+              _userRow(
+                '7',
+                'Pedro Gonzalez',
+                'pedro@hotmail.com',
+                'residential',
+                '1',
+                false,
+                'Hace 15 dias',
+                false,
+              ),
             ]),
           ]),
         ]),
@@ -78,32 +149,55 @@ class UsersPage extends StatelessComponent {
     ]);
   }
 
-  Component _segmentCard(String segment, String count, String pricing, String detail) {
+  Component _segmentCard(
+    String segment,
+    String count,
+    String pricing,
+    String detail,
+  ) {
     return div(classes: 'segment-card', [
-      h3(classes: 'segment-card__title', [text(segment)]),
-      span(classes: 'segment-card__count', [text(count)]),
-      span(classes: 'segment-card__label', [text('usuarios')]),
+      h3(classes: 'segment-card__title', [Component.text(segment)]),
+      span(classes: 'segment-card__count', [Component.text(count)]),
+      span(classes: 'segment-card__label', [Component.text('usuarios')]),
       div(classes: 'segment-card__detail', [
-        span([text(pricing)]),
-        span([text(detail)]),
+        span([Component.text(pricing)]),
+        span([Component.text(detail)]),
       ]),
     ]);
   }
 
-  Component _userRow(String id, String name, String email, String segment,
-      String greenhouses, bool twoFa, String lastLogin, bool active) {
-    return tr(classes: 'data-table__row${!active ? ' data-table__row--inactive' : ''}', [
-      td([text(id)]),
-      td([text(name)]),
-      td(classes: 'data-table__mono', [text(email)]),
-      td([span(classes: 'badge badge--segment-$segment', [text(segment)])]),
-      td([text(greenhouses)]),
-      td([text(twoFa ? 'Si' : 'No')]),
-      td(classes: 'data-table__date', [text(lastLogin)]),
-      td([
-        span(classes: 'status-dot status-dot--${active ? 'online' : 'offline'}', []),
-        text(active ? ' Activo' : ' Inactivo'),
-      ]),
-    ]);
+  Component _userRow(
+    String id,
+    String name,
+    String email,
+    String segment,
+    String greenhouses,
+    bool twoFa,
+    String lastLogin,
+    bool active,
+  ) {
+    return tr(
+      classes: 'data-table__row${!active ? ' data-table__row--inactive' : ''}',
+      [
+        td([Component.text(id)]),
+        td([Component.text(name)]),
+        td(classes: 'data-table__mono', [Component.text(email)]),
+        td([
+          span(classes: 'badge badge--segment-$segment', [
+            Component.text(segment),
+          ]),
+        ]),
+        td([Component.text(greenhouses)]),
+        td([Component.text(twoFa ? 'Si' : 'No')]),
+        td(classes: 'data-table__date', [Component.text(lastLogin)]),
+        td([
+          span(
+            classes: 'status-dot status-dot--${active ? 'online' : 'offline'}',
+            [],
+          ),
+          Component.text(active ? ' Activo' : ' Inactivo'),
+        ]),
+      ],
+    );
   }
 }

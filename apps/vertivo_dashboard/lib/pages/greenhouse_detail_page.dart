@@ -1,4 +1,5 @@
 import 'package:jaspr/jaspr.dart';
+import 'package:jaspr/dom.dart';
 
 import '../components/sensor_chart.dart';
 import '../components/gauge_chart.dart';
@@ -9,51 +10,55 @@ class GreenhouseDetailPage extends StatelessComponent {
   const GreenhouseDetailPage({required this.greenhouseId, super.key});
 
   @override
-  Iterable<Component> build(BuildContext context) sync* {
-    yield div(classes: 'page', [
+  Component build(BuildContext context) {
+    return div(classes: 'page', [
       // Breadcrumb
       div(classes: 'breadcrumb', [
-        a(href: '/greenhouses', [text('Invernaderos')]),
-        span(classes: 'breadcrumb__sep', [text(' / ')]),
-        span([text('GH-$greenhouseId')]),
+        a(href: '/greenhouses', [Component.text('Invernaderos')]),
+        span(classes: 'breadcrumb__sep', [Component.text(' / ')]),
+        span([Component.text('GH-$greenhouseId')]),
       ]),
 
       // Header
       div(classes: 'page__header page__header--detail', [
         div([
-          h1([text('GH-$greenhouseId')]),
-          p(classes: 'page__subtitle', [text('Invernadero Central — Indoor Hydroponics')]),
+          h1([Component.text('GH-$greenhouseId')]),
+          p(classes: 'page__subtitle', [
+            Component.text('Invernadero Central — Indoor Hydroponics'),
+          ]),
         ]),
         div(classes: 'page__header-actions', [
-          span(classes: 'badge badge--segment-industrial', [text('Industrial')]),
+          span(classes: 'badge badge--segment-industrial', [
+            Component.text('Industrial'),
+          ]),
           span(classes: 'status-dot status-dot--online', []),
-          span([text('Online')]),
+          span([Component.text('Online')]),
         ]),
       ]),
 
       // Metadata
       div(classes: 'detail-meta', [
         div(classes: 'detail-meta__item', [
-          span(classes: 'detail-meta__label', [text('Modo')]),
-          span([text('Indoor')]),
+          span(classes: 'detail-meta__label', [Component.text('Modo')]),
+          span([Component.text('Indoor')]),
         ]),
         div(classes: 'detail-meta__item', [
-          span(classes: 'detail-meta__label', [text('Irrigacion')]),
-          span([text('NFT Hidroponico')]),
+          span(classes: 'detail-meta__label', [Component.text('Irrigacion')]),
+          span([Component.text('NFT Hidroponico')]),
         ]),
         div(classes: 'detail-meta__item', [
-          span(classes: 'detail-meta__label', [text('Bandejas')]),
-          span([text('6')]),
+          span(classes: 'detail-meta__label', [Component.text('Bandejas')]),
+          span([Component.text('6')]),
         ]),
         div(classes: 'detail-meta__item', [
-          span(classes: 'detail-meta__label', [text('Ubicacion')]),
-          span([text('Bogota, Colombia')]),
+          span(classes: 'detail-meta__label', [Component.text('Ubicacion')]),
+          span([Component.text('Bogota, Colombia')]),
         ]),
       ]),
 
       // Gauge row — all 8 sensors
       div(classes: 'section', [
-        h2(classes: 'section__title', [text('Lecturas Actuales')]),
+        h2(classes: 'section__title', [Component.text('Lecturas Actuales')]),
         div(classes: 'grid grid--4', [
           _gaugePanel('CO2', 537.9, 300, 800, 400, 700, 'ppm'),
           _gaugePanel('Humedad', 62.3, 0, 100, 40, 80, '%'),
@@ -68,7 +73,9 @@ class GreenhouseDetailPage extends StatelessComponent {
 
       // Time-series charts — 2 columns
       div(classes: 'section', [
-        h2(classes: 'section__title', [text('Historico — Ultimas 24h')]),
+        h2(classes: 'section__title', [
+          Component.text('Historico — Ultimas 24h'),
+        ]),
         div(classes: 'grid grid--2', [
           _chartPanel('CO2', 'co2', 'ppm', 400, 700),
           _chartPanel('Humedad', 'humidity', '%', 40, 80),
@@ -83,9 +90,16 @@ class GreenhouseDetailPage extends StatelessComponent {
     ]);
   }
 
-  Component _gaugePanel(String label, double value, double min, double max,
-      double lowerBound, double upperBound, String unit) {
-    final id = '${greenhouseId}-${label.toLowerCase()}';
+  Component _gaugePanel(
+    String label,
+    double value,
+    double min,
+    double max,
+    double lowerBound,
+    double upperBound,
+    String unit,
+  ) {
+    final id = '$greenhouseId-${label.toLowerCase()}';
     return div(classes: 'panel panel--compact', [
       GaugeChart(
         gaugeId: id,
@@ -100,11 +114,16 @@ class GreenhouseDetailPage extends StatelessComponent {
     ]);
   }
 
-  Component _chartPanel(String label, String sensorType, String unit,
-      double minBound, double maxBound) {
+  Component _chartPanel(
+    String label,
+    String sensorType,
+    String unit,
+    double minBound,
+    double maxBound,
+  ) {
     return div(classes: 'panel', [
       div(classes: 'panel__header', [
-        span(classes: 'panel__title', [text('$label ($unit)')]),
+        span(classes: 'panel__title', [Component.text('$label ($unit)')]),
       ]),
       SensorChart(
         chartId: '$greenhouseId-$sensorType',

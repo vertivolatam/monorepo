@@ -19,7 +19,7 @@ TIMEOUT ?= 900000
         dev-backend-build dev-backend-deploy dev-backend-start dev-backend-logs dev-backend-generate \
         dev-all-deploy dev-all-destroy dev-all-status dev-all-port-forward dev-all-port-forward-stop \
         dev-mqtt-forward dev-mqtt-test \
-        dev-flutter-start dev-flutter-build \
+        dev-flutter-start dev-flutter-build dev-flutter-desktop dev-flutter-mobile \
         dev-argocd-deploy dev-argocd-status dev-argocd-password \
         dev-raspberry-install dev-raspberry-start dev-raspberry-test dev-raspberry-lint \
         dev-raspberry-emqx-sim dev-raspberry-i2c-sim dev-raspberry-i2c-sim-scenarios \
@@ -128,6 +128,8 @@ help: ## Show this help message
 	@echo "$(GREEN)DEV - Flutter:$(NC)"
 	@echo "  $(YELLOW)dev-flutter-start$(NC)           Run Flutter app in dev mode"
 	@echo "  $(YELLOW)dev-flutter-build$(NC)           Build Flutter web for Serverpod"
+	@echo "  $(YELLOW)dev-flutter-desktop$(NC)         Run Flutter app on Linux desktop"
+	@echo "  $(YELLOW)dev-flutter-mobile$(NC)          Run Flutter app on Android device/emulator"
 	@echo ""
 	@echo "$(GREEN)DEV - ArgoCD:$(NC)"
 	@echo "  $(YELLOW)dev-argocd-deploy$(NC)           Install ArgoCD + apps"
@@ -450,6 +452,14 @@ dev-flutter-start: ## Run Flutter app
 
 dev-flutter-build: ## Build Flutter web for Serverpod
 	@cd apps/vertivo_flutter && flutter build web --base-href /app/ --wasm --output ../vertivo_server/web/app
+
+dev-flutter-desktop: ## Run Flutter app on Linux desktop (server on localhost:8080)
+	@cd apps/vertivo_flutter && flutter run -d linux \
+		--dart-define=SERVER_URL=http://localhost:8080/
+
+dev-flutter-mobile: ## Run Flutter app on Android device/emulator (10.0.2.2 = host from emulator)
+	@cd apps/vertivo_flutter && flutter run \
+		--dart-define=SERVER_URL=http://10.0.2.2:8080/
 
 # ==========================================
 # DEV - ArgoCD

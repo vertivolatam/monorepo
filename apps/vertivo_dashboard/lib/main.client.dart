@@ -1,6 +1,6 @@
-import 'package:jaspr/browser.dart';
+import 'package:jaspr/client.dart';
 import 'app.dart';
 
 void main() {
-  runAppWithParams((_) => App());
+  runApp(App());
 }
