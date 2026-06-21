@@ -150,6 +150,9 @@ CREATE TABLE IF NOT EXISTS crops (
     name_en           TEXT,
     family            TEXT,
     species           TEXT,
+    origin            TEXT,
+    general_use       TEXT,
+    common_use        TEXT,
     edible_part       TEXT,
     sheet_harvest_type TEXT,
     aeroponic         INTEGER NOT NULL DEFAULT 0,
@@ -501,15 +504,18 @@ def build(crops_path: Path, xlsx_path: Path, db_path: Path, reseed: bool = False
         sheet_type = derive_sheet_type(crop, sheet_lookup)
         assigned = crop.get("profile")
         cur.execute(
-            "INSERT INTO crops (id, name_es, name_en, family, species, "
-            "edible_part, sheet_harvest_type, aeroponic, priority, assigned_profile) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO crops (id, name_es, name_en, family, species, origin, "
+            "general_use, common_use, edible_part, sheet_harvest_type, aeroponic, "
+            "priority, assigned_profile) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (
                 idx,
                 crop.get("name_es"),
                 crop.get("name_en"),
                 crop.get("family"),
                 crop.get("species"),
+                crop.get("origin"),
+                crop.get("general_use"),
+                crop.get("common_use"),
                 crop.get("edible_part"),
                 sheet_type,
                 1 if crop.get("aeroponic") else 0,
