@@ -28,6 +28,7 @@ dependencies:
   flutter:
     sdk: flutter
   google_fonts: ^6.2.1
+  flutter_riverpod: ^2.5.1
   vertivo_client:
     path: ../vertivo_client
   serverpod_flutter: 3.4.1
