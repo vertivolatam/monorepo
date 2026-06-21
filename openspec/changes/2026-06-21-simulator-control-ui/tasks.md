@@ -9,11 +9,12 @@
 - [ ] `read()`/loop: respetar `_enabled` (no publicar si está off).
 - [ ] Test unit: cada setter cambia el comportamiento esperado (target mueve la media; anomaly mete spike; disabled no publica).
 
-## Phase 1 — Modelo de calibración
-- [ ] `SimulatedSensorBase`: estado `calibrated: bool` + `bias`/`slope`; `read()` aplica sesgo si `not calibrated`.
-- [ ] Sensores no-pH: `calibrate()` (sin args) → `calibrated = True`, sesgo a 0.
+## Phase 1 — Modelo de calibración (solo EZO aislados: pH · EC · DO · ORP)
+- [ ] `SimulatedSensorBase`: `requires_calibration: bool` (default False) + estado `calibrated: bool` + `bias`/`slope`; `read()` aplica sesgo solo si `requires_calibration and not calibrated`.
+- [ ] Marcar `requires_calibration=True` en **pH, EC, DO, ORP**. **HUM, CO₂, RTD** quedan factory (`requires_calibration=False`, siempre 🟢). **TDS** deriva de EC (sin estado propio; usa el de EC).
+- [ ] EC/DO/ORP: `calibrate()` (sin args) → `calibrated=True`, sesgo a 0.
 - [ ] `SimulatedPHSensor`: `calibrate(point, value)` con `point ∈ {low,mid,high}`; offset desde `mid`, `slope%` desde par low/high; `mtc(temp)` afecta la lectura.
-- [ ] Tests: pH offset tras `mid`, slope tras low+high; simple-flip quita sesgo; default de sesgo "sin calibrar" por tipo.
+- [ ] Tests: pH offset tras `mid`, slope tras low+high; EC/DO/ORP simple-flip quita sesgo; HUM/CO₂/RTD nunca sesgan; TDS sigue a EC; default de sesgo por tipo.
 
 ## Phase 2 — Dispatcher + subscriber de control
 - [ ] `_dispatch(command: dict)` puro: mapea `{sensor, action, ...}` y acciones globales (`kill_all`, `set_interval`) a efectos en el modelo. Sensor/acción desconocida → log + no-op.

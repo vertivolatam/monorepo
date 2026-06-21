@@ -72,16 +72,21 @@ Topic dedicado (separado del `command/` de actuadores reales del orquestador):
 
 ## 5. Modelo de calibración
 
-Todos los sensores arrancan **sin calibrar** → `read()` devuelve la lectura con **sesgo** (offset +
-slope degradado) y bandera de baja confianza. La UI lo marca 🟡.
+**Solo calibran los EZO aislados** del i3 InterLink (`require electrical isolation`): **pH, EC, DO,
+ORP** — los que miden por electrodo/sonda. Estos arrancan **sin calibrar** → `read()` devuelve la
+lectura con **sesgo** (offset + slope degradado) y bandera de baja confianza; la UI los marca 🟡.
 
 - **pH (fiel)**: puntos `low (4.0) / mid (7.0) / high (10.0)`. `calibrate(point, value)` captura un punto;
   el offset se fija con `mid`, el `slope%` se deriva del par low/high (ideal ≈ 59.16 mV/pH a 25 °C = 100%).
   **MTC** (temperatura manual) corrige la lectura. 1 punto = offset; 2–3 puntos = slope + rango.
-- **Otros 7 (estado simple)**: `calibrate` (sin args) voltea `sin-calibrar → calibrado` y elimina el
+- **EC, DO, ORP (estado simple)**: `calibrate` (sin args) voltea `sin-calibrar → calibrado` y elimina el
   sesgo de un paso. Sin química de soluciones de referencia.
 
-El sesgo "sin calibrar" por tipo tiene un default razonable (open question #2 del PDR).
+**No calibran** (sin control de calibración en la UI): **HUM, CO₂** (factory) y **RTD/temp** (factory /
+1-punto opcional → tratado como factory). **TDS = derivado de EC** — no tiene calibración propia;
+calibrar EC habilita TDS. Estos sensores publican siempre con confianza normal (🟢).
+
+El sesgo "sin calibrar" de pH/EC/DO/ORP tiene un default razonable por tipo (open question #2 del PDR).
 
 ## 6. Vista de wiring InterLink (interactiva, config-driven)
 
