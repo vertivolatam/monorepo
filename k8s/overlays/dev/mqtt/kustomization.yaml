@@ -5,6 +5,9 @@ namespace: vertivo-dev
 
 resources:
   - ../../../base/mqtt
+  # Workaround Service: emqx-operator 2.3.1 ↔ emqx 5.8.6 incompatibility means
+  # the operator never creates `emqx-listeners`. See the file header for details.
+  - emqx-listeners-service.yaml
 
 patches:
   - target:

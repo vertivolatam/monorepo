@@ -1,0 +1,45 @@
+# Manual MQTT listeners Service for the dev EMQX cluster.
+#
+# Why this exists: emqx-operator 2.3.1 is INCOMPATIBLE with emqx/emqx:5.8.6.
+# The operator polls `GET /api/v5/load_rebalance/global_status` on the core node
+# to compute readiness, but that endpoint returns HTTP 404 on EMQX 5.8.6
+# (removed/renamed). The reconcile fails at the `updateStatus` step, so the
+# cluster never reaches the `Ready` phase and the operator NEVER creates the
+# `emqx-listeners` Service declared in `listenersServiceTemplate`. The broker
+# itself is fully healthy (tcp:1883 listener started, sub/pub works) — only the
+# Service is missing, which breaks the in-cluster name the backend resolves
+# (`emqx-listeners:1883`, see MqttDataSource).
+#
+# Workaround: define the listeners Service ourselves, selecting the operator's
+# core pod. `publishNotReadyAddresses: true` is REQUIRED because the operator
+# leaves the pod's custom readiness gate `apps.emqx.io/on-serving=Unknown`
+# (it can't flip it to True due to the same 404), so without this flag the
+# endpoints stay unready and the Service routes to nothing.
+#
+# Proper fix (tracked separately): bump emqx-operator to a version compatible
+# with EMQX 5.8.x, or pin emqx/emqx to a version this operator supports. Once
+# the operator creates `emqx-listeners` on its own, delete this file.
+apiVersion: v1
+kind: Service
+metadata:
+  name: emqx-listeners
+  namespace: vertivo-dev
+  labels:
+    app.kubernetes.io/managed-by: manual-operator-workaround
+spec:
+  type: NodePort
+  publishNotReadyAddresses: true
+  selector:
+    apps.emqx.io/instance: emqx
+    apps.emqx.io/db-role: core
+  ports:
+    - name: mqtt-tcp
+      port: 1883
+      targetPort: 1883
+      nodePort: 31883
+      protocol: TCP
+    - name: mqtt-ws
+      port: 8083
+      targetPort: 8083
+      nodePort: 30083
+      protocol: TCP

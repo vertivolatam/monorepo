@@ -1,6 +1,6 @@
-# Dev cluster DB wiring for the Serverpod backend.
+# Dev cluster DB wiring + auth secrets for the Serverpod backend.
 #
-# Root cause: the backend image bakes config/development.yaml with
+# Root cause (DB): the backend image bakes config/development.yaml with
 # `database.host: localhost` (and port 8090). In the cluster Postgres lives at
 # `postgres-service:5432`, so Serverpod crash-loops with
 # "Retrying to connect to the database" (Connection refused to localhost).
@@ -11,6 +11,21 @@
 #   - SERVERPOD_PASSWORD_database                      -> overrides passwords.yaml `database`
 # Values come from the existing `backend-config` ConfigMap (DB_*) and the
 # `backend-secret` Secret (DB_PASSWORD). Runmode stays `development`.
+#
+# Root cause (auth): the pH-monitoring slice (PR #8) wired serverpod_auth_idp
+# (JwtConfigFromPasswords + EmailIdpConfigFromPasswords in server.dart). On
+# startup Serverpod now REQUIRES the JWT/email auth secrets, otherwise it throws
+# `PasswordNotFoundException` and CrashLoopBackOffs. The pre-slice image didn't
+# need them, so the dev manifest never provided them. We inject them as
+# SERVERPOD_PASSWORD_<key> env vars sourced from a `backend-auth-peppers` Secret.
+#
+# The Secret is NOT committed (no plaintext in git). Create it once per cluster
+# with random dev values:
+#   kubectl create secret generic backend-auth-peppers -n vertivo-dev \
+#     --from-literal=jwtRefreshTokenHashPepper="$(openssl rand -hex 32)" \
+#     --from-literal=refreshTokenHashPepper="$(openssl rand -hex 32)" \
+#     --from-literal=emailSecretHashPepper="$(openssl rand -hex 32)" \
+#     --from-literal=jwtHmacSha512PrivateKey="$(openssl rand -base64 64 | tr -d '\n')"
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -51,3 +66,26 @@ spec:
             # "tables missing" check). Migrations ship in the image.
             - name: SERVERPOD_APPLY_MIGRATIONS
               value: "true"
+            # serverpod_auth_idp secrets (required since PR #8 wired auth into
+            # server.dart). Sourced from the `backend-auth-peppers` Secret —
+            # see the create-secret snippet in this file's header.
+            - name: SERVERPOD_PASSWORD_jwtRefreshTokenHashPepper
+              valueFrom:
+                secretKeyRef:
+                  name: backend-auth-peppers
+                  key: jwtRefreshTokenHashPepper
+            - name: SERVERPOD_PASSWORD_refreshTokenHashPepper
+              valueFrom:
+                secretKeyRef:
+                  name: backend-auth-peppers
+                  key: refreshTokenHashPepper
+            - name: SERVERPOD_PASSWORD_emailSecretHashPepper
+              valueFrom:
+                secretKeyRef:
+                  name: backend-auth-peppers
+                  key: emailSecretHashPepper
+            - name: SERVERPOD_PASSWORD_jwtHmacSha512PrivateKey
+              valueFrom:
+                secretKeyRef:
+                  name: backend-auth-peppers
+                  key: jwtHmacSha512PrivateKey
