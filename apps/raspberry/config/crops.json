@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "source": "Modelo Fitotécnico (Google Sheet, vertivolatam)",
+    "version": "1.0.0",
+    "generated_note": "v1 — perfil 'leafy_vegetative' completo desde la hoja. Lista de cultivos PARCIAL: la lectura de la hoja se truncó alfabéticamente; los setpoints están confirmados para los cultivos de hoja en fase vegetativa (uniformes). Completar el catálogo con el resto de la hoja. Especies de los cultivos del kit (mostaza/espinaca/cebollín/culantro) inferidas — verificar contra la hoja."
+  },
+  "profiles": {
+    "leafy_vegetative": {
+      "label_es": "Cultivos de Hoja — Fase Vegetativa",
+      "label_en": "Leafy Crops — Vegetative Phase",
+      "ph": { "min": 6.0, "ideal": 6.6, "max": 7.4 },
+      "ec_uS_cm3": { "min": 250, "max": 450 },
+      "nutrient_conc_mL_L": { "min": 4.8, "max": 5.1 },
+      "photoperiod_h": 18,
+      "light_spectrum": "FSMUV",
+      "ambient_temp_c": { "day": { "min": 23, "max": 33 }, "night": { "min": 15, "max": 25 } },
+      "nutrient_solution_temp_c": { "day": { "min": 23, "max": 33 }, "night": { "min": 15, "max": 25 } },
+      "relative_humidity_pct": { "day": { "min": 70, "max": 100 }, "night": { "min": 50, "max": 100 } },
+      "row_spacing_cm": 18,
+      "plant_spacing_cm": 15,
+      "nutrient_recipe_g_per_1000ml": {
+        "solucion_a_nitratos": { "nitrato_de_calcio": 520.0, "nitrato_de_potasio": 274.0 },
+        "solucion_b_fosfatos_sulfatos": { "fosfato_monoamonico": 85.0, "sulfato_de_magnesio": 122.8 },
+        "solucion_c_micros": { "manganeso": 62.0, "cobre": 0.2, "hierro": 12.58, "zinc": 0.3, "boro": 1.5 }
+      }
+    }
+  },
+  "crops": [
+    { "name_es": "Albahaca", "name_en": "Basil", "family": "Lamiaceae", "species": "Ocimum basilicum var. genovese", "aeroponic": true, "priority": 1, "edible_part": "Hojas", "profile": "leafy_vegetative", "in_kit": true },
+    { "name_es": "Apio", "name_en": "Celery", "family": "Apiaceae", "species": "Apium graveolens", "aeroponic": true, "priority": 1, "edible_part": "Tallo", "profile": "leafy_vegetative", "in_kit": true },
+    { "name_es": "Ajo", "name_en": "Garlic", "family": "Amaryllidaceae", "species": "Allium sativum", "aeroponic": true, "priority": 1, "edible_part": "Bulbo", "profile": "leafy_vegetative", "in_kit": false },
+    { "name_es": "Alfalfa", "name_en": "Alfalfa", "family": "Fabaceae", "species": "Medicago sativa", "aeroponic": true, "priority": 1, "edible_part": "Tallo", "profile": "leafy_vegetative", "in_kit": false },
+    { "name_es": "Acelga", "name_en": "Chard", "family": "Amaranthaceae", "species": "Beta vulgaris subsp. vulgaris", "aeroponic": true, "priority": 2, "edible_part": "Hojas", "profile": "leafy_vegetative", "in_kit": false },
+    { "name_es": "Arúgula", "name_en": "Arugula", "family": "Brassicaceae", "species": "Eruca vesicaria ssp. sativa", "aeroponic": true, "priority": 2, "edible_part": "Hojas", "profile": "leafy_vegetative", "in_kit": false },
+    { "name_es": "Mostaza china", "name_en": "Chinese mustard", "family": "Brassicaceae", "species": "Brassica juncea", "aeroponic": true, "priority": 1, "edible_part": "Hojas", "profile": "leafy_vegetative", "in_kit": true, "species_inferred": true },
+    { "name_es": "Espinaca", "name_en": "Spinach", "family": "Amaranthaceae", "species": "Spinacia oleracea", "aeroponic": true, "priority": 1, "edible_part": "Hojas", "profile": "leafy_vegetative", "in_kit": true, "species_inferred": true },
+    { "name_es": "Cebollín", "name_en": "Chives", "family": "Amaryllidaceae", "species": "Allium schoenoprasum", "aeroponic": true, "priority": 1, "edible_part": "Hojas", "profile": "leafy_vegetative", "in_kit": true, "species_inferred": true },
+    { "name_es": "Culantro", "name_en": "Cilantro", "family": "Apiaceae", "species": "Coriandrum sativum", "aeroponic": true, "priority": 1, "edible_part": "Hojas", "profile": "leafy_vegetative", "in_kit": true, "species_inferred": true }
+  ]
+}
