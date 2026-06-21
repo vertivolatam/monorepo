@@ -56,7 +56,7 @@ HERE = Path(__file__).resolve().parent
 CONFIG_DIR = HERE.parent.parent / "config"
 DEFAULT_CROPS = CONFIG_DIR / "crops.json"
 DEFAULT_DB = CONFIG_DIR / "crops.db"
-DEFAULT_XLSX = Path.home() / "Descargas" / "vertivolatam" / "Estructura de Costos.xlsx"
+DEFAULT_XLSX = CONFIG_DIR / "modelo-fitotecnico.xlsx"
 SHEET_NAME = "Modelo Fitotécnico"
 
 # Columnas (1-indexed) de la hoja "Modelo Fitotécnico" (header en fila 4).
