@@ -9,6 +9,9 @@ resolution: workspace
 dependencies:
   jaspr: ^0.22.4
   jaspr_router: ^0.8.1
+  vertivo_client:
+    path: ../vertivo_client
+  serverpod_client: 3.4.1
 
 dev_dependencies:
   build_runner: ^2.4.0
@@ -16,7 +19,10 @@ dev_dependencies:
   jaspr_builder: ^0.22.4
   jaspr_lints: ^0.6.1
   lints: ^5.0.0
+  test: ^1.25.5
 
 jaspr:
   mode: server
-  port: 8080
+  # :8090 — Serverpod owns :8080 (the backend this dashboard calls). See
+  # openspec/changes/2026-06-21-dashboard-fleet-cockpit/design.md §Puerto.
+  port: 8090
