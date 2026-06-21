@@ -63,6 +63,43 @@ SHEET_NAME = "Modelo Fitotécnico"
 COL_AEROPONIC = 1
 COL_NAME_ES = 4
 COL_EDIBLE_PART = 9  # "Parte Comestible / Edible Portion"
+SHEET_HEADER_ROW = 4
+SHEET_FIRST_DATA_ROW = 5
+
+# --- Grupo verde "Nutritional value per 100 g (3.5 oz)" (cols 106-131) -------
+# Cada entrada: clave estable -> (col 1-indexed, unidad). El orden refleja la
+# hoja (energía, macros, vitaminas A→K, minerales Ca→Zn). value_num en estas
+# unidades; el explorador agrupa por prefijo (vit_*/min_* → Vitaminas/Minerales).
+NUTRITION_COLUMNS: list[tuple[str, int, str]] = [
+    ("energy", 106, "kJ"),
+    ("carbohydrates_sugars", 107, "g"),
+    ("dietary_fiber", 108, "g"),
+    ("fat", 109, "g"),
+    ("protein", 110, "g"),
+    ("water", 111, "g"),
+    ("vit_a_retinol", 112, "µg"),
+    ("vit_beta_carotene", 113, "µg"),
+    ("vit_b1_thiamine", 114, "mg"),
+    ("vit_b2_riboflavin", 115, "mg"),
+    ("vit_b3_niacin", 116, "mg"),
+    ("vit_b5_pantothenic", 117, "mg"),
+    ("vit_b6", 118, "mg"),
+    ("vit_b9_folate", 119, "µg"),
+    ("vit_choline", 120, "mg"),
+    ("vit_c", 121, "mg"),
+    ("vit_e", 122, "mg"),
+    ("vit_k", 123, "µg"),
+    ("min_calcium", 124, "mg"),
+    ("min_iron", 125, "mg"),
+    ("min_magnesium", 126, "mg"),
+    ("min_manganese", 127, "mg"),
+    ("min_phosphorus", 128, "mg"),
+    ("min_potassium", 129, "mg"),
+    ("min_sodium", 130, "mg"),
+    ("min_zinc", 131, "mg"),
+]
+# Unidad por nutriente (para poblar la tabla y la UI).
+NUTRITION_UNITS: dict[str, str] = {k: u for k, _c, u in NUTRITION_COLUMNS}
 
 # --- Clasificación de harvest type ------------------------------------------
 # La hoja registra "Parte Comestible" (su propia clasificación botánica). De ahí
@@ -100,6 +137,7 @@ def now_iso() -> str:
 # CREATE IF NOT EXISTS: el esquema se asegura sin destruir datos existentes.
 # El seeding se gatea aparte (seed-if-empty). Solo --reseed hace DROP.
 DROP_SCHEMA = """
+DROP TABLE IF EXISTS nutrition;
 DROP TABLE IF EXISTS setpoint_audit;
 DROP TABLE IF EXISTS setpoints;
 DROP TABLE IF EXISTS crops;
@@ -147,6 +185,16 @@ CREATE TABLE IF NOT EXISTS setpoint_audit (
 CREATE INDEX IF NOT EXISTS idx_audit_crop        ON setpoint_audit(crop_id);
 CREATE INDEX IF NOT EXISTS idx_audit_crop_field  ON setpoint_audit(crop_id, field);
 CREATE INDEX IF NOT EXISTS idx_audit_active      ON setpoint_audit(crop_id, field, is_active);
+
+CREATE TABLE IF NOT EXISTS nutrition (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    crop_id   INTEGER NOT NULL REFERENCES crops(id),
+    nutrient  TEXT NOT NULL,        -- clave estable (energy, protein, vit_c, min_iron…)
+    value_num REAL,
+    unit      TEXT,
+    source    TEXT                  -- sheet | researched
+);
+CREATE INDEX IF NOT EXISTS idx_nutrition_crop ON nutrition(crop_id);
 """
 
 
@@ -177,6 +225,92 @@ def read_sheet_harvest_types(xlsx_path: Path) -> dict[str, str]:
     except Exception as exc:  # pragma: no cover
         print(f"[build_db] aviso: no se pudo leer XLSX ({exc}); se usará el json.")
         return {}
+
+
+def read_sheet_nutrition(xlsx_path: Path) -> dict[int, list[dict]]:
+    """Lee el grupo verde 'Nutritional value per 100 g' (cols 106-131) de la hoja,
+    indexado por número de fila del XLSX (1-indexed). Cada cultivo del json trae
+    su ``source_row``; con él recuperamos sus celdas nutricionales.
+
+    Devuelve {source_row: [{nutrient, value_num, unit, source='sheet'}, …]}.
+    Solo incluye celdas numéricas presentes. Vacío si no hay openpyxl/archivo.
+
+    NOTA: al 2026-06-21 este grupo está VACÍO en la hoja (0 celdas en las 1081
+    filas), igual que las fases Reproductiva/Maduración. El extractor queda listo
+    para cuando se pueble; mientras tanto la nutrición visible viene del bloque
+    ``nutrition_per_100g`` (source='researched') de crops.json."""
+    if openpyxl is None or not xlsx_path.exists():
+        return {}
+    try:
+        wb = openpyxl.load_workbook(xlsx_path, data_only=True, read_only=True)
+        if SHEET_NAME not in wb.sheetnames:
+            return {}
+        ws = wb[SHEET_NAME]
+        out: dict[int, list[dict]] = {}
+        for r_idx, row in enumerate(
+            ws.iter_rows(min_row=SHEET_FIRST_DATA_ROW, values_only=True),
+            start=SHEET_FIRST_DATA_ROW,
+        ):
+            entries: list[dict] = []
+            for nutrient, col, unit in NUTRITION_COLUMNS:
+                if len(row) < col:
+                    continue
+                val = row[col - 1]
+                if isinstance(val, (int, float)) and not isinstance(val, bool):
+                    entries.append(
+                        {
+                            "nutrient": nutrient,
+                            "value_num": float(val),
+                            "unit": unit,
+                            "source": "sheet",
+                        }
+                    )
+            if entries:
+                out[r_idx] = entries
+        return out
+    except Exception as exc:  # pragma: no cover
+        print(f"[build_db] aviso: no se pudo leer nutrición del XLSX ({exc}).")
+        return {}
+
+
+def resolve_nutrition(crop: dict, sheet_nutrition: dict[int, list[dict]]) -> list[dict]:
+    """Resuelve las filas de nutrición de un cultivo. Prioriza el grupo verde de
+    la hoja (vía ``source_row``); si la hoja no tiene datos para ese cultivo,
+    usa el bloque ``nutrition_per_100g`` de crops.json (source='researched').
+
+    Cada item: {nutrient, value_num, unit, source}."""
+    src_row = crop.get("source_row")
+    if src_row is not None and src_row in sheet_nutrition:
+        return list(sheet_nutrition[src_row])
+
+    block = crop.get("nutrition_per_100g")
+    if not isinstance(block, dict):
+        return []
+    # Claves meta del bloque que NO son nutrientes.
+    _META_KEYS = {"source", "citation", "confidence", "note"}
+    rows: list[dict] = []
+    for nutrient, payload in block.items():
+        if nutrient in _META_KEYS or nutrient not in NUTRITION_UNITS:
+            continue
+        if isinstance(payload, dict):
+            value = payload.get("value")
+            unit = payload.get("unit") or NUTRITION_UNITS.get(nutrient)
+            source = payload.get("source") or block.get("source") or "researched"
+        else:
+            value = payload
+            unit = NUTRITION_UNITS.get(nutrient)
+            source = block.get("source") or "researched"
+        if value is None:
+            continue
+        rows.append(
+            {
+                "nutrient": nutrient,
+                "value_num": float(value),
+                "unit": unit,
+                "source": source,
+            }
+        )
+    return rows
 
 
 def derive_sheet_type(crop: dict, sheet_lookup: dict[str, str]) -> str | None:
@@ -322,6 +456,7 @@ def build(crops_path: Path, xlsx_path: Path, db_path: Path, reseed: bool = False
     profiles = data.get("profiles", {})
     crops = data.get("crops", [])
     sheet_lookup = read_sheet_harvest_types(xlsx_path)
+    sheet_nutrition = read_sheet_nutrition(xlsx_path)
 
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
@@ -335,6 +470,7 @@ def build(crops_path: Path, xlsx_path: Path, db_path: Path, reseed: bool = False
         # DB ya poblada — fuente de verdad. No tocamos nada (preserva audit).
         n_sp = cur.execute("SELECT COUNT(*) FROM setpoints").fetchone()[0]
         n_audit = cur.execute("SELECT COUNT(*) FROM setpoint_audit").fetchone()[0]
+        n_nut = cur.execute("SELECT COUNT(*) FROM nutrition").fetchone()[0]
         disc_rows = cur.execute(
             "SELECT assigned_profile, sheet_harvest_type FROM crops "
             "WHERE assigned_profile IS NOT NULL AND sheet_harvest_type IS NOT NULL"
@@ -349,6 +485,7 @@ def build(crops_path: Path, xlsx_path: Path, db_path: Path, reseed: bool = False
             "crops": existing,
             "setpoints": n_sp,
             "audit": n_audit,
+            "nutrition": n_nut,
             "discrepancies": disc,
             "sheet_rows": len(sheet_lookup),
             "seeded": False,
@@ -357,6 +494,7 @@ def build(crops_path: Path, xlsx_path: Path, db_path: Path, reseed: bool = False
     ts = now_iso()
     n_setpoints = 0
     n_audit = 0
+    n_nutrition = 0
     discrepancies = 0
 
     for idx, crop in enumerate(crops, start=1):
@@ -385,6 +523,16 @@ def build(crops_path: Path, xlsx_path: Path, db_path: Path, reseed: bool = False
             expected = PROFILE_TO_SHEET_TYPE.get(assigned)
             if expected and expected != sheet_type:
                 discrepancies += 1
+
+        # Nutrición por 100 g (independiente del perfil: aplica a TODO cultivo
+        # con datos, incluidos los no-aeropónicos sin perfil asignado).
+        for nut in resolve_nutrition(crop, sheet_nutrition):
+            cur.execute(
+                "INSERT INTO nutrition (crop_id, nutrient, value_num, unit, source) "
+                "VALUES (?,?,?,?,?)",
+                (idx, nut["nutrient"], nut["value_num"], nut["unit"], nut["source"]),
+            )
+            n_nutrition += 1
 
         # Setpoints operativos (solo si el cultivo tiene perfil asignado)
         profile = profiles.get(assigned) if assigned else None
@@ -424,6 +572,7 @@ def build(crops_path: Path, xlsx_path: Path, db_path: Path, reseed: bool = False
         "crops": len(crops),
         "setpoints": n_setpoints,
         "audit": n_audit,
+        "nutrition": n_nutrition,
         "discrepancies": discrepancies,
         "sheet_rows": len(sheet_lookup),
         "seeded": True,
@@ -440,6 +589,7 @@ def smoke(db_path: Path) -> int:
     n_crops = cur.execute("SELECT COUNT(*) FROM crops").fetchone()[0]
     n_sp = cur.execute("SELECT COUNT(*) FROM setpoints").fetchone()[0]
     n_audit = cur.execute("SELECT COUNT(*) FROM setpoint_audit").fetchone()[0]
+    n_nut = cur.execute("SELECT COUNT(*) FROM nutrition").fetchone()[0]
 
     # discrepancia: al menos un cultivo donde sheet_harvest_type no concuerda
     # con el tipo presupuesto por su perfil.
@@ -458,6 +608,7 @@ def smoke(db_path: Path) -> int:
     print(f"[smoke] crops      = {n_crops}  (esperado 107)")
     print(f"[smoke] setpoints  = {n_sp}     (esperado > 0)")
     print(f"[smoke] audit      = {n_audit}  (esperado > 0)")
+    print(f"[smoke] nutrition  = {n_nut}    (esperado > 0)")
     print(f"[smoke] discrepancias sheet/profile = {len(disc)}")
     if disc[:5]:
         print("[smoke] ejemplos:")
@@ -472,6 +623,9 @@ def smoke(db_path: Path) -> int:
         ok = False
     if n_audit <= 0:
         print("[smoke] FALLO: audit == 0")
+        ok = False
+    if n_nut <= 0:
+        print("[smoke] FALLO: nutrition == 0")
         ok = False
     if len(disc) < 1:
         print("[smoke] FALLO: no se detectó ninguna discrepancia sheet/profile")
@@ -512,8 +666,8 @@ def main() -> int:
     if stats["seeded"]:
         print(
             f"[build_db] sembrada — crops={stats['crops']} setpoints={stats['setpoints']} "
-            f"audit={stats['audit']} discrepancias={stats['discrepancies']} "
-            f"(filas-hoja={stats['sheet_rows']})"
+            f"audit={stats['audit']} nutrition={stats['nutrition']} "
+            f"discrepancias={stats['discrepancies']} (filas-hoja={stats['sheet_rows']})"
         )
     else:
         print(

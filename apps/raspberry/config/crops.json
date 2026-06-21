@@ -1,7 +1,7 @@
 {
   "meta": {
     "source": "Estructura de Costos.xlsx — hoja 'Modelo Fitotécnico' (+ 'Recetas Soluciones Nutrientes')",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "generated_note": "Catálogo COMPLETO de 107 cultivos. 64 marcados SI (aeropónicos). La hoja solo tiene setpoints poblados para 20 cultivos SI, y TODOS comparten un baseline genérico idéntico (pH 6.0/6.6/7.4, EC 10-12, PPFD 250-450, RH 70-100/50-100, ORP 650-750). Los bloques de fase Reproductiva (col 50-77) y Maduración (col 78-105) están VACÍOS en toda la hoja, y las columnas de receta de Fruto/Raíz en 'Recetas Soluciones Nutrientes' son 0.0 (placeholders). Por eso los setpoints específicos por tipo (fruiting/berry/root/herb) son INVESTIGADOS.",
     "method": "openpyxl data_only=True. Valores de la hoja preservados literalmente con source='sheet'. Valores investigados marcados source='researched' + citation + confidence. Perfiles por tipo de cultivo derivados de Parte Comestible + Familia.",
     "counts": {
@@ -26,7 +26,8 @@
       "Aero-Gro — Nutrient Solution EC/pH for Hydroponic Herbs",
       "HomeHydroSystems — pH/TDS/PPM for herbs",
       "Current Culture H2O / NutriHydro / Atlas Scientific — ORP 300-400 mV"
-    ]
+    ],
+    "nutrition_note": "Grupo verde 'Nutritional value per 100 g' de la hoja está VACÍO (0 celdas en 1081 filas), igual que las fases Reproductiva/Maduración. Se sembró nutrición INVESTIGADA (source='researched', USDA FDC) para cultivos insignia (Albahaca, Espinaca, Fresa, Lechuga, Tomate); el extractor read_sheet_nutrition queda listo para cuando se pueble la hoja (source='sheet' tendría prioridad)."
   },
   "profiles": {
     "leafy_vegetative": {
@@ -753,7 +754,38 @@
       "profiles": [
         "herb_aromatic"
       ],
-      "profile": "herb_aromatic"
+      "profile": "herb_aromatic",
+      "nutrition_per_100g": {
+        "source": "researched",
+        "citation": "USDA FoodData Central (SR Legacy), valores por 100 g en crudo",
+        "confidence": "medium",
+        "energy": 94,
+        "carbohydrates_sugars": 0.3,
+        "dietary_fiber": 1.6,
+        "fat": 0.64,
+        "protein": 3.15,
+        "water": 92.06,
+        "vit_a_retinol": 264,
+        "vit_beta_carotene": 3142,
+        "vit_b1_thiamine": 0.034,
+        "vit_b2_riboflavin": 0.076,
+        "vit_b3_niacin": 0.902,
+        "vit_b5_pantothenic": 0.209,
+        "vit_b6": 0.155,
+        "vit_b9_folate": 68,
+        "vit_choline": 11.4,
+        "vit_c": 18,
+        "vit_e": 0.8,
+        "vit_k": 414.8,
+        "min_calcium": 177,
+        "min_iron": 3.17,
+        "min_magnesium": 64,
+        "min_manganese": 1.148,
+        "min_phosphorus": 56,
+        "min_potassium": 295,
+        "min_sodium": 4,
+        "min_zinc": 0.81
+      }
     },
     {
       "name_es": "Alcachofa",
@@ -1811,7 +1843,38 @@
       "profiles": [
         "leafy_vegetative"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "leafy_vegetative",
+      "nutrition_per_100g": {
+        "source": "researched",
+        "citation": "USDA FoodData Central (SR Legacy), valores por 100 g en crudo",
+        "confidence": "medium",
+        "energy": 97,
+        "carbohydrates_sugars": 0.42,
+        "dietary_fiber": 2.2,
+        "fat": 0.39,
+        "protein": 2.86,
+        "water": 91.4,
+        "vit_a_retinol": 469,
+        "vit_beta_carotene": 5626,
+        "vit_b1_thiamine": 0.078,
+        "vit_b2_riboflavin": 0.189,
+        "vit_b3_niacin": 0.724,
+        "vit_b5_pantothenic": 0.065,
+        "vit_b6": 0.195,
+        "vit_b9_folate": 194,
+        "vit_choline": 19.3,
+        "vit_c": 28.1,
+        "vit_e": 2.03,
+        "vit_k": 482.9,
+        "min_calcium": 99,
+        "min_iron": 2.71,
+        "min_magnesium": 79,
+        "min_manganese": 0.897,
+        "min_phosphorus": 49,
+        "min_potassium": 558,
+        "min_sodium": 79,
+        "min_zinc": 0.53
+      }
     },
     {
       "name_es": "Frambuesa",
@@ -1849,7 +1912,38 @@
       "profiles": [
         "berry_fruiting"
       ],
-      "profile": "berry_fruiting"
+      "profile": "berry_fruiting",
+      "nutrition_per_100g": {
+        "source": "researched",
+        "citation": "USDA FoodData Central (SR Legacy), valores por 100 g en crudo",
+        "confidence": "medium",
+        "energy": 136,
+        "carbohydrates_sugars": 4.89,
+        "dietary_fiber": 2.0,
+        "fat": 0.3,
+        "protein": 0.67,
+        "water": 90.95,
+        "vit_a_retinol": 1,
+        "vit_beta_carotene": 7,
+        "vit_b1_thiamine": 0.024,
+        "vit_b2_riboflavin": 0.022,
+        "vit_b3_niacin": 0.386,
+        "vit_b5_pantothenic": 0.125,
+        "vit_b6": 0.047,
+        "vit_b9_folate": 24,
+        "vit_choline": 5.7,
+        "vit_c": 58.8,
+        "vit_e": 0.29,
+        "vit_k": 2.2,
+        "min_calcium": 16,
+        "min_iron": 0.41,
+        "min_magnesium": 13,
+        "min_manganese": 0.386,
+        "min_phosphorus": 24,
+        "min_potassium": 153,
+        "min_sodium": 1,
+        "min_zinc": 0.14
+      }
     },
     {
       "name_es": "Frijol",
@@ -1977,7 +2071,38 @@
       "profiles": [
         "leafy_vegetative"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "leafy_vegetative",
+      "nutrition_per_100g": {
+        "source": "researched",
+        "citation": "USDA FoodData Central (SR Legacy), valores por 100 g en crudo",
+        "confidence": "medium",
+        "energy": 63,
+        "carbohydrates_sugars": 0.78,
+        "dietary_fiber": 1.3,
+        "fat": 0.15,
+        "protein": 1.36,
+        "water": 94.98,
+        "vit_a_retinol": 370,
+        "vit_beta_carotene": 4443,
+        "vit_b1_thiamine": 0.07,
+        "vit_b2_riboflavin": 0.08,
+        "vit_b3_niacin": 0.375,
+        "vit_b5_pantothenic": 0.134,
+        "vit_b6": 0.09,
+        "vit_b9_folate": 38,
+        "vit_choline": 13.4,
+        "vit_c": 9.2,
+        "vit_e": 0.22,
+        "vit_k": 126.3,
+        "min_calcium": 36,
+        "min_iron": 0.86,
+        "min_magnesium": 13,
+        "min_manganese": 0.25,
+        "min_phosphorus": 29,
+        "min_potassium": 194,
+        "min_sodium": 28,
+        "min_zinc": 0.18
+      }
     },
     {
       "name_es": "Lenteja (brote)",
@@ -2922,6 +3047,37 @@
       "profile_phases": {
         "vegetative": "fruiting_vegetative",
         "reproductive": "fruiting_reproductive"
+      },
+      "nutrition_per_100g": {
+        "source": "researched",
+        "citation": "USDA FoodData Central (SR Legacy), valores por 100 g en crudo",
+        "confidence": "medium",
+        "energy": 74,
+        "carbohydrates_sugars": 2.63,
+        "dietary_fiber": 1.2,
+        "fat": 0.2,
+        "protein": 0.88,
+        "water": 94.52,
+        "vit_a_retinol": 42,
+        "vit_beta_carotene": 449,
+        "vit_b1_thiamine": 0.037,
+        "vit_b2_riboflavin": 0.019,
+        "vit_b3_niacin": 0.594,
+        "vit_b5_pantothenic": 0.089,
+        "vit_b6": 0.08,
+        "vit_b9_folate": 15,
+        "vit_choline": 6.7,
+        "vit_c": 13.7,
+        "vit_e": 0.54,
+        "vit_k": 7.9,
+        "min_calcium": 10,
+        "min_iron": 0.27,
+        "min_magnesium": 11,
+        "min_manganese": 0.114,
+        "min_phosphorus": 24,
+        "min_potassium": 237,
+        "min_sodium": 5,
+        "min_zinc": 0.17
       }
     },
     {
