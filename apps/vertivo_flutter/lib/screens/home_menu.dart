@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 import 'package:vertivo_client/vertivo_client.dart';
 
 import '../main.dart';
@@ -10,19 +9,14 @@ class HomeMenu extends StatelessWidget {
 
   /// Dev-only: ensure a greenhouse with pH thresholds exists so the ingestion
   /// service can raise alerts. On a fresh bootstrap-dev DB this creates id=1.
-  /// The server's `greenhouse.create` does NOT assign `userId` from the
-  /// session, and `listByUser` filters by the authenticated user's UUID, so we
-  /// set `userId` here from the current auth session to keep the greenhouse
-  /// owned by (and visible to) the logged-in user.
+  /// `greenhouse.create` assigns `userId` from the authenticated session
+  /// server-side, so the value sent here is ignored.
   Future<void> _seedGreenhouse(BuildContext context) async {
     final existing = await client.greenhouse.listByUser();
     if (existing.isNotEmpty) return;
-    final userId =
-        client.authSessionManager.authInfoListenable.value?.authUserId.uuid ??
-            '';
     await client.greenhouse.create(
       Greenhouse(
-        userId: userId,
+        userId: '',
         name: 'Invernadero de prueba',
         irrigationType: 'aeroponic',
         totalTrays: 1,
