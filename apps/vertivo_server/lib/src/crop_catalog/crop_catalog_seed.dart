@@ -100,7 +100,7 @@ class CropCatalogSeeder {
     final ph = (profile['ph'] as Map<String, dynamic>?) ?? const {};
     final temp = _dayRange(profile['ambient_temp_c']);
     final humidity = _dayRange(profile['relative_humidity_pct']);
-    final photoperiod = _asDouble(profile['photoperiod_h']);
+    final photoperiod = _photoperiodHours(profile['photoperiod_h']);
 
     return CropModel(
       species: crop['species'] as String,
@@ -117,7 +117,7 @@ class CropCatalogSeeder {
       idealPhMin: _asDouble(ph['min']) ?? 6.0,
       idealPhMax: _asDouble(ph['max']) ?? 7.0,
       waterRequirement: 'high', // aeroponic / nebuponía
-      growthDurationDays: 0, // unknown in crops.json v1 — see follow-up
+      growthDurationDays: 0, // unknown in crops.json v2 — see follow-up VRTV-97
       difficulty: 'beginner',
       segments: const ['residential', 'commercial'],
       isActive: true,
@@ -126,7 +126,7 @@ class CropCatalogSeeder {
     );
   }
 
-  /// Crude category inference from botanical family. crops.json v1 has no
+  /// Crude category inference from botanical family. crops.json v2 has no
   /// explicit category; aromatic families map to `herb`, the rest to
   /// `vegetable`.
   static String _categoryFor(Map<String, dynamic> crop) {
@@ -145,6 +145,16 @@ class CropCatalogSeeder {
     final day = field['day'];
     if (day is! Map<String, dynamic>) return (null, null);
     return (_asDouble(day['min']), _asDouble(day['max']));
+  }
+
+  /// Extracts the photoperiod in hours from the v2 `photoperiod_h` field.
+  ///
+  /// In crops.json v2 it is wrapped as `{ "value": 18, "source": "sheet" }`
+  /// (it was a flat int in v1). Accepts both shapes for resilience.
+  static double? _photoperiodHours(Object? field) {
+    if (field is num) return field.toDouble();
+    if (field is Map<String, dynamic>) return _asDouble(field['value']);
+    return null;
   }
 
   static double? _asDouble(Object? value) {
