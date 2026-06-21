@@ -33,10 +33,13 @@ if [ ! -d "$SERVER_DIR" ]; then
     exit 1
 fi
 
-# Build from workspace root so Dart workspace resolution works
+# Build from the monorepo root so Dart pub-workspace resolution works.
+# The build CONTEXT must be the workspace root (not $SERVER_DIR): the Dockerfile
+# needs the root pubspec.lock and the server's member pubspec to resolve the
+# `resolution: workspace` package.
 cd "$PROJECT_ROOT"
 
-if ! podman build -t "${IMAGE_TAG}" -f "$SERVER_DIR/Dockerfile" "$SERVER_DIR" 2>&1; then
+if ! podman build -t "${IMAGE_TAG}" -f "$SERVER_DIR/Dockerfile" "$PROJECT_ROOT" 2>&1; then
     echo -e "${RED}Failed to build backend image${NC}"
     exit 1
 fi
