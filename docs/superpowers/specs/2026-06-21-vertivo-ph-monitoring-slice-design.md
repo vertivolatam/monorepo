@@ -115,13 +115,23 @@ dev-flutter-mobile: ## Run Flutter app on Android device/emulator
 
 ### 5.5 Verificación E2E
 
-Secuencia manual reproducible (irá al plan de implementación):
+Secuencia manual reproducible (irá al plan de implementación). El simulador **ya es
+headless y controlable por escenarios** (`apps/raspberry/src/simulation/scenarios.py`) —
+no requiere UI propia:
 1. `make bootstrap-dev` (o pasos equivalentes ya levantados).
 2. `make dev-all-port-forward` (expone EMQX :1883 y Serverpod :8080).
-3. `make dev-raspberry-i2c-sim` con escenario que mueva pH.
-4. Confirmar filas en `environmental_readings` (PostgreSQL).
-5. `make dev-flutter-desktop` → login → `MonitorPhScreen` → ver el número moverse y el
-   color cambiar; provocar un valor fuera de rango y ver el banner de Alert.
+3. **Camino feliz (banner verde):** `make dev-raspberry-i2c-sim SCENARIO=normal INTERVAL=30`
+   → pH ~6.0 en rango.
+4. Confirmar filas en `environmental_readings` con `measurement_type = 'ph'` (PostgreSQL).
+5. `make dev-flutter-desktop` → login → `MonitorPhScreen`: pH ~6.0, color verde, sparkline
+   poblándose cada 5 s.
+6. **Camino de alerta (banner rojo):** `make dev-raspberry-i2c-sim SCENARIO=nutrient_imbalance INTERVAL=30`
+   → pH deriva a ~7.2 (fuera de rango) → el `SensorIngestionService` crea `Alert`/`Anomaly`
+   → la pantalla cambia a rojo y muestra el banner de Alert.
+
+> El control por escenarios (`SCENARIO=normal` / `nutrient_imbalance`) es suficiente para el
+> slice. Una UI de control/demo del simulador es un track **paralelo y opcional** (decisión
+> aparte, pendiente de su propio brainstorm), no un bloqueante de este slice.
 
 ## 6. Manejo de errores
 
