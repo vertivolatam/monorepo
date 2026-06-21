@@ -13,22 +13,27 @@ class App extends StatelessComponent {
   const App({super.key});
 
   @override
-  Iterable<Component> build(BuildContext context) sync* {
-    yield Router(
+  Component build(BuildContext context) {
+    return Router(
       routes: [
         ShellRoute(
           builder: (context, state, child) => DashboardShell(child: child),
           routes: [
             Route(path: '/', builder: (_, __) => const HomePage()),
-            Route(path: '/greenhouses', builder: (_, __) => const GreenhousesPage()),
+            Route(
+              path: '/greenhouses',
+              builder: (_, __) => const GreenhousesPage(),
+            ),
             Route(
               path: '/greenhouses/:id',
-              builder: (_, state) => GreenhouseDetailPage(
-                greenhouseId: state.pathParameters['id'] ?? '0',
-              ),
+              builder: (_, state) =>
+                  GreenhouseDetailPage(greenhouseId: state.params['id'] ?? '0'),
             ),
             Route(path: '/alerts', builder: (_, __) => const AlertsPage()),
-            Route(path: '/anomalies', builder: (_, __) => const AnomaliesPage()),
+            Route(
+              path: '/anomalies',
+              builder: (_, __) => const AnomaliesPage(),
+            ),
             Route(path: '/users', builder: (_, __) => const UsersPage()),
           ],
         ),
