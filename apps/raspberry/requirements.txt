@@ -16,6 +16,9 @@ sphinx-autobuild
 sphinx-rtd-theme
 # MQTT client libraries
 paho-mqtt
+# Simulator control UI (sim_control web panel)
+fastapi
+uvicorn
 # Database libraries
 sqlalchemy
 sqlite3

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2024 Vertivo Horticultura Urbana Vertical S.R.L.
+  Cedula Juridica 3-102-815230 - All Rights Reserved.
+
+  Simulator Control Panel (VRTV-95, Phases 3-5).
+  Vanilla JS, no framework. Dev/QA functional aesthetic.
+-->
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vertivo - Panel de Control del Simulador</title>
+  <style>
+    :root {
+      --bg: #0f1419; --panel: #1a212b; --panel2: #222c38;
+      --fg: #d7dee8; --muted: #7c8a9c; --line: #2c3744;
+      --ok: #2ecc71; --warn: #f1c40f; --bad: #e74c3c; --accent: #4aa3df;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font-family: ui-monospace, "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+      font-size: 14px;
+    }
+    header {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line);
+      position: sticky; top: 0; z-index: 10;
+    }
+    header h1 { font-size: 15px; margin: 0; font-weight: 600; letter-spacing: .5px; }
+    .spacer { flex: 1; }
+    .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+      background: var(--bad); margin-right: 6px; vertical-align: middle; }
+    .status-dot.up { background: var(--ok); }
+    select, button, input[type=range] { font-family: inherit; color: var(--fg); }
+    button {
+      background: var(--panel2); border: 1px solid var(--line); color: var(--fg);
+      padding: 6px 10px; border-radius: 5px; cursor: pointer; font-size: 13px;
+    }
+    button:hover { border-color: var(--accent); }
+    button.kill { background: #3a1414; border-color: #5a1f1f; color: #ff9a8a; }
+    button.kill:hover { background: var(--bad); color: #fff; }
+    select { background: var(--panel2); border: 1px solid var(--line); padding: 6px 8px; border-radius: 5px; }
+    .toggle-view { display: flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+    .toggle-view button { border: none; border-radius: 0; }
+    .toggle-view button.active { background: var(--accent); color: #06121c; font-weight: 600; }
+
+    main { padding: 16px; }
+    .grid {
+      display: grid; gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    }
+    .card {
+      background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--muted);
+      border-radius: 8px; padding: 12px;
+    }
+    .card.ok { border-left-color: var(--ok); }
+    .card.warn { border-left-color: var(--warn); }
+    .card.bad { border-left-color: var(--bad); }
+    .card.off { opacity: .5; }
+    .card-head { display: flex; align-items: baseline; justify-content: space-between; }
+    .card-head .name { font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; }
+    .card-head .badge { font-size: 11px; color: var(--muted); }
+    .value { font-size: 30px; font-weight: 700; margin: 6px 0 2px; }
+    .value .unit { font-size: 14px; color: var(--muted); font-weight: 400; margin-left: 4px; }
+    .range-hint { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+    .ctrl-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .ctrl-row label { font-size: 11px; color: var(--muted); width: 48px; }
+    input[type=range] { flex: 1; }
+    .target-val { font-size: 12px; width: 46px; text-align: right; }
+    .btn-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .btn-row button { flex: 1; font-size: 12px; padding: 5px 6px; }
+    .cal-flag { font-size: 11px; padding: 1px 6px; border-radius: 3px; }
+    .cal-flag.uncal { background: #4a3a10; color: var(--warn); }
+    .cal-flag.cal { background: #103a22; color: var(--ok); }
+    .cal-flag.factory { background: #20303a; color: var(--muted); }
+    details.calib { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+    details.calib summary { cursor: pointer; color: var(--accent); font-size: 12px; }
+    .ph-cal { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 8px; }
+    .ph-cal button { font-size: 11px; }
+    .ph-extra { display: flex; gap: 6px; margin-top: 6px; }
+    .ph-extra input { width: 60px; background: var(--panel2); border: 1px solid var(--line);
+      color: var(--fg); border-radius: 4px; padding: 4px; }
+    .slope-readout { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+    /* Wiring view */
+    #wiring { display: none; }
+    #wiring.active { display: block; }
+    #grid-view.hidden { display: none; }
+    .wiring-canvas { display: flex; gap: 40px; align-items: flex-start; flex-wrap: wrap; }
+    .interlink-box {
+      background: var(--panel); border: 2px solid var(--line); border-radius: 10px;
+      padding: 14px; min-width: 220px;
+    }
+    .interlink-box h3 { margin: 0 0 10px; font-size: 13px; color: var(--accent); }
+    .node {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      background: var(--panel2); border: 1px solid var(--line); border-left: 4px solid var(--muted);
+      border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; cursor: pointer;
+    }
+    .node:hover { border-color: var(--accent); }
+    .node.ok { border-left-color: var(--ok); }
+    .node.warn { border-left-color: var(--warn); }
+    .node.bad { border-left-color: var(--bad); }
+    .node.off { opacity: .45; }
+    .node .port { font-size: 11px; color: var(--muted); }
+    .pi-box { background: #102019; border: 2px solid #1f5a3a; border-radius: 10px;
+      padding: 14px 18px; align-self: center; }
+    .pi-box h3 { margin: 0 0 6px; color: var(--ok); font-size: 13px; }
+    .derived-note { font-size: 11px; color: var(--muted); margin-top: 8px; }
+    .legend { margin-top: 18px; font-size: 12px; color: var(--muted); }
+    .legend span { margin-right: 16px; }
+    .dot { display:inline-block; width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>VERTIVO · SIM CONTROL</h1>
+    <span><span id="mqtt-dot" class="status-dot"></span><span id="mqtt-label">MQTT…</span></span>
+    <label>Intervalo
+      <select id="interval-select">
+        <option value="1">1s</option>
+        <option value="5" selected>5s</option>
+        <option value="10">10s</option>
+        <option value="30">30s</option>
+        <option value="60">60s</option>
+      </select>
+    </label>
+    <div class="toggle-view">
+      <button id="view-grid" class="active">Instrumentos</button>
+      <button id="view-wiring">Wiring</button>
+    </div>
+    <div class="spacer"></div>
+    <button id="kill-all" class="kill">⏻ KILL ALL</button>
+  </header>
+
+  <main>
+    <section id="grid-view"><div class="grid" id="grid"></div></section>
+    <section id="wiring">
+      <div class="wiring-canvas" id="wiring-canvas"></div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--ok)"></span>En rango</span>
+        <span><span class="dot" style="background:var(--warn)"></span>Advertencia / sin calibrar</span>
+        <span><span class="dot" style="background:var(--bad)"></span>Fuera de rango / anomalía</span>
+        <span>Click en un nodo = enable/disable</span>
+      </div>
+    </section>
+  </main>
+
+  <script>
+  // ---- Sensor model: healthy ranges (Modelo Fitotecnico, cultivos de hoja) ----
+  // status: green in-range / yellow warning / red out-of-range. Uncalibrated -> yellow.
+  const SENSORS = {
+    ph:          { label: "pH",   unit: "",       min: 0,    max: 14,    target: 6.6, good:[6.0,7.4],  warn:[5.6,7.8],   calib:"ph"     },
+    ec:          { label: "EC",   unit: "µS/cm³", min: 0,    max: 3000,  target: 350, good:[250,450],  warn:[150,600],   calib:"simple" },
+    do:          { label: "DO",   unit: "mg/L",   min: 0,    max: 20,    target: 6.5, good:[5,8],      warn:[4,9],       calib:"simple" },
+    orp:         { label: "ORP",  unit: "mV",     min: -500, max: 1000,  target: 400, good:[300,500],  warn:[200,600],   calib:"simple" },
+    tds:         { label: "TDS",  unit: "mg/L",   min: 0,    max: 2000,  target: 700, good:[400,900],  warn:[250,1100],  calib:"derived"},
+    co2:         { label: "CO₂",  unit: "ppm",    min: 0,    max: 2000,  target: 600, good:[400,1000], warn:[300,1400],  calib:"factory"},
+    humidity:    { label: "HUM",  unit: "%",      min: 0,    max: 100,   target: 80,  good:[70,100],   warn:[55,100],    calib:"factory"},
+    temperature: { label: "RTD",  unit: "°C",     min: -10,  max: 60,    target: 25,  good:[23,33],    warn:[18,36],     calib:"factory"},
+  };
+
+  // Runtime state per sensor.
+  const state = {};
+  for (const k of Object.keys(SENSORS)) {
+    state[k] = { value: null, enabled: true, calibrated: SENSORS[k].calib === "factory",
+                 anomaly: false, slopePct: null };
+  }
+
+  let topology = null;
+
+  // ---- Status coloring ----
+  function statusOf(key) {
+    const s = state[key], cfg = SENSORS[key];
+    if (!s.enabled) return "off";
+    if (s.anomaly) return "bad";
+    // Uncalibrated probe -> yellow even if value in range.
+    if ((cfg.calib === "ph" || cfg.calib === "simple" || cfg.calib === "derived") && !s.calibrated) return "warn";
+    if (s.value === null || Number.isNaN(s.value)) return "warn";
+    if (s.value >= cfg.good[0] && s.value <= cfg.good[1]) return "ok";
+    if (s.value >= cfg.warn[0] && s.value <= cfg.warn[1]) return "warn";
+    return "bad";
+  }
+
+  // ---- Backend calls ----
+  async function sendControl(cmd) {
+    try {
+      const r = await fetch("/control", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(cmd),
+      });
+      if (!r.ok) console.warn("control rejected", cmd, await r.json());
+      return r.ok;
+    } catch (e) { console.error("control failed", e); return false; }
+  }
+
+  // ---- Card builders (grid view) ----
+  function calFlag(key) {
+    const cfg = SENSORS[key], s = state[key];
+    if (cfg.calib === "factory") return '<span class="cal-flag factory">factory</span>';
+    if (cfg.calib === "derived") return '<span class="cal-flag ' + (s.calibrated?"cal":"uncal") + '">sigue EC</span>';
+    return '<span class="cal-flag ' + (s.calibrated?"cal":"uncal") + '">' + (s.calibrated?"calibrado":"sin calibrar") + '</span>';
+  }
+
+  function buildCard(key) {
+    const cfg = SENSORS[key], s = state[key];
+    const div = document.createElement("div");
+    div.className = "card";
+    div.id = "card-" + key;
+
+    let calibHtml = "";
+    if (cfg.calib === "ph") {
+      calibHtml = `
+        <details class="calib">
+          <summary>Calibración pH (fiel)</summary>
+          <div class="ph-cal">
+            <button data-cal="low">4.0 (low)</button>
+            <button data-cal="mid">7.0 (mid)</button>
+            <button data-cal="high">10.0 (high)</button>
+          </div>
+          <div class="ph-extra">
+            <label>MTC °C <input type="number" class="mtc" value="25" step="0.5"></label>
+          </div>
+          <div class="slope-readout" id="slope-${key}">slope: —</div>
+        </details>`;
+    } else if (cfg.calib === "simple") {
+      calibHtml = `<div class="btn-row"><button data-cal="simple">Calibrar</button></div>`;
+    }
+
+    div.innerHTML = `
+      <div class="card-head">
+        <span class="name">${cfg.label}</span>
+        <span class="badge">${calFlag(key)}</span>
+      </div>
+      <div class="value"><span class="num">—</span><span class="unit">${cfg.unit}</span></div>
+      <div class="range-hint">ideal ${cfg.good[0]}–${cfg.good[1]} ${cfg.unit}</div>
+      <div class="ctrl-row">
+        <label>target</label>
+        <input type="range" class="target" min="${cfg.min}" max="${cfg.max}" step="${(cfg.max-cfg.min)/200}" value="${cfg.target}">
+        <span class="target-val">${cfg.target}</span>
+      </div>
+      <div class="btn-row">
+        <button class="anomaly">⚡ Anomalía</button>
+        <button class="toggle">On/Off</button>
+      </div>
+      ${calibHtml}`;
+
+    // Target slider -> set_target
+    const slider = div.querySelector(".target");
+    const tval = div.querySelector(".target-val");
+    slider.addEventListener("input", () => { tval.textContent = (+slider.value).toFixed(2); });
+    slider.addEventListener("change", () => {
+      sendControl({ sensor: key, action: "set_target", value: +slider.value });
+    });
+
+    // Anomaly -> inject a fixed offset (10% of good-range span, min 1 unit)
+    div.querySelector(".anomaly").addEventListener("click", () => {
+      const span = cfg.good[1] - cfg.good[0];
+      const mag = Math.max(1, span * 1.5);
+      sendControl({ sensor: key, action: "inject_anomaly", magnitude: mag });
+      state[key].anomaly = true;
+      render();
+      setTimeout(() => { state[key].anomaly = false; render(); }, 4000);
+    });
+
+    // Toggle on/off
+    div.querySelector(".toggle").addEventListener("click", () => {
+      const next = !state[key].enabled;
+      state[key].enabled = next;
+      sendControl({ sensor: key, action: "enable", on: next });
+      render();
+    });
+
+    // Calibration buttons
+    div.querySelectorAll("[data-cal]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const which = btn.getAttribute("data-cal");
+        if (which === "simple") {
+          sendControl({ sensor: key, action: "calibrate" });
+          state[key].calibrated = true;
+        } else {
+          const mtcEl = div.querySelector(".mtc");
+          const nominal = { low: 4.0, mid: 7.0, high: 10.0 }[which];
+          sendControl({ sensor: key, action: "calibrate", point: which, value: nominal });
+          state[key].calibrated = true;
+          if (mtcEl) state[key].mtc = +mtcEl.value;
+        }
+        render();
+      });
+    });
+
+    return div;
+  }
+
+  function buildGrid() {
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
+    for (const key of Object.keys(SENSORS)) grid.appendChild(buildCard(key));
+  }
+
+  // ---- Wiring view ----
+  function buildWiring() {
+    const canvas = document.getElementById("wiring-canvas");
+    if (!topology) { canvas.innerHTML = "<em>Cargando topología…</em>"; return; }
+    canvas.innerHTML = "";
+
+    // Group sensors by interlink board.
+    const boards = {};
+    const derived = [];
+    for (const [key, node] of Object.entries(topology.sensors || {})) {
+      if (node.derived) { derived.push(key); continue; }
+      const id = `${node.interlink} #${node.board}`;
+      (boards[id] = boards[id] || []).push({ key, port: node.port });
+    }
+    // Sensors not present in topology -> "sin asignar".
+    const mapped = new Set(Object.keys(topology.sensors || {}));
+    const unassigned = Object.keys(SENSORS).filter(k => !mapped.has(k));
+
+    for (const [boardId, nodes] of Object.entries(boards)) {
+      const box = document.createElement("div");
+      box.className = "interlink-box";
+      box.innerHTML = `<h3>InterLink ${boardId}</h3>`;
+      nodes.sort((a,b) => a.port - b.port).forEach(({key, port}) => {
+        const n = document.createElement("div");
+        n.className = "node";
+        n.id = "wnode-" + key;
+        n.innerHTML = `<span>${SENSORS[key].label}</span><span class="port">port ${port}</span>`;
+        n.addEventListener("click", () => {
+          const next = !state[key].enabled;
+          state[key].enabled = next;
+          sendControl({ sensor: key, action: "enable", on: next });
+          render();
+        });
+        box.appendChild(n);
+      });
+      canvas.appendChild(box);
+    }
+
+    const pi = document.createElement("div");
+    pi.className = "pi-box";
+    pi.innerHTML = `<h3>Raspberry Pi</h3><div>I²C bus → MQTT</div>`;
+    if (derived.length) {
+      pi.innerHTML += `<div class="derived-note">Derivado: ${derived.map(k=>SENSORS[k].label+" ← "+(topology.sensors[k].source||"").toUpperCase()).join(", ")}</div>`;
+    }
+    if (unassigned.length) {
+      pi.innerHTML += `<div class="derived-note">Sin asignar: ${unassigned.map(k=>SENSORS[k].label).join(", ")}</div>`;
+    }
+    canvas.appendChild(pi);
+    render();
+  }
+
+  // ---- Render: apply status colors to both views ----
+  function render() {
+    for (const key of Object.keys(SENSORS)) {
+      const st = statusOf(key);
+      const s = state[key], cfg = SENSORS[key];
+
+      const card = document.getElementById("card-" + key);
+      if (card) {
+        card.className = "card " + st;
+        const num = card.querySelector(".num");
+        if (num) num.textContent = (s.value === null || Number.isNaN(s.value)) ? "—" : (+s.value).toFixed(2);
+        const badge = card.querySelector(".badge");
+        if (badge) badge.innerHTML = calFlag(key);
+        const slope = document.getElementById("slope-" + key);
+        if (slope) slope.textContent = "slope: " + (s.slopePct != null ? s.slopePct.toFixed(0) + "%" : "—");
+      }
+      const wnode = document.getElementById("wnode-" + key);
+      if (wnode) wnode.className = "node " + st;
+    }
+  }
+
+  // ---- SSE live values ----
+  function startEvents() {
+    const es = new EventSource("/events");
+    es.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(ev.data);
+        const key = msg.sensor;            // topic leaf: ph, ec, co2, ...
+        if (!(key in state)) return;
+        const p = msg.payload || {};
+        if (typeof p.value === "number") state[key].value = p.value;
+        render();
+      } catch (e) { /* heartbeat / non-JSON */ }
+    };
+    es.onerror = () => { /* EventSource auto-reconnects */ };
+  }
+
+  // ---- Global controls ----
+  async function refreshConfig() {
+    try {
+      const r = await fetch("/config");
+      const cfg = await r.json();
+      const dot = document.getElementById("mqtt-dot");
+      const label = document.getElementById("mqtt-label");
+      dot.className = "status-dot" + (cfg.connected ? " up" : "");
+      label.textContent = cfg.connected
+        ? `MQTT ${cfg.host}:${cfg.port} · gh ${cfg.greenhouse_id}`
+        : `MQTT desconectado (${cfg.host}:${cfg.port})`;
+    } catch (e) { /* keep last */ }
+  }
+
+  document.getElementById("interval-select").addEventListener("change", (e) => {
+    sendControl({ action: "set_interval", seconds: +e.target.value });
+  });
+  document.getElementById("kill-all").addEventListener("click", () => {
+    if (confirm("¿Detener toda publicación del simulador (KILL ALL)?"))
+      sendControl({ action: "kill_all" });
+  });
+
+  // View toggle
+  const gridView = document.getElementById("grid-view");
+  const wiringView = document.getElementById("wiring");
+  const btnGrid = document.getElementById("view-grid");
+  const btnWiring = document.getElementById("view-wiring");
+  btnGrid.addEventListener("click", () => {
+    btnGrid.classList.add("active"); btnWiring.classList.remove("active");
+    gridView.classList.remove("hidden"); wiringView.classList.remove("active");
+  });
+  btnWiring.addEventListener("click", () => {
+    btnWiring.classList.add("active"); btnGrid.classList.remove("active");
+    gridView.classList.add("hidden"); wiringView.classList.add("active");
+    buildWiring();
+  });
+
+  // ---- Minimal YAML loader for topology.yaml (flat sensor map) ----
+  async function loadTopology() {
+    try {
+      const txt = await (await fetch("/topology.yaml")).text();
+      topology = parseTopology(txt);
+    } catch (e) { console.warn("topology load failed", e); }
+  }
+  function parseTopology(txt) {
+    // Purpose-built parser for our 2-level "sensors:" map (no external dep).
+    const out = { sensors: {} };
+    const lines = txt.split("\n");
+    let inSensors = false, cur = null;
+    for (const raw of lines) {
+      const line = raw.replace(/\t/g, "  ");
+      if (/^\s*#/.test(line) || !line.trim()) continue;
+      if (/^sensors:\s*$/.test(line)) { inSensors = true; continue; }
+      if (!inSensors) continue;
+      const m2 = line.match(/^  (\w+):\s*$/);       // sensor key
+      if (m2) { cur = m2[1]; out.sensors[cur] = {}; continue; }
+      const m4 = line.match(/^    (\w+):\s*(.+)$/); // property
+      if (m4 && cur) {
+        let v = m4[2].trim();
+        if (v === "true") v = true; else if (v === "false") v = false;
+        else if (/^-?\d+$/.test(v)) v = parseInt(v, 10);
+        out.sensors[cur][m4[1]] = v;
+      }
+    }
+    return out;
+  }
+
+  // ---- Boot ----
+  buildGrid();
+  loadTopology();
+  refreshConfig();
+  setInterval(refreshConfig, 5000);
+  startEvents();
+  render();
+  </script>
+</body>
+</html>
