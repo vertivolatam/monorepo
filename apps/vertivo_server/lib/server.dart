@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:serverpod/serverpod.dart';
 import 'package:serverpod_auth_idp_server/core.dart';
 import 'package:serverpod_auth_idp_server/providers/email.dart';
 
+import 'src/crop_catalog/crop_catalog_seed.dart';
 import 'src/generated/endpoints.dart';
 import 'src/generated/protocol.dart';
 import 'src/web/routes/app_config_route.dart';
@@ -75,6 +77,27 @@ void run(List<String> args) async {
 
   // Start the server.
   await pod.start();
+
+  // Seed the crop catalog from the canonical config/crops.json (VRTV-96).
+  // Idempotent: existing crops are skipped, so it is safe on every boot.
+  // Guarded so a seed failure never takes the server down.
+  unawaited(_seedCropCatalog(pod));
+}
+
+Future<void> _seedCropCatalog(Serverpod pod) async {
+  final session = await pod.createSession();
+  try {
+    await CropCatalogSeeder.seed(session);
+  } catch (e, stackTrace) {
+    session.log(
+      '[CropCatalogSeeder] seed failed: $e',
+      level: LogLevel.error,
+      exception: e,
+      stackTrace: stackTrace,
+    );
+  } finally {
+    await session.close();
+  }
 }
 
 void _sendRegistrationCode(
