@@ -31,6 +31,49 @@
 
 ---
 
+## Task 0: Fix pre-existing auth API errors in vertivo_flutter (BLOCKER)
+
+Discovered during baseline: `vertivo_flutter` does not compile. `sign_in_screen.dart` uses a
+Serverpod auth API that no longer exists in `serverpod_auth_idp_flutter 3.4.1`:
+`client.auth.authInfoListenable` and `client.auth.isAuthenticated` are undefined on
+`EndpointAuth`. The slice's Task 7 depends on `SignInScreen`, so this must be fixed first.
+
+**Files:**
+- Modify: `apps/vertivo_flutter/lib/screens/sign_in_screen.dart`
+
+- [ ] **Step 1: See the failing analyze**
+
+Run: `export PATH="/home/kvttvrsis/flutter/bin:$PATH" && cd apps/vertivo_flutter && flutter analyze`
+Expected: 5 errors about `authInfoListenable` / `isAuthenticated` on `EndpointAuth`.
+
+- [ ] **Step 2: Find the correct 3.4.1 API**
+
+Inspect the installed package for the current way to observe auth state:
+`grep -rnE "isAuthenticated|authInfo|Listenable|ValueListenable|SessionManager|signedIn" ~/.pub-cache/hosted/pub.dev/serverpod_auth_idp_flutter-3.4.1/lib/`
+(and `serverpod_flutter-3.4.1`). Likely the auth state is exposed via the
+`authSessionManager` / a `ValueListenable<AuthInfo?>` rather than `client.auth.*`.
+
+- [ ] **Step 3: Rewrite the auth-state wiring**
+
+Update `sign_in_screen.dart` to use the current API to (a) read whether the user is signed in
+and (b) listen for changes, replacing `client.auth.authInfoListenable` and
+`client.auth.isAuthenticated`. Keep the same widget behavior (show `SignInWidget` when not
+signed in, `child` when signed in).
+
+- [ ] **Step 4: Verify analyze is clean**
+
+Run: `cd apps/vertivo_flutter && flutter analyze`
+Expected: 0 errors (the 5 auth errors gone).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/vertivo_flutter/lib/screens/sign_in_screen.dart
+git commit -m "fix(flutter): update sign_in_screen to serverpod_auth_idp_flutter 3.4.1 auth API"
+```
+
+---
+
 ## Task 1: Makefile targets (desktop + mobile)
 
 **Files:**
