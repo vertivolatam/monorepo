@@ -17,51 +17,52 @@ import '../auth/auth_endpoint.dart' as _i4;
 import '../auth/email_idp_endpoint.dart' as _i5;
 import '../auth/jwt_refresh_endpoint.dart' as _i6;
 import '../crop_catalog/crop_catalog_endpoint.dart' as _i7;
-import '../greenhouses/greenhouse_endpoint.dart' as _i8;
-import '../greetings/greeting_endpoint.dart' as _i9;
-import '../harvest_prediction/harvest_prediction_endpoint.dart' as _i10;
-import '../management/management_endpoint.dart' as _i11;
-import '../phytopathology/phytopathology_endpoint.dart' as _i12;
-import '../traceability/traceability_endpoint.dart' as _i13;
-import '../users/user_endpoint.dart' as _i14;
-import 'package:vertivo_server/src/generated/alerts/alert.dart' as _i15;
+import '../greenhouses/admin_fleet_endpoint.dart' as _i8;
+import '../greenhouses/greenhouse_endpoint.dart' as _i9;
+import '../greetings/greeting_endpoint.dart' as _i10;
+import '../harvest_prediction/harvest_prediction_endpoint.dart' as _i11;
+import '../management/management_endpoint.dart' as _i12;
+import '../phytopathology/phytopathology_endpoint.dart' as _i13;
+import '../traceability/traceability_endpoint.dart' as _i14;
+import '../users/user_endpoint.dart' as _i15;
+import 'package:vertivo_server/src/generated/alerts/alert.dart' as _i16;
 import 'package:vertivo_server/src/generated/anomaly_management/anomaly.dart'
-    as _i16;
-import 'package:vertivo_server/src/generated/crop_catalog/crop_model.dart'
     as _i17;
-import 'package:vertivo_server/src/generated/crop_catalog/growth_stage_definition.dart'
+import 'package:vertivo_server/src/generated/crop_catalog/crop_model.dart'
     as _i18;
-import 'package:vertivo_server/src/generated/greenhouses/greenhouse.dart'
+import 'package:vertivo_server/src/generated/crop_catalog/growth_stage_definition.dart'
     as _i19;
-import 'package:vertivo_server/src/generated/greenhouses/tray.dart' as _i20;
-import 'package:vertivo_server/src/generated/greenhouses/plant.dart' as _i21;
+import 'package:vertivo_server/src/generated/greenhouses/greenhouse.dart'
+    as _i20;
+import 'package:vertivo_server/src/generated/greenhouses/tray.dart' as _i21;
+import 'package:vertivo_server/src/generated/greenhouses/plant.dart' as _i22;
 import 'package:vertivo_server/src/generated/greenhouses/environmental_reading.dart'
-    as _i22;
-import 'package:vertivo_server/src/generated/greenhouses/irrigation_event.dart'
     as _i23;
-import 'package:vertivo_server/src/generated/harvest_prediction/harvest_prediction.dart'
+import 'package:vertivo_server/src/generated/greenhouses/irrigation_event.dart'
     as _i24;
-import 'package:vertivo_server/src/generated/harvest_prediction/quality_prediction.dart'
+import 'package:vertivo_server/src/generated/harvest_prediction/harvest_prediction.dart'
     as _i25;
-import 'package:vertivo_server/src/generated/management/kpi_metric.dart'
+import 'package:vertivo_server/src/generated/harvest_prediction/quality_prediction.dart'
     as _i26;
-import 'package:vertivo_server/src/generated/phytopathology/disease_detection.dart'
+import 'package:vertivo_server/src/generated/management/kpi_metric.dart'
     as _i27;
-import 'package:vertivo_server/src/generated/phytopathology/pest_identification.dart'
+import 'package:vertivo_server/src/generated/phytopathology/disease_detection.dart'
     as _i28;
-import 'package:vertivo_server/src/generated/phytopathology/nutritional_deficiency.dart'
+import 'package:vertivo_server/src/generated/phytopathology/pest_identification.dart'
     as _i29;
-import 'package:vertivo_server/src/generated/phytopathology/treatment_recommendation.dart'
+import 'package:vertivo_server/src/generated/phytopathology/nutritional_deficiency.dart'
     as _i30;
-import 'package:vertivo_server/src/generated/traceability/traceability_record.dart'
+import 'package:vertivo_server/src/generated/phytopathology/treatment_recommendation.dart'
     as _i31;
-import 'package:vertivo_server/src/generated/users/user.dart' as _i32;
+import 'package:vertivo_server/src/generated/traceability/traceability_record.dart'
+    as _i32;
+import 'package:vertivo_server/src/generated/users/user.dart' as _i33;
 import 'package:vertivo_server/src/generated/users/user_preferences.dart'
-    as _i33;
-import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _i34;
-import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
+import 'package:serverpod_auth_idp_server/serverpod_auth_idp_server.dart'
     as _i35;
+import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
+    as _i36;
 
 class Endpoints extends _i1.EndpointDispatch {
   @override
@@ -103,43 +104,49 @@ class Endpoints extends _i1.EndpointDispatch {
           'cropCatalog',
           null,
         ),
-      'greenhouse': _i8.GreenhouseEndpoint()
+      'adminFleet': _i8.AdminFleetEndpoint()
+        ..initialize(
+          server,
+          'adminFleet',
+          null,
+        ),
+      'greenhouse': _i9.GreenhouseEndpoint()
         ..initialize(
           server,
           'greenhouse',
           null,
         ),
-      'greeting': _i9.GreetingEndpoint()
+      'greeting': _i10.GreetingEndpoint()
         ..initialize(
           server,
           'greeting',
           null,
         ),
-      'harvestPrediction': _i10.HarvestPredictionEndpoint()
+      'harvestPrediction': _i11.HarvestPredictionEndpoint()
         ..initialize(
           server,
           'harvestPrediction',
           null,
         ),
-      'management': _i11.ManagementEndpoint()
+      'management': _i12.ManagementEndpoint()
         ..initialize(
           server,
           'management',
           null,
         ),
-      'phytopathology': _i12.PhytopathologyEndpoint()
+      'phytopathology': _i13.PhytopathologyEndpoint()
         ..initialize(
           server,
           'phytopathology',
           null,
         ),
-      'traceability': _i13.TraceabilityEndpoint()
+      'traceability': _i14.TraceabilityEndpoint()
         ..initialize(
           server,
           'traceability',
           null,
         ),
-      'user': _i14.UserEndpoint()
+      'user': _i15.UserEndpoint()
         ..initialize(
           server,
           'user',
@@ -155,7 +162,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'alert': _i1.ParameterDescription(
               name: 'alert',
-              type: _i1.getType<_i15.Alert>(),
+              type: _i1.getType<_i16.Alert>(),
               nullable: false,
             ),
           },
@@ -303,7 +310,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'anomaly': _i1.ParameterDescription(
               name: 'anomaly',
-              type: _i1.getType<_i16.Anomaly>(),
+              type: _i1.getType<_i17.Anomaly>(),
               nullable: false,
             ),
           },
@@ -824,7 +831,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'crop': _i1.ParameterDescription(
               name: 'crop',
-              type: _i1.getType<_i17.CropModel>(),
+              type: _i1.getType<_i18.CropModel>(),
               nullable: false,
             ),
           },
@@ -843,7 +850,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'crop': _i1.ParameterDescription(
               name: 'crop',
-              type: _i1.getType<_i17.CropModel>(),
+              type: _i1.getType<_i18.CropModel>(),
               nullable: false,
             ),
           },
@@ -881,7 +888,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'stage': _i1.ParameterDescription(
               name: 'stage',
-              type: _i1.getType<_i18.GrowthStageDefinition>(),
+              type: _i1.getType<_i19.GrowthStageDefinition>(),
               nullable: false,
             ),
           },
@@ -897,6 +904,37 @@ class Endpoints extends _i1.EndpointDispatch {
         ),
       },
     );
+    connectors['adminFleet'] = _i1.EndpointConnector(
+      name: 'adminFleet',
+      endpoint: endpoints['adminFleet']!,
+      methodConnectors: {
+        'listAll': _i1.MethodConnector(
+          name: 'listAll',
+          params: {
+            'limit': _i1.ParameterDescription(
+              name: 'limit',
+              type: _i1.getType<int>(),
+              nullable: false,
+            ),
+            'offset': _i1.ParameterDescription(
+              name: 'offset',
+              type: _i1.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _i1.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['adminFleet'] as _i8.AdminFleetEndpoint).listAll(
+                    session,
+                    limit: params['limit'],
+                    offset: params['offset'],
+                  ),
+        ),
+      },
+    );
     connectors['greenhouse'] = _i1.EndpointConnector(
       name: 'greenhouse',
       endpoint: endpoints['greenhouse']!,
@@ -906,7 +944,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'greenhouse': _i1.ParameterDescription(
               name: 'greenhouse',
-              type: _i1.getType<_i19.Greenhouse>(),
+              type: _i1.getType<_i20.Greenhouse>(),
               nullable: false,
             ),
           },
@@ -915,7 +953,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['greenhouse'] as _i8.GreenhouseEndpoint).create(
+                  (endpoints['greenhouse'] as _i9.GreenhouseEndpoint).create(
                     session,
                     params['greenhouse'],
                   ),
@@ -934,7 +972,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['greenhouse'] as _i8.GreenhouseEndpoint).get(
+                  (endpoints['greenhouse'] as _i9.GreenhouseEndpoint).get(
                     session,
                     params['id'],
                   ),
@@ -946,7 +984,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['greenhouse'] as _i8.GreenhouseEndpoint)
+              ) async => (endpoints['greenhouse'] as _i9.GreenhouseEndpoint)
                   .listByUser(session),
         ),
         'update': _i1.MethodConnector(
@@ -954,7 +992,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'greenhouse': _i1.ParameterDescription(
               name: 'greenhouse',
-              type: _i1.getType<_i19.Greenhouse>(),
+              type: _i1.getType<_i20.Greenhouse>(),
               nullable: false,
             ),
           },
@@ -963,7 +1001,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['greenhouse'] as _i8.GreenhouseEndpoint).update(
+                  (endpoints['greenhouse'] as _i9.GreenhouseEndpoint).update(
                     session,
                     params['greenhouse'],
                   ),
@@ -982,7 +1020,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['greenhouse'] as _i8.GreenhouseEndpoint).delete(
+                  (endpoints['greenhouse'] as _i9.GreenhouseEndpoint).delete(
                     session,
                     params['id'],
                   ),
@@ -1001,7 +1039,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['greenhouse'] as _i8.GreenhouseEndpoint).getTrays(
+                  (endpoints['greenhouse'] as _i9.GreenhouseEndpoint).getTrays(
                     session,
                     params['greenhouseId'],
                   ),
@@ -1020,7 +1058,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['greenhouse'] as _i8.GreenhouseEndpoint).getPlants(
+                  (endpoints['greenhouse'] as _i9.GreenhouseEndpoint).getPlants(
                     session,
                     params['trayId'],
                   ),
@@ -1030,7 +1068,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'tray': _i1.ParameterDescription(
               name: 'tray',
-              type: _i1.getType<_i20.Tray>(),
+              type: _i1.getType<_i21.Tray>(),
               nullable: false,
             ),
           },
@@ -1038,7 +1076,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['greenhouse'] as _i8.GreenhouseEndpoint)
+              ) async => (endpoints['greenhouse'] as _i9.GreenhouseEndpoint)
                   .createTray(
                     session,
                     params['tray'],
@@ -1049,7 +1087,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'plant': _i1.ParameterDescription(
               name: 'plant',
-              type: _i1.getType<_i21.Plant>(),
+              type: _i1.getType<_i22.Plant>(),
               nullable: false,
             ),
           },
@@ -1057,7 +1095,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['greenhouse'] as _i8.GreenhouseEndpoint)
+              ) async => (endpoints['greenhouse'] as _i9.GreenhouseEndpoint)
                   .createPlant(
                     session,
                     params['plant'],
@@ -1068,7 +1106,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'reading': _i1.ParameterDescription(
               name: 'reading',
-              type: _i1.getType<_i22.EnvironmentalReading>(),
+              type: _i1.getType<_i23.EnvironmentalReading>(),
               nullable: false,
             ),
           },
@@ -1076,7 +1114,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['greenhouse'] as _i8.GreenhouseEndpoint)
+              ) async => (endpoints['greenhouse'] as _i9.GreenhouseEndpoint)
                   .recordReading(
                     session,
                     params['reading'],
@@ -1105,7 +1143,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['greenhouse'] as _i8.GreenhouseEndpoint)
+              ) async => (endpoints['greenhouse'] as _i9.GreenhouseEndpoint)
                   .getReadings(
                     session,
                     params['greenhouseId'],
@@ -1131,7 +1169,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['greenhouse'] as _i8.GreenhouseEndpoint)
+              ) async => (endpoints['greenhouse'] as _i9.GreenhouseEndpoint)
                   .quarantinePlant(
                     session,
                     params['plantId'],
@@ -1143,7 +1181,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'event': _i1.ParameterDescription(
               name: 'event',
-              type: _i1.getType<_i23.IrrigationEvent>(),
+              type: _i1.getType<_i24.IrrigationEvent>(),
               nullable: false,
             ),
           },
@@ -1151,7 +1189,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['greenhouse'] as _i8.GreenhouseEndpoint)
+              ) async => (endpoints['greenhouse'] as _i9.GreenhouseEndpoint)
                   .recordIrrigation(
                     session,
                     params['event'],
@@ -1176,7 +1214,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['greeting'] as _i9.GreetingEndpoint).hello(
+              ) async => (endpoints['greeting'] as _i10.GreetingEndpoint).hello(
                 session,
                 params['name'],
               ),
@@ -1207,7 +1245,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 Map<String, dynamic> params,
               ) async =>
                   (endpoints['harvestPrediction']
-                          as _i10.HarvestPredictionEndpoint)
+                          as _i11.HarvestPredictionEndpoint)
                       .getForGreenhouse(
                         session,
                         params['greenhouseId'],
@@ -1229,7 +1267,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 Map<String, dynamic> params,
               ) async =>
                   (endpoints['harvestPrediction']
-                          as _i10.HarvestPredictionEndpoint)
+                          as _i11.HarvestPredictionEndpoint)
                       .getForPlant(
                         session,
                         params['plantId'],
@@ -1240,7 +1278,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'prediction': _i1.ParameterDescription(
               name: 'prediction',
-              type: _i1.getType<_i24.HarvestPrediction>(),
+              type: _i1.getType<_i25.HarvestPrediction>(),
               nullable: false,
             ),
           },
@@ -1250,7 +1288,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 Map<String, dynamic> params,
               ) async =>
                   (endpoints['harvestPrediction']
-                          as _i10.HarvestPredictionEndpoint)
+                          as _i11.HarvestPredictionEndpoint)
                       .create(
                         session,
                         params['prediction'],
@@ -1281,7 +1319,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 Map<String, dynamic> params,
               ) async =>
                   (endpoints['harvestPrediction']
-                          as _i10.HarvestPredictionEndpoint)
+                          as _i11.HarvestPredictionEndpoint)
                       .recordActual(
                         session,
                         params['predictionId'],
@@ -1304,7 +1342,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 Map<String, dynamic> params,
               ) async =>
                   (endpoints['harvestPrediction']
-                          as _i10.HarvestPredictionEndpoint)
+                          as _i11.HarvestPredictionEndpoint)
                       .getQuality(
                         session,
                         params['harvestPredictionId'],
@@ -1315,7 +1353,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'quality': _i1.ParameterDescription(
               name: 'quality',
-              type: _i1.getType<_i25.QualityPrediction>(),
+              type: _i1.getType<_i26.QualityPrediction>(),
               nullable: false,
             ),
           },
@@ -1325,7 +1363,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 Map<String, dynamic> params,
               ) async =>
                   (endpoints['harvestPrediction']
-                          as _i10.HarvestPredictionEndpoint)
+                          as _i11.HarvestPredictionEndpoint)
                       .createQuality(
                         session,
                         params['quality'],
@@ -1365,7 +1403,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['management'] as _i11.ManagementEndpoint)
+              ) async => (endpoints['management'] as _i12.ManagementEndpoint)
                   .getMetrics(
                     session,
                     params['greenhouseId'],
@@ -1379,7 +1417,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'metric': _i1.ParameterDescription(
               name: 'metric',
-              type: _i1.getType<_i26.KpiMetric>(),
+              type: _i1.getType<_i27.KpiMetric>(),
               nullable: false,
             ),
           },
@@ -1388,7 +1426,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['management'] as _i11.ManagementEndpoint).record(
+                  (endpoints['management'] as _i12.ManagementEndpoint).record(
                     session,
                     params['metric'],
                   ),
@@ -1400,7 +1438,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['management'] as _i11.ManagementEndpoint)
+              ) async => (endpoints['management'] as _i12.ManagementEndpoint)
                   .getDashboardSummary(session),
         ),
         'getMetricsByUser': _i1.MethodConnector(
@@ -1426,7 +1464,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['management'] as _i11.ManagementEndpoint)
+              ) async => (endpoints['management'] as _i12.ManagementEndpoint)
                   .getMetricsByUser(
                     session,
                     params['metricType'],
@@ -1445,7 +1483,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'detection': _i1.ParameterDescription(
               name: 'detection',
-              type: _i1.getType<_i27.DiseaseDetection>(),
+              type: _i1.getType<_i28.DiseaseDetection>(),
               nullable: false,
             ),
           },
@@ -1454,7 +1492,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['phytopathology'] as _i12.PhytopathologyEndpoint)
+                  (endpoints['phytopathology'] as _i13.PhytopathologyEndpoint)
                       .recordDiseaseDetection(
                         session,
                         params['detection'],
@@ -1474,7 +1512,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['phytopathology'] as _i12.PhytopathologyEndpoint)
+                  (endpoints['phytopathology'] as _i13.PhytopathologyEndpoint)
                       .getDetectionsForPlant(
                         session,
                         params['plantId'],
@@ -1499,7 +1537,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['phytopathology'] as _i12.PhytopathologyEndpoint)
+                  (endpoints['phytopathology'] as _i13.PhytopathologyEndpoint)
                       .getDetectionsForGreenhouse(
                         session,
                         params['greenhouseId'],
@@ -1525,7 +1563,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['phytopathology'] as _i12.PhytopathologyEndpoint)
+                  (endpoints['phytopathology'] as _i13.PhytopathologyEndpoint)
                       .confirmDetection(
                         session,
                         params['detectionId'],
@@ -1537,7 +1575,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'identification': _i1.ParameterDescription(
               name: 'identification',
-              type: _i1.getType<_i28.PestIdentification>(),
+              type: _i1.getType<_i29.PestIdentification>(),
               nullable: false,
             ),
           },
@@ -1546,7 +1584,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['phytopathology'] as _i12.PhytopathologyEndpoint)
+                  (endpoints['phytopathology'] as _i13.PhytopathologyEndpoint)
                       .recordPestIdentification(
                         session,
                         params['identification'],
@@ -1571,7 +1609,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['phytopathology'] as _i12.PhytopathologyEndpoint)
+                  (endpoints['phytopathology'] as _i13.PhytopathologyEndpoint)
                       .getPestsForGreenhouse(
                         session,
                         params['greenhouseId'],
@@ -1583,7 +1621,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'deficiency': _i1.ParameterDescription(
               name: 'deficiency',
-              type: _i1.getType<_i29.NutritionalDeficiency>(),
+              type: _i1.getType<_i30.NutritionalDeficiency>(),
               nullable: false,
             ),
           },
@@ -1592,7 +1630,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['phytopathology'] as _i12.PhytopathologyEndpoint)
+                  (endpoints['phytopathology'] as _i13.PhytopathologyEndpoint)
                       .recordDeficiency(
                         session,
                         params['deficiency'],
@@ -1612,7 +1650,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['phytopathology'] as _i12.PhytopathologyEndpoint)
+                  (endpoints['phytopathology'] as _i13.PhytopathologyEndpoint)
                       .getTreatments(
                         session,
                         params['plantId'],
@@ -1623,7 +1661,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'treatment': _i1.ParameterDescription(
               name: 'treatment',
-              type: _i1.getType<_i30.TreatmentRecommendation>(),
+              type: _i1.getType<_i31.TreatmentRecommendation>(),
               nullable: false,
             ),
           },
@@ -1632,7 +1670,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['phytopathology'] as _i12.PhytopathologyEndpoint)
+                  (endpoints['phytopathology'] as _i13.PhytopathologyEndpoint)
                       .createTreatment(
                         session,
                         params['treatment'],
@@ -1657,7 +1695,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['phytopathology'] as _i12.PhytopathologyEndpoint)
+                  (endpoints['phytopathology'] as _i13.PhytopathologyEndpoint)
                       .markTreatmentApplied(
                         session,
                         params['treatmentId'],
@@ -1675,7 +1713,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'record': _i1.ParameterDescription(
               name: 'record',
-              type: _i1.getType<_i31.TraceabilityRecord>(),
+              type: _i1.getType<_i32.TraceabilityRecord>(),
               nullable: false,
             ),
           },
@@ -1684,7 +1722,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['traceability'] as _i13.TraceabilityEndpoint)
+                  (endpoints['traceability'] as _i14.TraceabilityEndpoint)
                       .addRecord(
                         session,
                         params['record'],
@@ -1704,7 +1742,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['traceability'] as _i13.TraceabilityEndpoint)
+                  (endpoints['traceability'] as _i14.TraceabilityEndpoint)
                       .getChain(
                         session,
                         params['batchId'],
@@ -1724,7 +1762,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['traceability'] as _i13.TraceabilityEndpoint)
+                  (endpoints['traceability'] as _i14.TraceabilityEndpoint)
                       .verifyChain(
                         session,
                         params['batchId'],
@@ -1754,7 +1792,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['traceability'] as _i13.TraceabilityEndpoint)
+                  (endpoints['traceability'] as _i14.TraceabilityEndpoint)
                       .generateReport(
                         session,
                         params['greenhouseId'],
@@ -1781,7 +1819,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['traceability'] as _i13.TraceabilityEndpoint)
+                  (endpoints['traceability'] as _i14.TraceabilityEndpoint)
                       .getReports(
                         session,
                         params['greenhouseId'],
@@ -1796,7 +1834,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['traceability'] as _i13.TraceabilityEndpoint)
+                  (endpoints['traceability'] as _i14.TraceabilityEndpoint)
                       .getTemplates(session),
         ),
       },
@@ -1813,14 +1851,14 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['user'] as _i14.UserEndpoint).getProfile(session),
+                  (endpoints['user'] as _i15.UserEndpoint).getProfile(session),
         ),
         'updateProfile': _i1.MethodConnector(
           name: 'updateProfile',
           params: {
             'user': _i1.ParameterDescription(
               name: 'user',
-              type: _i1.getType<_i32.User>(),
+              type: _i1.getType<_i33.User>(),
               nullable: false,
             ),
           },
@@ -1828,7 +1866,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['user'] as _i14.UserEndpoint).updateProfile(
+              ) async => (endpoints['user'] as _i15.UserEndpoint).updateProfile(
                 session,
                 params['user'],
               ),
@@ -1840,7 +1878,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['user'] as _i14.UserEndpoint)
+              ) async => (endpoints['user'] as _i15.UserEndpoint)
                   .getPreferences(session),
         ),
         'updatePreferences': _i1.MethodConnector(
@@ -1848,7 +1886,7 @@ class Endpoints extends _i1.EndpointDispatch {
           params: {
             'preferences': _i1.ParameterDescription(
               name: 'preferences',
-              type: _i1.getType<_i33.UserPreferences>(),
+              type: _i1.getType<_i34.UserPreferences>(),
               nullable: false,
             ),
           },
@@ -1857,7 +1895,7 @@ class Endpoints extends _i1.EndpointDispatch {
                 _i1.Session session,
                 Map<String, dynamic> params,
               ) async =>
-                  (endpoints['user'] as _i14.UserEndpoint).updatePreferences(
+                  (endpoints['user'] as _i15.UserEndpoint).updatePreferences(
                     session,
                     params['preferences'],
                   ),
@@ -1869,7 +1907,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['user'] as _i14.UserEndpoint)
+              ) async => (endpoints['user'] as _i15.UserEndpoint)
                   .getSubscriptionPlan(session),
         ),
         'listBySegment': _i1.MethodConnector(
@@ -1895,7 +1933,7 @@ class Endpoints extends _i1.EndpointDispatch {
               (
                 _i1.Session session,
                 Map<String, dynamic> params,
-              ) async => (endpoints['user'] as _i14.UserEndpoint).listBySegment(
+              ) async => (endpoints['user'] as _i15.UserEndpoint).listBySegment(
                 session,
                 params['segment'],
                 limit: params['limit'],
@@ -1904,9 +1942,9 @@ class Endpoints extends _i1.EndpointDispatch {
         ),
       },
     );
-    modules['serverpod_auth_idp'] = _i34.Endpoints()
+    modules['serverpod_auth_idp'] = _i35.Endpoints()
       ..initializeEndpoints(server);
-    modules['serverpod_auth_core'] = _i35.Endpoints()
+    modules['serverpod_auth_core'] = _i36.Endpoints()
       ..initializeEndpoints(server);
   }
 }

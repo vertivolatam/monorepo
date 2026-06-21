@@ -179,6 +179,8 @@ class TestEndpoints {
 
   late final _CropCatalogEndpoint cropCatalog;
 
+  late final _AdminFleetEndpoint adminFleet;
+
   late final _GreenhouseEndpoint greenhouse;
 
   late final _GreetingEndpoint greeting;
@@ -222,6 +224,10 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
     cropCatalog = _CropCatalogEndpoint(
+      endpoints,
+      serializationManager,
+    );
+    adminFleet = _AdminFleetEndpoint(
       endpoints,
       serializationManager,
     );
@@ -1426,6 +1432,52 @@ class _CropCatalogEndpoint {
                   _localCallContext.arguments,
                 )
                 as _i3.Future<_i11.GrowthStageDefinition>);
+        return _localReturnValue;
+      } finally {
+        await _localUniqueSession.close();
+      }
+    });
+  }
+}
+
+class _AdminFleetEndpoint {
+  _AdminFleetEndpoint(
+    this._endpointDispatch,
+    this._serializationManager,
+  );
+
+  final _i2.EndpointDispatch _endpointDispatch;
+
+  final _i2.SerializationManager _serializationManager;
+
+  _i3.Future<List<_i12.Greenhouse>> listAll(
+    _i1.TestSessionBuilder sessionBuilder, {
+    required int limit,
+    required int offset,
+  }) async {
+    return _i1.callAwaitableFunctionAndHandleExceptions(() async {
+      var _localUniqueSession =
+          (sessionBuilder as _i1.InternalTestSessionBuilder).internalBuild(
+            endpoint: 'adminFleet',
+            method: 'listAll',
+          );
+      try {
+        var _localCallContext = await _endpointDispatch.getMethodCallContext(
+          createSessionCallback: (_) => _localUniqueSession,
+          endpointPath: 'adminFleet',
+          methodName: 'listAll',
+          parameters: _i1.testObjectToJson({
+            'limit': limit,
+            'offset': offset,
+          }),
+          serializationManager: _serializationManager,
+        );
+        var _localReturnValue =
+            await (_localCallContext.method.call(
+                  _localUniqueSession,
+                  _localCallContext.arguments,
+                )
+                as _i3.Future<List<_i12.Greenhouse>>);
         return _localReturnValue;
       } finally {
         await _localUniqueSession.close();

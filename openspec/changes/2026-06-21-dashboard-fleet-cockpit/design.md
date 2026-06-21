@@ -104,24 +104,19 @@ añade **un** método nuevo al `GreenhouseEndpoint`, protegido admin-only con el
 nativo de Serverpod 3.4 (`requiredScopes` implica `requireLogin`):
 
 ```dart
-// apps/vertivo_server/lib/src/greenhouses/greenhouse_endpoint.dart  (patrón)
-class GreenhouseEndpoint extends Endpoint {
-  // Admin-only: sólo sesiones con Scope.admin pueden listar la flota cross-tenant.
-  // Serverpod rechaza automáticamente cualquier sesión sin el scope.
+// apps/vertivo_server/lib/src/greenhouses/admin_fleet_endpoint.dart  (impl real)
+class AdminFleetEndpoint extends Endpoint {
+  // Override de clase: Serverpod rechaza toda sesión sin Scope.admin ANTES de
+  // ejecutar el método (requiredScopes implica requireLogin). Sin chequeo manual.
   @override
-  Set<Scope> get requiredScopes => const {}; // (ver nota: NO global)
+  Set<Scope> get requiredScopes => {Scope.admin};
 
-  /// (NUEVO) Lista toda la flota de TODOS los tenants — operador/admin.
-  Future<List<Greenhouse>> listAllForAdmin(
+  /// Lista toda la flota activa de TODOS los tenants, ordenada por owner.
+  Future<List<Greenhouse>> listAll(
     Session session, {
     int limit = 500,
     int offset = 0,
   }) async {
-    // requireScope manual por-método: el resto del endpoint sigue per-tenant.
-    final auth = await session.authenticated;
-    if (auth == null || !auth.scopes.contains(Scope.admin)) {
-      throw Exception('admin scope required');
-    }
     return await Greenhouse.db.find(
       session,
       where: (t) => t.isActive.equals(true),
@@ -132,15 +127,12 @@ class GreenhouseEndpoint extends Endpoint {
 }
 ```
 
-**Decisión de aislamiento:** como `GreenhouseEndpoint` mezcla métodos per-tenant
-(`listByUser`, `getReadings`) con este admin-only, el override de clase `requiredScopes` NO
-sirve (aplicaría a todos los métodos). Dos opciones a evaluar en implementación:
-- **(A, preferida)** un endpoint nuevo aparte `AdminFleetEndpoint extends Endpoint` con
-  `requiredScopes => {Scope.admin}` a nivel de clase (Serverpod recomienda base classes
-  admin) — mantiene `greenhouse.*` intacto.
-- **(B)** chequeo manual de scope dentro del método (como el snippet) si se prefiere un solo
-  endpoint. Menos idiomático.
-La impl arranca por **(A)**: `client.adminFleet.listAll()`.
+**Decisión de aislamiento (elegida: A).** `GreenhouseEndpoint` mezcla métodos per-tenant
+(`listByUser`, `getReadings`), así que un override de clase `requiredScopes` ahí aplicaría a
+todos sus métodos — incorrecto. Se usa un **endpoint nuevo aparte** `AdminFleetEndpoint` con
+`requiredScopes => {Scope.admin}` a nivel de clase (patrón que Serverpod recomienda para
+admin), manteniendo `greenhouse.*` intacto. El gating es **declarativo** (no manual): Serverpod
+valida el scope antes del cuerpo. Cliente: `client.adminFleet.listAll()`.
 
 **Supuesto de roles documentado:** NO existe tabla de roles ni campo `isAdmin` en `User`
 (`User.segment` es residential/commercial/industrial/expert, no un rol de autorización). El
