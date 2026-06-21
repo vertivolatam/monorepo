@@ -7,6 +7,7 @@
 # (input_EZO_*Sensor constructor params) so the entire pipeline runs
 # identically to production, only the I2C layer is replaced.
 
+import json
 import logging
 import signal
 import sys
@@ -75,7 +76,9 @@ class Simulator:
         sim_ec = SimulatedECSensor(**scenario_data.get("ec", {}))
         sim_do = SimulatedDOSensor(**scenario_data.get("do", {}))
         sim_orp = SimulatedORPSensor(**scenario_data.get("orp", {}))
-        sim_tds = SimulatedTDSSensor(**scenario_data.get("tds", {}))
+        # TDS derives from EC on real kits — link it so it follows EC's
+        # calibration state (no calibration state of its own).
+        sim_tds = SimulatedTDSSensor(ec_sensor=sim_ec, **scenario_data.get("tds", {}))
         sim_temp = SimulatedRTDSensor(**scenario_data.get("temperature", {}))
 
         # Keep references to the simulated sensors so live control commands
@@ -144,6 +147,15 @@ class Simulator:
         # Global kill switch (Phase 2): when True the loop publishes nothing.
         self._kill_all = False
 
+        # Control config (greenhouse_id for the control topic). Best-effort:
+        # fall back to "1" if config can't be loaded.
+        try:
+            from src.cloud_sdk_libs.mqtt_client_factory import load_config
+            self._config = load_config()
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning(f"Could not load MQTT config for control topic: {exc}")
+            self._config = {}
+
     def _register_monitors(self):
         """Register all monitors with MQTT integration."""
         self.mqtt_integration.register_environmental_co2_monitor(self.co2_monitor)
@@ -185,6 +197,112 @@ class Simulator:
             self.tds_monitor.read_tds()
         if _enabled("temperature"):
             self.temp_monitor.read_temperature()
+
+    # ------------------------------------------------------------------
+    # Control plane (Phase 2): dispatcher + MQTT control subscription
+    # ------------------------------------------------------------------
+    def _control_topic(self) -> str:
+        """Build the control topic the simulator listens on.
+
+        Schema: vertivo/sim/greenhouse/{greenhouse_id}/control
+        """
+        gh = self._config.get("greenhouse_id", "1")
+        return f"vertivo/sim/greenhouse/{gh}/control"
+
+    def _dispatch(self, command) -> None:
+        """Pure command dispatcher: map a control command dict to an effect.
+
+        Expected shape: {"sensor": <name>, "action": <action>, ...}. Global
+        actions (kill_all, set_interval) ignore "sensor". Unknown sensors or
+        actions, or malformed commands, are logged and ignored (never raise).
+
+        Supported actions:
+          set_target     {sensor, value}
+          inject_anomaly {sensor, magnitude}
+          enable         {sensor, on}
+          calibrate      {sensor, point?, value?}
+          kill_all       {}
+          set_interval   {seconds}
+        """
+        if not isinstance(command, dict):
+            logger.warning(f"Control command is not a dict, ignored: {command!r}")
+            return
+
+        action = command.get("action")
+        if not action:
+            logger.warning(f"Control command missing 'action', ignored: {command!r}")
+            return
+
+        # Global actions (no sensor required).
+        if action == "kill_all":
+            self._kill_all = True
+            logger.info("Control: kill_all — publishing halted")
+            return
+        if action == "set_interval":
+            seconds = command.get("seconds")
+            if isinstance(seconds, (int, float)) and seconds > 0:
+                self.mqtt_publish_interval = seconds
+                # Propagate to the live MQTT integration if it supports it.
+                integration = getattr(self, "mqtt_integration", None)
+                if integration is not None:
+                    try:
+                        integration.publish_interval = seconds
+                    except Exception:  # pragma: no cover - defensive
+                        pass
+                logger.info(f"Control: set_interval — {seconds}s")
+            else:
+                logger.warning(f"Control: set_interval invalid seconds: {seconds!r}")
+            return
+
+        # Per-sensor actions.
+        sensor_name = command.get("sensor")
+        sensor = self.sensors.get(sensor_name)
+        if sensor is None:
+            logger.warning(f"Control: unknown sensor '{sensor_name}', ignored")
+            return
+
+        try:
+            if action == "set_target":
+                sensor.set_target(float(command["value"]))
+            elif action == "inject_anomaly":
+                sensor.inject_anomaly(float(command["magnitude"]))
+            elif action == "enable":
+                sensor.enable(bool(command.get("on", True)))
+            elif action == "calibrate":
+                point = command.get("point")
+                value = command.get("value")
+                if point is not None:
+                    sensor.calibrate(point, value)
+                else:
+                    sensor.calibrate()
+            else:
+                logger.warning(f"Control: unknown action '{action}', ignored")
+        except (KeyError, TypeError, ValueError) as exc:
+            logger.warning(f"Control: malformed '{action}' command {command!r}: {exc}")
+
+    def _handle_control_message(self, topic: str, payload) -> None:
+        """MQTT callback: parse a JSON control payload and dispatch it.
+
+        Invalid JSON is logged and ignored (never raises).
+        """
+        try:
+            command = json.loads(payload)
+        except (ValueError, TypeError) as exc:
+            logger.warning(f"Control: invalid JSON on {topic}: {exc}")
+            return
+        self._dispatch(command)
+
+    def _subscribe_to_control(self) -> None:
+        """Subscribe to the control topic and route messages to the dispatcher.
+
+        Best-effort: logs and continues if the MQTT layer can't subscribe.
+        """
+        topic = self._control_topic()
+        try:
+            self.mqtt_integration.mqtt.subscribe(topic, self._handle_control_message)
+            logger.info(f"Control: subscribed to {topic}")
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning(f"Control: failed to subscribe to {topic}: {exc}")
 
     def print_status(self):
         """Print current simulated values."""
@@ -243,6 +361,7 @@ class Simulator:
                 "scenario": self.scenario_name,
             })
             self.mqtt_integration.start_data_collection()
+            self._subscribe_to_control()
         else:
             logger.warning("MQTT connection failed — running in local-only mode (no publishing)")
 
