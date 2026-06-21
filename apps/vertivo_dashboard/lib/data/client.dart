@@ -21,4 +21,6 @@ import 'package:vertivo_client/vertivo_client.dart';
 ///
 /// Backend URL: Serverpod owns `:8080`; the dashboard's own Jaspr server is on
 /// `:8090` (see `pubspec.yaml`), so this points at the *backend's* port, 8080.
-final Client client = Client('http://localhost:8080/');
+/// Named `backendClient` (not `client`) to avoid colliding with Jaspr's
+/// `client` annotation when both are imported into a page.
+final Client backendClient = Client('http://localhost:8080/');
