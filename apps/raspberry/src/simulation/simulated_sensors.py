@@ -66,6 +66,34 @@ class _SimulatedSensorBase:
         self._value = mean
         self._start_time = time.time()
 
+        # Live-control state (Phase 0)
+        self._enabled = True
+        # Pending one-shot anomaly magnitude (multiplier of std). 0.0 = none.
+        self._pending_anomaly = 0.0
+
+    # ------------------------------------------------------------------
+    # Live setters (Phase 0) — mutate the running sensor from control UI
+    # ------------------------------------------------------------------
+    def set_target(self, mean: float) -> None:
+        """Move the target mean the sensor reverts toward (live)."""
+        self.mean = mean
+
+    def inject_anomaly(self, magnitude: float) -> None:
+        """Queue a one-shot anomaly spike for the next read().
+
+        magnitude is an absolute offset in the sensor's own units (e.g.
+        +2.0 pH, -150 mV ORP), added to the next _next_value() result. This
+        is the intuitive contract for a control UI (the UI sends "+50 mV"),
+        and is independent of std. A spike is still clamped to the sensor's
+        physical bounds.
+        """
+        self._pending_anomaly = magnitude
+
+    def enable(self, on: bool) -> None:
+        """Enable/disable this sensor. Disabled sensors are skipped by the
+        Simulator publish loop (their monitor value is not updated)."""
+        self._enabled = bool(on)
+
     def _diurnal_offset(self) -> float:
         """Sinusoidal offset based on time of day."""
         if self.diurnal_amplitude == 0.0:
@@ -86,6 +114,15 @@ class _SimulatedSensorBase:
         target = self.mean + self._diurnal_offset()
         noise = random.gauss(0, self.std)
         self._value += self.reversion_rate * (target - self._value) + noise
+
+        # One-shot injected anomaly (Phase 0, from control UI). magnitude is
+        # an absolute offset in the sensor's own units.
+        if self._pending_anomaly:
+            self._value += self._pending_anomaly
+            logger.debug(
+                f"{self.__class__.__name__}: injected anomaly {self._pending_anomaly:+.2f}"
+            )
+            self._pending_anomaly = 0.0
 
         # Anomaly injection
         if self.anomaly_probability > 0 and random.random() < self.anomaly_probability:

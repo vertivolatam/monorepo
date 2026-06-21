@@ -78,6 +78,19 @@ class Simulator:
         sim_tds = SimulatedTDSSensor(**scenario_data.get("tds", {}))
         sim_temp = SimulatedRTDSensor(**scenario_data.get("temperature", {}))
 
+        # Keep references to the simulated sensors so live control commands
+        # (set_target / inject_anomaly / enable / calibrate) can reach them.
+        self.sensors = {
+            "co2": sim_co2,
+            "humidity": sim_humidity,
+            "ph": sim_ph,
+            "ec": sim_ec,
+            "do": sim_do,
+            "orp": sim_orp,
+            "tds": sim_tds,
+            "temperature": sim_temp,
+        }
+
         # Create monitors with simulated sensors injected
         self.co2_monitor = CO2Monitor(
             mode_config.get("co2_input_lower_bound", 400),
@@ -128,6 +141,8 @@ class Simulator:
 
         # State
         self._running = False
+        # Global kill switch (Phase 2): when True the loop publishes nothing.
+        self._kill_all = False
 
     def _register_monitors(self):
         """Register all monitors with MQTT integration."""
@@ -141,15 +156,35 @@ class Simulator:
         self.mqtt_integration.register_nutrient_solution_orp_monitor(self.orp_monitor)
 
     def read_all_sensors(self):
-        """Read from all simulated sensors (via monitors)."""
-        self.co2_monitor.read_co2()
-        self.humidity_monitor.read_humidity()
-        self.do_monitor.read_do()
-        self.ec_monitor.read_ec()
-        self.orp_monitor.read_orp()
-        self.ph_monitor.read_ph()
-        self.tds_monitor.read_tds()
-        self.temp_monitor.read_temperature()
+        """Read from all simulated sensors (via monitors).
+
+        Sensors whose underlying simulated sensor is disabled (`_enabled`
+        is False) are skipped — their monitor value is not refreshed and so
+        nothing new is published for them. When the global kill switch
+        (`_kill_all`) is active, no sensor is read at all.
+        """
+        if self._kill_all:
+            return
+
+        def _enabled(key):
+            return self.sensors[key]._enabled
+
+        if _enabled("co2"):
+            self.co2_monitor.read_co2()
+        if _enabled("humidity"):
+            self.humidity_monitor.read_humidity()
+        if _enabled("do"):
+            self.do_monitor.read_do()
+        if _enabled("ec"):
+            self.ec_monitor.read_ec()
+        if _enabled("orp"):
+            self.orp_monitor.read_orp()
+        if _enabled("ph"):
+            self.ph_monitor.read_ph()
+        if _enabled("tds"):
+            self.tds_monitor.read_tds()
+        if _enabled("temperature"):
+            self.temp_monitor.read_temperature()
 
     def print_status(self):
         """Print current simulated values."""
