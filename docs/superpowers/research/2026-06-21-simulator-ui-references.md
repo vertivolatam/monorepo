@@ -48,6 +48,28 @@ Cada **instrumento** (uno por sensor Atlas) debería exponer:
 - Cobertura de los sensores que ya existen en `apps/raspberry/src/monitors/atlas_scientific/`
   (pH, EC, TDS, DO, ORP, temp de solución, CO₂, humedad).
 
+## Atlas InterLink (i3 / i4) + Atlas Desktop — descubierto 2026-06-21
+
+> Hardware/SW que el owner no conocía al diseñar `apps/raspberry`. Los InterLink son
+> puentes/expansores para conectar varios circuitos EZO; cambian el diagrama de wiring y
+> abren la puerta a replicar la app oficial **Atlas Desktop** como modelo de UI.
+
+- **Atlas Desktop — user guide:** https://files.atlas-scientific.com/Atlasdesktop-user-guide.pdf
+  (la app oficial de escritorio; modelo de UX para el panel de control del simulador).
+- **i3 InterLink — datasheet:** https://files.atlas-scientific.com/i3-interlink-datasheet.pdf
+  · **3D STEP:** https://files.atlas-scientific.com/i3-iL.zip
+- **i4 InterLink — datasheet:** https://files.atlas-scientific.com/i4-interlink-datasheet.pdf
+  · **3D STEP:** https://files.atlas-scientific.com/i4-cad.zip
+- **Atlas Desktop (instalador local):**
+  `/home/kvttvrsis/Descargas/vertivolatam/AtlasDesktop/Atlas Desktop Setup.msi`
+  — desensamblar con `7z x`, `msidump`, o `wine msiexec /a ... TARGETDIR=...` para analizar
+  la app real (layout, controles, flujo de calibración) como referencia directa de UI.
+
+**Implicación para el diseño:** el panel de control del simulador podría espejar **Atlas
+Desktop** (no solo el medidor de mesa), e incluir el modelo InterLink i3/i4 en el diagrama
+de wiring. Los STEP 3D sirven para render del hardware. Todo esto entra en el **brainstorm
+del track de UI del simulador** (no en el slice de pH).
+
 ## Mapeo al simulador existente (para el brainstorm)
 
 - `apps/raspberry/src/simulation/simulated_sensors.py` — `SimulatedSensorBase(mean, std,
