@@ -41,6 +41,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QPushButton,
     QGroupBox,
+    QSplitter,
     QTabWidget,
     QTabBar,
     QTreeWidget,
@@ -233,16 +234,13 @@ class DetailView(QWidget):
         self.disc_banner.hide()
         outer.addWidget(self.disc_banner)
 
-        # --- fila superior sticky: Botánicos | Negocio | Monitoreo ---
-        top = QHBoxLayout()
-        top.setSpacing(8)
-
+        # --- secciones superiores: 2 columnas RESIZABLES (QSplitter):
+        #     [Datos Botánicos]  |  [Constantes de Monitoreo encima / Negocio debajo]
         self.botanic_box = QGroupBox("Datos Botánicos")
         self.botanic_box.setStyleSheet(T.groupbox_qss("botanic"))
         self.botanic_form = QVBoxLayout(self.botanic_box)
         self.botanic_form.setContentsMargins(12, 16, 12, 12)
         self.botanic_form.setSpacing(7)
-        top.addWidget(self.botanic_box, 1)
 
         self.business_box = QGroupBox("Soluciones del Negocio")
         self.business_box.setStyleSheet(T.groupbox_qss("business"))
@@ -277,16 +275,26 @@ class DetailView(QWidget):
         self.toast = QLabel("")
         self.toast.setStyleSheet("font-size:11px;")
         biz.addWidget(self.toast)
-        top.addWidget(self.business_box, 1)
 
         self.monitor_box = QGroupBox("Constantes de Monitoreo")
         self.monitor_box.setStyleSheet(T.groupbox_qss("monitor"))
         self.monitor_form = QVBoxLayout(self.monitor_box)
         self.monitor_form.setContentsMargins(12, 16, 12, 12)
         self.monitor_form.setSpacing(7)
-        top.addWidget(self.monitor_box, 1)
 
-        outer.addLayout(top)
+        # Columna derecha: Monitoreo ENCIMA, Negocio debajo (splitter vertical).
+        right_split = QSplitter(Qt.Vertical)
+        right_split.setChildrenCollapsible(False)
+        right_split.addWidget(self.monitor_box)
+        right_split.addWidget(self.business_box)
+        right_split.setSizes([170, 300])
+
+        # 2 columnas resizables: Botánicos | columna derecha.
+        self._top_split = QSplitter(Qt.Horizontal)
+        self._top_split.setChildrenCollapsible(False)
+        self._top_split.addWidget(self.botanic_box)
+        self._top_split.addWidget(right_split)
+        self._top_split.setSizes([470, 730])
 
         # --- tabs de fase ---
         self.tabs = QTabWidget()
@@ -305,7 +313,14 @@ class DetailView(QWidget):
         self.tabs.addTab(self.tab_repro, "Reproductiva")
         self.tabs.addTab(self.tab_madur, "Maduración")
         self.tabs.addTab(self.tab_nutri, "Valor Nutricional")
-        outer.addWidget(self.tabs, 1)
+
+        # Splitter vertical: secciones superiores | tabs (todo resizable).
+        main_split = QSplitter(Qt.Vertical)
+        main_split.setChildrenCollapsible(False)
+        main_split.addWidget(self._top_split)
+        main_split.addWidget(self.tabs)
+        main_split.setSizes([340, 470])
+        outer.addWidget(main_split, 1)
 
     # --- API pública ---
     def setCrop(self, crop_id: int):
