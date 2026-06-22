@@ -95,17 +95,19 @@ def _recompute():
 
     if MODE == "dark":
         # Acentos de marca en tonos claros para contraste sobre superficie oscura.
+        # Dark mode MORADO: superficies tintadas con la paleta primary (no neutral
+        # negro), estilo Material You tonal surfaces sobre el hue de marca.
         PRIMARY = palette("primary", 80) or "#DA99E3"
         SECONDARY = palette("secondary", 80) or "#CEDC00"
         ACCENT = palette("accent", 80) or "#AACD78"
         SUCCESS = palette("success", 70) or "#8FB35D"
-        SURFACE = palette("neutral", 6) or "#141419"
-        SURFACE_ALT = palette("neutral", 10) or "#1C1A1E"
-        SURFACE_SUNKEN = palette("neutral", 20) or "#312F34"
-        BORDER = palette("neutralVariant", 30) or "#49454E"
-        TEXT = palette("neutral", 90) or "#E6E1E8"
-        TEXT_MUTED = palette("neutral", 70) or "#AEAAB1"
-        TRACK = palette("neutralVariant", 30) or "#49454E"
+        SURFACE = palette("primary", 10) or "#2A0033"        # cards/base: morado muy oscuro
+        SURFACE_ALT = "#1A0020"                              # ventana: morado casi negro
+        SURFACE_SUNKEN = palette("primary", 20) or "#461452"  # chips/headers: morado
+        BORDER = palette("primary", 30) or "#5E1D6B"
+        TEXT = palette("primary", 95) or "#F8E8FB"           # lavanda muy claro
+        TEXT_MUTED = palette("primary", 70) or "#C178CB"
+        TRACK = palette("primary", 30) or "#5E1D6B"
         BAND_HEALTHY = palette("accent", 30) or "#354D15"
         IDEAL_MARK = palette("accent", 70) or "#8FB35D"
         status = {

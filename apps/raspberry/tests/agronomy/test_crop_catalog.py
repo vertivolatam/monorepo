@@ -69,7 +69,7 @@ def test_get_crop_returns_crop_dataclass():
     assert crop.name_es == "Albahaca"
     assert crop.name_en == "Basil"
     # In v2 Albahaca is an aromatic herb, not a generic leafy crop.
-    assert crop.profile == "herb_aromatic"
+    assert crop.profile == "hierba_aromatica"
     assert crop.aeroponic is True
 
 
@@ -93,10 +93,10 @@ def test_get_crop_unknown_raises_clear_error():
 
 
 def test_setpoints_resolves_leafy_profile_clean():
-    """Lechuga → leafy_vegetative; values clean (numbers, not provenance)."""
+    """Lechuga → hoja_vegetativa; values clean (numbers, not provenance)."""
     catalog = load_catalog()
     sp = catalog.setpoints("Lechuga")
-    # pH ideal 6.6 from the leafy_vegetative profile.
+    # pH ideal 6.6 from the hoja_vegetativa profile.
     assert sp["ph"]["ideal"] == pytest.approx(6.6)
     assert sp["ph"]["min"] == pytest.approx(6.0)
     assert sp["ph"]["max"] == pytest.approx(7.4)
@@ -130,12 +130,12 @@ def test_setpoints_includes_crop_identity():
     catalog = load_catalog()
     sp = catalog.setpoints("Albahaca")
     assert sp["crop"]["name_es"] == "Albahaca"
-    assert sp["crop"]["profile"] == "herb_aromatic"
+    assert sp["crop"]["profile"] == "hierba_aromatica"
     assert sp["crop"]["aeroponic"] is True
 
 
 def test_setpoints_herb_profile_values():
-    """Albahaca resolves the researched herb_aromatic profile (pH 5.8)."""
+    """Albahaca resolves the researched hierba_aromatica profile (pH 5.8)."""
     catalog = load_catalog()
     sp = catalog.setpoints("Albahaca")
     assert sp["ph"]["ideal"] == pytest.approx(5.8)
@@ -150,11 +150,11 @@ def test_setpoints_fruit_default_phase_is_vegetative():
     catalog = load_catalog()
     crop = catalog.get_crop("Tomate")
     assert crop.profile_phases == {
-        "vegetative": "fruiting_vegetative",
-        "reproductive": "fruiting_reproductive",
+        "vegetative": "fruto_vegetativa",
+        "reproductive": "fruto_reproductiva",
     }
     sp = catalog.setpoints("Tomate")
-    assert sp["crop"]["profile"] == "fruiting_vegetative"
+    assert sp["crop"]["profile"] == "fruto_vegetativa"
     assert sp["ph"]["ideal"] == pytest.approx(6.0)
 
 
@@ -162,7 +162,7 @@ def test_setpoints_fruit_reproductive_phase():
     """Explicit reproductive phase resolves the reproductive profile."""
     catalog = load_catalog()
     sp = catalog.setpoints("Tomate", phase="reproductive")
-    assert sp["crop"]["profile"] == "fruiting_reproductive"
+    assert sp["crop"]["profile"] == "fruto_reproductiva"
     assert sp["ph"]["ideal"] == pytest.approx(5.8)
     _assert_no_provenance(sp)
 

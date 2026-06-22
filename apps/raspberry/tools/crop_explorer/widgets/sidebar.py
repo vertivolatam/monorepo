@@ -27,6 +27,7 @@ from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QComboBox,
@@ -63,9 +64,16 @@ GROUP_DIMENSIONS = [
 
 
 class _MultiCombo(QComboBox):
-    """ComboBox checkable multi-select. Muestra ``label`` pero filtra por ``value``."""
+    """ComboBox multi-select. Muestra ``label`` pero filtra por ``value``.
+
+    El estado seleccionado se marca con un prefijo "✓" en el texto del item (no
+    con el indicator de checkbox del estilo), porque ese indicator es casi
+    invisible en dark mode con Fusion. Así el check se ve en cualquier tema.
+    """
 
     changed = Signal()
+    _CHECK = "✓ "
+    _BLANK = "    "
 
     def __init__(self, placeholder: str, items: list[tuple[str, str]], parent=None):
         super().__init__(parent)
@@ -80,11 +88,10 @@ class _MultiCombo(QComboBox):
         self._model = QStandardItemModel(self)
         self.setModel(self._model)
         for label, value in items:
-            item = QStandardItem(label)
-            item.setCheckable(True)
-            item.setCheckState(Qt.Unchecked)
+            item = QStandardItem(self._BLANK + label)
             item.setEditable(False)
             item.setData(value, Qt.UserRole)
+            item.setData(label, Qt.UserRole + 1)  # label base (sin prefijo)
             self._model.appendRow(item)
             self._label_of[value] = label
         self.view().pressed.connect(self._toggle)
@@ -94,12 +101,13 @@ class _MultiCombo(QComboBox):
         if not item:
             return
         value = item.data(Qt.UserRole)
-        if item.checkState() == Qt.Checked:
-            item.setCheckState(Qt.Unchecked)
+        base = item.data(Qt.UserRole + 1)
+        if value in self._checked:
             self._checked.discard(value)
+            item.setText(self._BLANK + base)
         else:
-            item.setCheckState(Qt.Checked)
             self._checked.add(value)
+            item.setText(self._CHECK + base)
         labels = [self._label_of.get(v, v) for v in self._checked]
         self.lineEdit().setText(
             ", ".join(sorted(labels)) if labels else self._placeholder
@@ -155,14 +163,19 @@ class Sidebar(QWidget):
         self.combo_profile = _MultiCombo("Todos", profile_items, self)
 
         def _filter_row(caption: str, combo: _MultiCombo):
+            row = QHBoxLayout()
+            row.setSpacing(6)
             cap = QLabel(caption)
+            cap.setFixedWidth(86)
+            cap.setWordWrap(True)
             cap.setStyleSheet(
                 f"color:{T.TEXT_MUTED}; font-size:10px; font-weight:bold;"
-                " text-transform:uppercase; padding-top:2px;"
+                " text-transform:uppercase;"
             )
-            lay.addWidget(cap)
+            row.addWidget(cap)
             combo.changed.connect(self._apply)
-            lay.addWidget(combo)
+            row.addWidget(combo, 1)
+            lay.addLayout(row)
 
         _filter_row("Aeropónico", self.combo_aero)
         _filter_row("Tipo de cosecha", self.combo_type)
@@ -208,8 +221,6 @@ class Sidebar(QWidget):
         # --- expandir/colapsar todo ---
         exp_row = QVBoxLayout()
         exp_btns = QWidget()
-        from PySide6.QtWidgets import QHBoxLayout
-
         h = QHBoxLayout(exp_btns)
         h.setContentsMargins(0, 0, 0, 0)
         h.setSpacing(4)

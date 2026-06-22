@@ -30,7 +30,7 @@
     "nutrition_note": "Grupo verde 'Nutritional value per 100 g' de la hoja está VACÍO (0 celdas en 1081 filas), igual que las fases Reproductiva/Maduración. Se sembró nutrición INVESTIGADA (source='researched', USDA FDC) para cultivos insignia (Albahaca, Espinaca, Fresa, Lechuga, Tomate); el extractor read_sheet_nutrition queda listo para cuando se pueble la hoja (source='sheet' tendría prioridad)."
   },
   "profiles": {
-    "leafy_vegetative": {
+    "hoja_vegetativa": {
       "label_es": "Cultivos de Hoja — Fase Vegetativa",
       "label_en": "Leafy Crops — Vegetative Phase",
       "applies_to_es": "hojas, tallos comestibles, inflorescencias tiernas, legumbres de vaina y brotes",
@@ -154,7 +154,7 @@
         "source": "sheet (Recetas Soluciones Nutrientes — Cultivos de Hoja Fase Vegetativa)"
       }
     },
-    "herb_aromatic": {
+    "hierba_aromatica": {
       "label_es": "Hierbas Aromáticas (Lamiaceae)",
       "label_en": "Aromatic Herbs (Lamiaceae)",
       "applies_to_es": "albahaca, orégano, romero, tomillo, menta",
@@ -255,7 +255,7 @@
         "confidence": "low"
       }
     },
-    "fruiting_vegetative": {
+    "fruto_vegetativa": {
       "label_es": "Cultivos de Fruto — Fase Vegetativa",
       "label_en": "Fruiting Crops — Vegetative Phase",
       "applies_to_es": "tomate, chile, pepino, melón, sandía (antes de floración)",
@@ -344,7 +344,7 @@
         "confidence": "low"
       }
     },
-    "fruiting_reproductive": {
+    "fruto_reproductiva": {
       "label_es": "Cultivos de Fruto — Fase Reproductiva (Fructificación)",
       "label_en": "Fruiting Crops — Reproductive Phase",
       "applies_to_es": "tomate, chile, pepino, melón, sandía durante floración/fructificación",
@@ -421,7 +421,7 @@
         "confidence": "low"
       }
     },
-    "berry_fruiting": {
+    "baya_fructificacion": {
       "label_es": "Frutos de Baya (fresa, arándanos, frambuesa, mora, uchuva, uva, pitahaya)",
       "label_en": "Berry / Soft-Fruit Crops",
       "ph": {
@@ -499,7 +499,7 @@
         "confidence": "low"
       }
     },
-    "root_bulking": {
+    "raiz_engrosamiento": {
       "label_es": "Cultivos de Raíz / Bulbo / Tubérculo — Fase de Engrosamiento",
       "label_en": "Root / Bulb / Tuber Crops — Bulking Phase",
       "applies_to_es": "rábano, nabo, malanga, ñame, papa, yampí, tupinambo, tacaco",
@@ -608,9 +608,9 @@
       "source_row": 6,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Achicoria / Escarola",
@@ -627,9 +627,9 @@
       "source_row": 7,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Aguacate",
@@ -697,9 +697,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "root_bulking"
+        "raiz_engrosamiento"
       ],
-      "profile": "root_bulking"
+      "profile": "raiz_engrosamiento"
     },
     {
       "name_es": "Albahaca",
@@ -752,9 +752,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "herb_aromatic"
+        "hierba_aromatica"
       ],
-      "profile": "herb_aromatic",
+      "profile": "hierba_aromatica",
       "nutrition_per_100g": {
         "source": "researched",
         "citation": "USDA FoodData Central (SR Legacy), valores por 100 g en crudo",
@@ -802,9 +802,9 @@
       "source_row": 11,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Alfalfa",
@@ -857,9 +857,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Algarrobo",
@@ -942,9 +942,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Arándano agraz (mortiño)",
@@ -961,9 +961,9 @@
       "source_row": 16,
       "_provenance": "sheet",
       "profiles": [
-        "berry_fruiting"
+        "baya_fructificacion"
       ],
-      "profile": "berry_fruiting"
+      "profile": "baya_fructificacion"
     },
     {
       "name_es": "Arándano azul",
@@ -980,9 +980,9 @@
       "source_row": 17,
       "_provenance": "sheet",
       "profiles": [
-        "berry_fruiting"
+        "baya_fructificacion"
       ],
-      "profile": "berry_fruiting"
+      "profile": "baya_fructificacion"
     },
     {
       "name_es": "Arándano rojo",
@@ -999,9 +999,9 @@
       "source_row": 18,
       "_provenance": "sheet",
       "profiles": [
-        "berry_fruiting"
+        "baya_fructificacion"
       ],
-      "profile": "berry_fruiting"
+      "profile": "baya_fructificacion"
     },
     {
       "name_es": "Arroz",
@@ -1033,9 +1033,9 @@
       "source_row": 20,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Avena",
@@ -1067,9 +1067,9 @@
       "source_row": 22,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Azuki (judía roja)",
@@ -1086,9 +1086,9 @@
       "source_row": 23,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Banano",
@@ -1171,9 +1171,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Berzas",
@@ -1190,9 +1190,9 @@
       "source_row": 27,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Brócoli",
@@ -1245,9 +1245,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Calabacín",
@@ -1420,9 +1420,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "root_bulking"
+        "raiz_engrosamiento"
       ],
-      "profile": "root_bulking"
+      "profile": "raiz_engrosamiento"
     },
     {
       "name_es": "Chayote",
@@ -1490,13 +1490,13 @@
         "_source": "sheet"
       },
       "profiles": [
-        "fruiting_vegetative",
-        "fruiting_reproductive"
+        "fruto_vegetativa",
+        "fruto_reproductiva"
       ],
-      "profile": "fruiting_vegetative",
+      "profile": "fruto_vegetativa",
       "profile_phases": {
-        "vegetative": "fruiting_vegetative",
-        "reproductive": "fruiting_reproductive"
+        "vegetative": "fruto_vegetativa",
+        "reproductive": "fruto_reproductiva"
       }
     },
     {
@@ -1514,13 +1514,13 @@
       "source_row": 40,
       "_provenance": "sheet",
       "profiles": [
-        "fruiting_vegetative",
-        "fruiting_reproductive"
+        "fruto_vegetativa",
+        "fruto_reproductiva"
       ],
-      "profile": "fruiting_vegetative",
+      "profile": "fruto_vegetativa",
       "profile_phases": {
-        "vegetative": "fruiting_vegetative",
-        "reproductive": "fruiting_reproductive"
+        "vegetative": "fruto_vegetativa",
+        "reproductive": "fruto_reproductiva"
       }
     },
     {
@@ -1553,9 +1553,9 @@
       "source_row": 42,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Coliflor",
@@ -1608,9 +1608,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Colinabo",
@@ -1627,9 +1627,9 @@
       "source_row": 44,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Cubaces (Frijol cubá)",
@@ -1697,9 +1697,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Culantro coyote",
@@ -1752,9 +1752,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Durazno",
@@ -1786,9 +1786,9 @@
       "source_row": 49,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Espinaca",
@@ -1841,9 +1841,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative",
+      "profile": "hoja_vegetativa",
       "nutrition_per_100g": {
         "source": "researched",
         "citation": "USDA FoodData Central (SR Legacy), valores por 100 g en crudo",
@@ -1891,9 +1891,9 @@
       "source_row": 51,
       "_provenance": "sheet",
       "profiles": [
-        "berry_fruiting"
+        "baya_fructificacion"
       ],
-      "profile": "berry_fruiting"
+      "profile": "baya_fructificacion"
     },
     {
       "name_es": "Fresa",
@@ -1910,9 +1910,9 @@
       "source_row": 52,
       "_provenance": "sheet",
       "profiles": [
-        "berry_fruiting"
+        "baya_fructificacion"
       ],
-      "profile": "berry_fruiting",
+      "profile": "baya_fructificacion",
       "nutrition_per_100g": {
         "source": "researched",
         "citation": "USDA FoodData Central (SR Legacy), valores por 100 g en crudo",
@@ -2020,9 +2020,9 @@
       "source_row": 57,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Hongos Champiñón",
@@ -2069,9 +2069,9 @@
       "source_row": 60,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative",
+      "profile": "hoja_vegetativa",
       "nutrition_per_100g": {
         "source": "researched",
         "citation": "USDA FoodData Central (SR Legacy), valores por 100 g en crudo",
@@ -2119,9 +2119,9 @@
       "source_row": 61,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Limón criollo",
@@ -2168,9 +2168,9 @@
       "source_row": 64,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Mandarina clementina",
@@ -2247,13 +2247,13 @@
       "source_row": 69,
       "_provenance": "sheet",
       "profiles": [
-        "fruiting_vegetative",
-        "fruiting_reproductive"
+        "fruto_vegetativa",
+        "fruto_reproductiva"
       ],
-      "profile": "fruiting_vegetative",
+      "profile": "fruto_vegetativa",
       "profile_phases": {
-        "vegetative": "fruiting_vegetative",
-        "reproductive": "fruiting_reproductive"
+        "vegetative": "fruto_vegetativa",
+        "reproductive": "fruto_reproductiva"
       }
     },
     {
@@ -2271,9 +2271,9 @@
       "source_row": 70,
       "_provenance": "sheet",
       "profiles": [
-        "herb_aromatic"
+        "hierba_aromatica"
       ],
-      "profile": "herb_aromatic"
+      "profile": "hierba_aromatica"
     },
     {
       "name_es": "Mora andina",
@@ -2290,9 +2290,9 @@
       "source_row": 71,
       "_provenance": "sheet",
       "profiles": [
-        "berry_fruiting"
+        "baya_fructificacion"
       ],
-      "profile": "berry_fruiting"
+      "profile": "baya_fructificacion"
     },
     {
       "name_es": "Mora negra",
@@ -2339,9 +2339,9 @@
       "source_row": 74,
       "_provenance": "sheet",
       "profiles": [
-        "root_bulking"
+        "raiz_engrosamiento"
       ],
-      "profile": "root_bulking"
+      "profile": "raiz_engrosamiento"
     },
     {
       "name_es": "Naranja dulce",
@@ -2373,9 +2373,9 @@
       "source_row": 76,
       "_provenance": "sheet",
       "profiles": [
-        "root_bulking"
+        "raiz_engrosamiento"
       ],
-      "profile": "root_bulking"
+      "profile": "raiz_engrosamiento"
     },
     {
       "name_es": "Ñampí / Malanga",
@@ -2392,9 +2392,9 @@
       "source_row": 77,
       "_provenance": "sheet",
       "profiles": [
-        "root_bulking"
+        "raiz_engrosamiento"
       ],
-      "profile": "root_bulking"
+      "profile": "raiz_engrosamiento"
     },
     {
       "name_es": "Nogal",
@@ -2462,9 +2462,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "herb_aromatic"
+        "hierba_aromatica"
       ],
-      "profile": "herb_aromatic"
+      "profile": "hierba_aromatica"
     },
     {
       "name_es": "Papa",
@@ -2481,9 +2481,9 @@
       "source_row": 80,
       "_provenance": "sheet",
       "profiles": [
-        "root_bulking"
+        "raiz_engrosamiento"
       ],
-      "profile": "root_bulking"
+      "profile": "raiz_engrosamiento"
     },
     {
       "name_es": "Papá de chancho (Tupinambo)",
@@ -2500,9 +2500,9 @@
       "source_row": 81,
       "_provenance": "sheet",
       "profiles": [
-        "root_bulking"
+        "raiz_engrosamiento"
       ],
-      "profile": "root_bulking"
+      "profile": "raiz_engrosamiento"
     },
     {
       "name_es": "Papaya",
@@ -2534,13 +2534,13 @@
       "source_row": 83,
       "_provenance": "sheet",
       "profiles": [
-        "fruiting_vegetative",
-        "fruiting_reproductive"
+        "fruto_vegetativa",
+        "fruto_reproductiva"
       ],
-      "profile": "fruiting_vegetative",
+      "profile": "fruto_vegetativa",
       "profile_phases": {
-        "vegetative": "fruiting_vegetative",
-        "reproductive": "fruiting_reproductive"
+        "vegetative": "fruto_vegetativa",
+        "reproductive": "fruto_reproductiva"
       }
     },
     {
@@ -2609,9 +2609,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Petit pois / Guisante",
@@ -2628,9 +2628,9 @@
       "source_row": 86,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Piña",
@@ -2662,9 +2662,9 @@
       "source_row": 88,
       "_provenance": "sheet",
       "profiles": [
-        "berry_fruiting"
+        "baya_fructificacion"
       ],
-      "profile": "berry_fruiting"
+      "profile": "baya_fructificacion"
     },
     {
       "name_es": "Puerro",
@@ -2681,9 +2681,9 @@
       "source_row": 89,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Rábano",
@@ -2700,9 +2700,9 @@
       "source_row": 90,
       "_provenance": "sheet",
       "profiles": [
-        "root_bulking"
+        "raiz_engrosamiento"
       ],
-      "profile": "root_bulking"
+      "profile": "raiz_engrosamiento"
     },
     {
       "name_es": "Remolacha",
@@ -2755,9 +2755,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Repollo",
@@ -2774,9 +2774,9 @@
       "source_row": 92,
       "_provenance": "sheet",
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Repollo chino (Mostaza china)",
@@ -2829,9 +2829,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Romero",
@@ -2884,9 +2884,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "herb_aromatic"
+        "hierba_aromatica"
       ],
-      "profile": "herb_aromatic"
+      "profile": "hierba_aromatica"
     },
     {
       "name_es": "Sandía",
@@ -2903,13 +2903,13 @@
       "source_row": 95,
       "_provenance": "sheet",
       "profiles": [
-        "fruiting_vegetative",
-        "fruiting_reproductive"
+        "fruto_vegetativa",
+        "fruto_reproductiva"
       ],
-      "profile": "fruiting_vegetative",
+      "profile": "fruto_vegetativa",
       "profile_phases": {
-        "vegetative": "fruiting_vegetative",
-        "reproductive": "fruiting_reproductive"
+        "vegetative": "fruto_vegetativa",
+        "reproductive": "fruto_reproductiva"
       }
     },
     {
@@ -2963,9 +2963,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "leafy_vegetative"
+        "hoja_vegetativa"
       ],
-      "profile": "leafy_vegetative"
+      "profile": "hoja_vegetativa"
     },
     {
       "name_es": "Tacaco",
@@ -2982,13 +2982,13 @@
       "source_row": 97,
       "_provenance": "sheet",
       "profiles": [
-        "fruiting_vegetative",
-        "fruiting_reproductive"
+        "fruto_vegetativa",
+        "fruto_reproductiva"
       ],
-      "profile": "fruiting_vegetative",
+      "profile": "fruto_vegetativa",
       "profile_phases": {
-        "vegetative": "fruiting_vegetative",
-        "reproductive": "fruiting_reproductive"
+        "vegetative": "fruto_vegetativa",
+        "reproductive": "fruto_reproductiva"
       }
     },
     {
@@ -3021,9 +3021,9 @@
       "source_row": 99,
       "_provenance": "sheet",
       "profiles": [
-        "root_bulking"
+        "raiz_engrosamiento"
       ],
-      "profile": "root_bulking"
+      "profile": "raiz_engrosamiento"
     },
     {
       "name_es": "Tomate",
@@ -3040,13 +3040,13 @@
       "source_row": 100,
       "_provenance": "sheet",
       "profiles": [
-        "fruiting_vegetative",
-        "fruiting_reproductive"
+        "fruto_vegetativa",
+        "fruto_reproductiva"
       ],
-      "profile": "fruiting_vegetative",
+      "profile": "fruto_vegetativa",
       "profile_phases": {
-        "vegetative": "fruiting_vegetative",
-        "reproductive": "fruiting_reproductive"
+        "vegetative": "fruto_vegetativa",
+        "reproductive": "fruto_reproductiva"
       },
       "nutrition_per_100g": {
         "source": "researched",
@@ -3095,13 +3095,13 @@
       "source_row": 101,
       "_provenance": "sheet",
       "profiles": [
-        "fruiting_vegetative",
-        "fruiting_reproductive"
+        "fruto_vegetativa",
+        "fruto_reproductiva"
       ],
-      "profile": "fruiting_vegetative",
+      "profile": "fruto_vegetativa",
       "profile_phases": {
-        "vegetative": "fruiting_vegetative",
-        "reproductive": "fruiting_reproductive"
+        "vegetative": "fruto_vegetativa",
+        "reproductive": "fruto_reproductiva"
       }
     },
     {
@@ -3155,9 +3155,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "herb_aromatic"
+        "hierba_aromatica"
       ],
-      "profile": "herb_aromatic"
+      "profile": "hierba_aromatica"
     },
     {
       "name_es": "Trigo",
@@ -3189,9 +3189,9 @@
       "source_row": 104,
       "_provenance": "sheet",
       "profiles": [
-        "berry_fruiting"
+        "baya_fructificacion"
       ],
-      "profile": "berry_fruiting"
+      "profile": "baya_fructificacion"
     },
     {
       "name_es": "Uva costarricense",
@@ -3208,9 +3208,9 @@
       "source_row": 105,
       "_provenance": "sheet",
       "profiles": [
-        "berry_fruiting"
+        "baya_fructificacion"
       ],
-      "profile": "berry_fruiting"
+      "profile": "baya_fructificacion"
     },
     {
       "name_es": "Yampí",
@@ -3227,9 +3227,9 @@
       "source_row": 106,
       "_provenance": "sheet",
       "profiles": [
-        "root_bulking"
+        "raiz_engrosamiento"
       ],
-      "profile": "root_bulking"
+      "profile": "raiz_engrosamiento"
     },
     {
       "name_es": "Yero",
@@ -3312,9 +3312,9 @@
         "_source": "sheet"
       },
       "profiles": [
-        "root_bulking"
+        "raiz_engrosamiento"
       ],
-      "profile": "root_bulking"
+      "profile": "raiz_engrosamiento"
     },
     {
       "name_es": "Zapallo (Ayote)",
@@ -3331,13 +3331,13 @@
       "source_row": 110,
       "_provenance": "sheet",
       "profiles": [
-        "fruiting_vegetative",
-        "fruiting_reproductive"
+        "fruto_vegetativa",
+        "fruto_reproductiva"
       ],
-      "profile": "fruiting_vegetative",
+      "profile": "fruto_vegetativa",
       "profile_phases": {
-        "vegetative": "fruiting_vegetative",
-        "reproductive": "fruiting_reproductive"
+        "vegetative": "fruto_vegetativa",
+        "reproductive": "fruto_reproductiva"
       }
     },
     {
@@ -3355,9 +3355,9 @@
       "source_row": 111,
       "_provenance": "sheet",
       "profiles": [
-        "berry_fruiting"
+        "baya_fructificacion"
       ],
-      "profile": "berry_fruiting"
+      "profile": "baya_fructificacion"
     }
   ]
 }

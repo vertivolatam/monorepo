@@ -120,12 +120,12 @@ EDIBLE_PART_TO_SHEET_TYPE = {
 
 # Tipo de hoja que CADA perfil presupone (para detectar discrepancias).
 PROFILE_TO_SHEET_TYPE = {
-    "leafy_vegetative": "Cultivos de Hoja",
-    "herb_aromatic": "Cultivos de Hoja",  # hierbas = parte foliar, pero perfil distinto
-    "fruiting_vegetative": "Cultivos de Fruto",
-    "fruiting_reproductive": "Cultivos de Fruto",
-    "berry_fruiting": "Cultivos de Fruto",
-    "root_bulking": "Cultivos de Raíz",
+    "hoja_vegetativa": "Cultivos de Hoja",
+    "hierba_aromatica": "Cultivos de Hoja",  # hierbas = parte foliar, pero perfil distinto
+    "fruto_vegetativa": "Cultivos de Fruto",
+    "fruto_reproductiva": "Cultivos de Fruto",
+    "baya_fructificacion": "Cultivos de Fruto",
+    "raiz_engrosamiento": "Cultivos de Raíz",
 }
 
 

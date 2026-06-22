@@ -78,8 +78,8 @@ def test_save_profile_change_emits_and_audits(view):
     dv.classificationSaved.connect(received.append)
 
     # El combo muestra label_es; el slug va en userData -> seleccionar por data.
-    dv.profile_combo.setCurrentIndex(dv.profile_combo.findData("herb_aromatic"))
-    assert dv.profile_combo.currentData() == "herb_aromatic"
+    dv.profile_combo.setCurrentIndex(dv.profile_combo.findData("hierba_aromatica"))
+    assert dv.profile_combo.currentData() == "hierba_aromatica"
     dv._on_save()
 
     assert received == [cid]
@@ -88,7 +88,7 @@ def test_save_profile_change_emits_and_audits(view):
         "WHERE crop_id = ? AND field = 'assigned_profile' AND is_active = 1",
         (cid,),
     ).fetchone()
-    assert audit["value_text"] == "herb_aromatic"
+    assert audit["value_text"] == "hierba_aromatica"
     assert audit["source"] == "experiment"
     assert "guardado" in dv.toast.text().lower()
 

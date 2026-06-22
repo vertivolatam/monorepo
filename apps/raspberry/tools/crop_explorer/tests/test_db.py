@@ -33,23 +33,23 @@ def _crop_id(db: CropDB, name: str) -> int:
 
 
 def test_change_profile_writes_audit_and_resyncs_setpoints(cropdb, temp_db):
-    cid = _crop_id(cropdb, "Espinaca")  # leafy_vegetative
+    cid = _crop_id(cropdb, "Espinaca")  # hoja_vegetativa
     before = cropdb.conn.execute(
         "SELECT assigned_profile FROM crops WHERE id = ?", (cid,)
     ).fetchone()["assigned_profile"]
-    assert before == "leafy_vegetative"
+    assert before == "hoja_vegetativa"
 
     n_sp_before = cropdb.conn.execute(
         "SELECT COUNT(*) FROM setpoints WHERE crop_id = ?", (cid,)
     ).fetchone()[0]
 
-    cropdb.save_classification(cid, profile="herb_aromatic", changed_by="pytest")
+    cropdb.save_classification(cid, profile="hierba_aromatica", changed_by="pytest")
 
     # crops updated
     after = cropdb.conn.execute(
         "SELECT assigned_profile FROM crops WHERE id = ?", (cid,)
     ).fetchone()["assigned_profile"]
-    assert after == "herb_aromatic"
+    assert after == "hierba_aromatica"
 
     # audit row created for assigned_profile, source='experiment', is_active=1
     audit = cropdb.conn.execute(
@@ -59,7 +59,7 @@ def test_change_profile_writes_audit_and_resyncs_setpoints(cropdb, temp_db):
     ).fetchone()
     assert audit is not None
     assert audit["source"] == "experiment"
-    assert audit["value_text"] == "herb_aromatic"
+    assert audit["value_text"] == "hierba_aromatica"
     assert audit["changed_by"] == "pytest"
 
     # setpoints were re-resolved (still present; profile change keeps rows)
@@ -72,14 +72,14 @@ def test_change_profile_writes_audit_and_resyncs_setpoints(cropdb, temp_db):
 
 def test_second_profile_change_supersedes_prior_audit(cropdb):
     cid = _crop_id(cropdb, "Espinaca")
-    cropdb.save_classification(cid, profile="herb_aromatic", changed_by="pytest")
+    cropdb.save_classification(cid, profile="hierba_aromatica", changed_by="pytest")
     first = cropdb.conn.execute(
         "SELECT id FROM setpoint_audit WHERE crop_id = ? AND field = 'assigned_profile' "
         "AND is_active = 1",
         (cid,),
     ).fetchone()["id"]
 
-    cropdb.save_classification(cid, profile="leafy_vegetative", changed_by="pytest")
+    cropdb.save_classification(cid, profile="hoja_vegetativa", changed_by="pytest")
 
     # prior is now inactive
     prior = cropdb.conn.execute(
@@ -94,7 +94,7 @@ def test_second_profile_change_supersedes_prior_audit(cropdb):
         (cid,),
     ).fetchone()
     assert new["supersedes_id"] == first
-    assert new["value_text"] == "leafy_vegetative"
+    assert new["value_text"] == "hoja_vegetativa"
 
 
 def test_change_priority_only_leaves_setpoints_intact(cropdb):
@@ -145,7 +145,7 @@ def test_noop_save_does_not_write_audit(cropdb):
         "SELECT COUNT(*) FROM setpoint_audit WHERE crop_id = ?", (cid,)
     ).fetchone()[0]
     # Same profile, no priority change -> no-op.
-    cropdb.save_classification(cid, profile="leafy_vegetative", changed_by="pytest")
+    cropdb.save_classification(cid, profile="hoja_vegetativa", changed_by="pytest")
     after = cropdb.conn.execute(
         "SELECT COUNT(*) FROM setpoint_audit WHERE crop_id = ?", (cid,)
     ).fetchone()[0]
