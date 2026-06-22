@@ -199,8 +199,14 @@ Cada page pasa por tres estados explícitos (no más mock silencioso):
 - **Fuga cross-tenant** — el endpoint admin expone la flota de TODOS los clientes. Debe ser
   admin-only por `Scope.admin` (Serverpod rechaza sin scope). Test obligatorio: sesión sin
   admin → rechazada; sesión sin auth → rechazada.
-- **`vertivo_client` en contexto Jaspr SSR** — el client se diseñó para Flutter; validar que
-  corre en el server de Jaspr (Dart VM) y dónde vive la sesión auth admin. **Spike** en fase 1.
+- **`vertivo_client` en contexto Jaspr SSR** — RESUELTO (spike + e2e 2026-06-21): el client
+  corre en el server Jaspr (Dart VM); las pages son `AsyncStatelessComponent` (fetch
+  server-side); la sesión admin/JWT vive server-side, no se envía al browser. **Verificado
+  e2e**: el binario SSR compila (`dart compile exe`), levanta, y con el backend caído renderiza
+  el `errorState` (no crash, no datos falsos).
+- **Puerto en runtime del binario** — `jaspr.port: 8090` solo aplica al dev server
+  `jaspr serve`. El **exe compilado lee `PORT`** (default 8080). El deployment DEBE arrancar
+  con `PORT=8090` (Dockerfile/manifest) o colisiona con Serverpod en :8080. Verificado e2e.
 - **Gaps de endpoints agregados** (KPIs globales "sensores online", anomalías multi-greenhouse)
   — sin endpoint hoy. No inventar: **"N/D"** explícito + registrar gap para change futuro.
 - **Nomenclatura (regla #6)** — el mock dice "Hydroponics/Hidroponico"; al cablear data real,
