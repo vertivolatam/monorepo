@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "description": "Catálogo de envases estándar (volumen FINAL) para la calculadora de lote. Fuente: La Casa del Tanque (Pichinga Industrial, Tanque Industrial Ecotank).",
+    "capacity_unit": "L"
+  },
+  "containers": [
+    { "model": "Pichinga 18 L", "capacity_L": 18, "gal": 5 },
+    { "model": "Pichinga 56 L", "capacity_L": 56, "gal": 15 },
+    { "model": "Tanque 5000 L", "capacity_L": 5000, "gal": 1321 },
+    { "model": "Tanque 7500 L", "capacity_L": 7500, "gal": 1981 },
+    { "model": "Tanque 10000 L", "capacity_L": 10000, "gal": 2642 },
+    { "model": "Tanque 15000 L", "capacity_L": 15000, "gal": 3963 },
+    { "model": "Tanque 22000 L", "capacity_L": 22000, "gal": 5812 },
+    { "model": "Tanque 27000 L", "capacity_L": 27000, "gal": 7133 }
+  ]
+}

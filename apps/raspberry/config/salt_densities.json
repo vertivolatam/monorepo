@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "description": "Densidad aparente de la sal seca (g/ml) para calcular el desplazamiento de volumen al disolverla. Usado por recipe_math (V_final, aforo, solver de lote).",
+    "unit": "g/ml",
+    "provenance": "researched",
+    "note": "Valores iniciales aproximados del mockup aprobado (interactive-megatabs.html). El agrónomo puede ajustarlos; el cambio es auditable.",
+    "source_sheet": "Recetas Soluciones Nutritivas — Modelo Fitotécnico"
+  },
+  "densities": {
+    "nitrato_de_calcio": 1.82,
+    "nitrato_de_potasio": 2.11,
+    "fosfato_monoamonico": 1.80,
+    "sulfato_de_magnesio": 1.68,
+    "manganeso": 2.95,
+    "hierro": 2.0,
+    "boro": 1.73,
+    "zinc": 3.5,
+    "cobre": 3.6
+  }
+}

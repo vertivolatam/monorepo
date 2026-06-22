@@ -54,6 +54,26 @@ class CropDB:
         self.conn.row_factory = sqlite3.Row
         self._crops_json = Path(crops_json) if crops_json else DEFAULT_CROPS_JSON
         self._profiles_cache: dict | None = None
+        self._ensure_profile_recipes_table()
+
+    # --- receta por perfil×fase (Fase 2 — fuente de verdad local) ---
+    def _ensure_profile_recipes_table(self):
+        """Tabla de la receta de nutrientes por PERFIL×FASE (la receta no es del
+        cultivo — es del perfil; design.md §2/§6). Se crea perezosamente para no
+        tocar build_db. UPSERT por (profile_key, phase)."""
+        self.conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS profile_recipes (
+                profile_key TEXT NOT NULL,
+                phase       TEXT NOT NULL,
+                recipe_json TEXT NOT NULL,
+                changed_at  TEXT NOT NULL,
+                changed_by  TEXT,
+                PRIMARY KEY (profile_key, phase)
+            )
+            """
+        )
+        self.conn.commit()
 
     def close(self):
         self.conn.close()
@@ -445,3 +465,97 @@ class CropDB:
         )
         self.conn.commit()
         return True
+
+    # --- receta por perfil×fase + propagación auditada (Fase 2) ---
+    def crops_using_profile(self, profile_key: str) -> list[int]:
+        """IDs de los cultivos con ``assigned_profile == profile_key`` (para el
+        "→ N cultivos" y la propagación)."""
+        rows = self.conn.execute(
+            "SELECT id FROM crops WHERE assigned_profile = ? ORDER BY id",
+            (profile_key,),
+        ).fetchall()
+        return [r["id"] for r in rows]
+
+    def profile_recipe(self, profile_key: str, phase: str) -> dict | None:
+        """Receta guardada del perfil×fase (la fuente de verdad de la receta), o
+        None si no se ha definido."""
+        row = self.conn.execute(
+            "SELECT recipe_json FROM profile_recipes "
+            "WHERE profile_key = ? AND phase = ? LIMIT 1",
+            (profile_key, phase),
+        ).fetchone()
+        if row is None:
+            return None
+        try:
+            parsed = json.loads(row["recipe_json"])
+        except (ValueError, TypeError):
+            return None
+        # Contrato: la receta es un objeto {solución: {sal: g}}. Una lista o
+        # string (JSON válido pero no-dict) viola el contrato -> None.
+        return parsed if isinstance(parsed, dict) else None
+
+    def save_profile_recipe(
+        self,
+        profile_key: str,
+        phase: str,
+        recipe: dict | str,
+        *,
+        changed_by: str = "explorer",
+    ) -> int:
+        """Persiste la receta del PERFIL×fase y la PROPAGA a todos sus cultivos.
+
+        - UPSERT en ``profile_recipes`` (la receta vive en el perfil).
+        - Para cada cultivo con ese ``assigned_profile``: escribe
+          ``nutrient_recipe_json`` en ``setpoints`` y deja un ``setpoint_audit``
+          (source='experiment', supersede, is_active) — rollback posible.
+        - N=0 (perfil sin cultivos) es válido: persiste, no propaga (design.md §8).
+
+        Devuelve el número de cultivos propagados.
+        """
+        recipe_json = (
+            recipe if isinstance(recipe, str)
+            else json.dumps(recipe, ensure_ascii=False)
+        )
+        cur = self.conn.cursor()
+        cur.execute(
+            "INSERT INTO profile_recipes (profile_key, phase, recipe_json, "
+            "changed_at, changed_by) VALUES (?,?,?,?,?) "
+            "ON CONFLICT(profile_key, phase) DO UPDATE SET "
+            "recipe_json = excluded.recipe_json, changed_at = excluded.changed_at, "
+            "changed_by = excluded.changed_by",
+            (profile_key, phase, recipe_json, _now_iso(), changed_by),
+        )
+
+        crop_ids = self.crops_using_profile(profile_key)
+        note = f"receta del perfil '{profile_key}' fase '{phase}'"
+        for crop_id in crop_ids:
+            # Escribir el VALOR del setpoint ANTES del audit: así el setpoint
+            # operativo y su registro de auditoría quedan alineados (el audit
+            # nunca referencia un valor que aún no se persistió).
+            row = self.conn.execute(
+                "SELECT id FROM setpoints WHERE crop_id = ? AND field = ? LIMIT 1",
+                (crop_id, "nutrient_recipe_json"),
+            ).fetchone()
+            if row is None:
+                cur.execute(
+                    "INSERT INTO setpoints (crop_id, field, value_num, value_text) "
+                    "VALUES (?,?,NULL,?)",
+                    (crop_id, "nutrient_recipe_json", recipe_json),
+                )
+            else:
+                cur.execute(
+                    "UPDATE setpoints SET value_text = ? "
+                    "WHERE crop_id = ? AND field = ?",
+                    (recipe_json, crop_id, "nutrient_recipe_json"),
+                )
+            self._write_audit(
+                cur,
+                crop_id,
+                "nutrient_recipe_json",
+                value_num=None,
+                value_text=recipe_json,
+                changed_by=changed_by,
+                note=note,
+            )
+        self.conn.commit()
+        return len(crop_ids)
