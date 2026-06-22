@@ -1333,9 +1333,9 @@ ALTER TABLE ONLY "serverpod_auth_core_session"
 -- MIGRATION VERSION FOR vertivo
 --
 INSERT INTO "serverpod_migrations" ("module", "version", "timestamp")
-    VALUES ('vertivo', '20260621203726603', now())
+    VALUES ('vertivo', '20260622101243017', now())
     ON CONFLICT ("module")
-    DO UPDATE SET "version" = '20260621203726603', "timestamp" = now();
+    DO UPDATE SET "version" = '20260622101243017', "timestamp" = now();
 
 --
 -- MIGRATION VERSION FOR serverpod

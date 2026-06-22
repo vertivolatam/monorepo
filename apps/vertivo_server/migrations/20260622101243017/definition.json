@@ -7096,7 +7096,7 @@
     {
       "__className__": "serverpod.DatabaseMigrationVersion",
       "module": "vertivo",
-      "version": "20260621203726603"
+      "version": "20260622101243017"
     },
     {
       "__className__": "serverpod.DatabaseMigrationVersion",
