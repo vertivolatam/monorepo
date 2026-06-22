@@ -177,7 +177,7 @@ class Sidebar(QWidget):
             row.addWidget(combo, 1)
             lay.addLayout(row)
 
-        _filter_row("Aeropónico", self.combo_aero)
+        _filter_row("Apto p/ Nebuponía", self.combo_aero)
         _filter_row("Tipo de cosecha", self.combo_type)
         _filter_row("Perfil asignado", self.combo_profile)
 

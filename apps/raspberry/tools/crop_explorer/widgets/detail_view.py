@@ -29,16 +29,20 @@ import os
 import sys
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
     QGridLayout,
     QLabel,
+    QCheckBox,
     QComboBox,
+    QDoubleSpinBox,
     QPushButton,
     QGroupBox,
     QTabWidget,
+    QTabBar,
     QTreeWidget,
     QTreeWidgetItem,
     QScrollArea,
@@ -66,13 +70,30 @@ CARD_DEFS = [
     ("ORP", "mV", "orp_min", "orp_max", "orp_ideal"),
 ]
 
-PRIORITY_CHOICES = ["1.0", "2.0", "3.0", "4.0", "5.0"]
+# Prioridad en escala 0-100 (MAYOR = más prioritario). Tiers canónicos 100..60
+# (remapeo del viejo 1..5: 1→100, 2→90, 3→80, 4→70, 5→60).
+PRIORITY_CHOICES = ["100", "90", "80", "70", "60"]
 
 # Etiquetas en español para los grupos de la receta (A/B/C).
+# Etiquetas de los grupos de la receta — exactas como la hoja "Recetas Soluciones
+# Nutritivas" del Modelo Fitotécnico.
 RECIPE_GROUP_LABELS = {
-    "solucion_a_nitratos": "Solución A — Nitratos",
-    "solucion_b_fosfatos_sulfatos": "Solución B — Fosfatos / Sulfatos",
-    "solucion_c_micros": "Solución C — Micronutrientes",
+    "solucion_a_nitratos": "Solución A — Nitratos (Macro-Nutrientes)",
+    "solucion_b_fosfatos_sulfatos": "Solución B — Fosfatos y Sulfatos (Macro-Nutrientes)",
+    "solucion_c_micros": "Solución C — Micro-Nutrientes",
+}
+# Nombres significativos de cada sal/nutriente (como el XLSX), con acentos y
+# mayúsculas correctas; fallback a Title-Case si aparece una sal nueva.
+SALT_LABELS = {
+    "nitrato_de_calcio": "Nitrato de Calcio",
+    "nitrato_de_potasio": "Nitrato de Potasio",
+    "fosfato_monoamonico": "Fosfato Monoamoníaco",
+    "sulfato_de_magnesio": "Sulfato de Magnesio",
+    "manganeso": "Manganeso",
+    "cobre": "Cobre",
+    "hierro": "Hierro",
+    "zinc": "Zinc",
+    "boro": "Boro",
 }
 # Keys que NO son sales (provenance) y no deben renderizarse como ingredientes.
 _RECIPE_META_KEYS = {"citation", "confidence", "source", "note", "_provenance"}
@@ -105,6 +126,50 @@ NUTRIENT_LABELS = {
     "min_sodium": "Sodio",
     "min_zinc": "Zinc",
 }
+
+
+# Colores de fase de la hoja (Modelo Fitotécnico): Vegetativa morado · Reproductiva
+# magenta · Maduración azul · Valor Nutricional verde.
+PHASE_COLORS = ["#6C4FA1", "#B03A6E", "#2F77C2", "#5AA64F"]
+
+
+class _PhaseTabBar(QTabBar):
+    """QTabBar que pinta cada tab con el color de su fase (como la hoja).
+
+    Seleccionado = color lleno + texto blanco; no-seleccionado = tinte
+    translúcido + texto del color. Replica las celdas color-codificadas.
+    """
+
+    def __init__(self, colors, parent=None):
+        super().__init__(parent)
+        self._colors = colors
+
+    def tabSizeHint(self, index):  # noqa: N802 (Qt override)
+        s = super().tabSizeHint(index)
+        s.setHeight(s.height() + 8)
+        s.setWidth(s.width() + 20)
+        return s
+
+    def paintEvent(self, _event):  # noqa: N802 (Qt override)
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        for i in range(self.count()):
+            rect = self.tabRect(i).adjusted(1, 2, -1, 0)
+            base = QColor(self._colors[i % len(self._colors)])
+            selected = i == self.currentIndex()
+            if selected:
+                p.fillRect(rect, base)
+                p.setPen(QColor("#FFFFFF"))
+            else:
+                tint = QColor(base)
+                tint.setAlpha(45)
+                p.fillRect(rect, tint)
+                p.setPen(base.darker(150))
+            font = self.font()
+            font.setBold(selected)
+            p.setFont(font)
+            p.drawText(self.tabRect(i), Qt.AlignCenter, self.tabText(i))
+        p.end()
 
 
 def _na_label(text: str = "No aplica") -> QLabel:
@@ -184,8 +249,9 @@ class DetailView(QWidget):
         biz = QVBoxLayout(self.business_box)
         biz.setContentsMargins(12, 16, 12, 12)
         biz.setSpacing(7)
-        self.apt_label = QLabel("")
-        biz.addWidget(self.apt_label)
+        # Aptitud para nebuponía: checkbox EDITABLE (se guarda auditado).
+        self.apt_check = QCheckBox("Apto para nebuponía")
+        biz.addWidget(self.apt_check)
         row1 = QHBoxLayout()
         row1.addWidget(QLabel("Perfil:"))
         self.profile_combo = QComboBox()
@@ -224,10 +290,10 @@ class DetailView(QWidget):
 
         # --- tabs de fase ---
         self.tabs = QTabWidget()
+        self.tabs.setTabBar(_PhaseTabBar(PHASE_COLORS))
         self.tabs.setStyleSheet(
-            f"QTabBar::tab {{ padding:6px 12px; font-family:'{T.FONT_FAMILY}'; }}"
-            f" QTabBar::tab:selected {{ color:{T.PRIMARY}; font-weight:600;"
-            f" border-bottom:2px solid {T.PRIMARY}; }}"
+            f"QTabWidget::pane {{ border:1px solid {T.BORDER}; border-radius:6px;"
+            " top:-1px; }"
         )
         self.tab_veg = QScrollArea()
         self.tab_repro = QScrollArea()
@@ -235,10 +301,10 @@ class DetailView(QWidget):
         self.tab_nutri = QScrollArea()
         for area in (self.tab_veg, self.tab_repro, self.tab_madur, self.tab_nutri):
             area.setWidgetResizable(True)
-        self.tabs.addTab(self.tab_veg, "🟣 Vegetativa")
-        self.tabs.addTab(self.tab_repro, "🟥 Reproductiva")
-        self.tabs.addTab(self.tab_madur, "🔵 Maduración")
-        self.tabs.addTab(self.tab_nutri, "🟢 Valor Nutricional")
+        self.tabs.addTab(self.tab_veg, "Vegetativa")
+        self.tabs.addTab(self.tab_repro, "Reproductiva")
+        self.tabs.addTab(self.tab_madur, "Maduración")
+        self.tabs.addTab(self.tab_nutri, "Valor Nutricional")
         outer.addWidget(self.tabs, 1)
 
     # --- API pública ---
@@ -300,16 +366,12 @@ class DetailView(QWidget):
         self.botanic_form.addStretch()
 
     def _fill_business(self, crop):
-        apt = "✅ Apto para aeroponía" if crop["aeroponic"] else "❌ No apto (no-aeropónico)"
-        self.apt_label.setText(apt)
+        self.apt_check.setChecked(bool(crop["aeroponic"]))
         # seleccionar por KEY (userData); el combo muestra el label_es en español.
         idx = self.profile_combo.findData(crop["assigned_profile"] or "")
         self.profile_combo.setCurrentIndex(idx if idx >= 0 else 0)
         pri = crop["priority"]
-        self.priority_combo.setCurrentText(
-            "" if pri is None
-            else f"{pri:g}.0" if float(pri).is_integer() else f"{pri:g}"
-        )
+        self.priority_combo.setCurrentText("" if pri is None else f"{pri:g}")
         self.toast.setText("")
 
     def _fill_monitor(self, crop_id):
@@ -318,15 +380,68 @@ class DetailView(QWidget):
         spectrum = sps.get("light_spectrum")
         photo = sps.get("photoperiod_h")
         spec_txt = spectrum["value_text"] if spectrum and spectrum["value_text"] else "—"
-        photo_txt = f"{photo['value_num']:g} h" if photo and photo["value_num"] is not None else "—"
-        for label, val in [("Espectro de luz", spec_txt), ("Fotoperiodo", photo_txt)]:
-            self.monitor_form.addWidget(
-                QLabel(
-                    f"<span style='color:{T.TEXT_MUTED}'>{label}:</span>"
-                    f" <b style='color:{T.TEXT}'>{val}</b>"
-                )
+        self.monitor_form.addWidget(
+            QLabel(
+                f"<span style='color:{T.TEXT_MUTED}'>Espectro de luz:</span>"
+                f" <b style='color:{T.TEXT}'>{spec_txt}</b>"
             )
+        )
+
+        # Fotoperiodo: constante EDITABLE con su propio Guardar (auditado).
+        photo_val = photo["value_num"] if photo and photo["value_num"] is not None else None
+        row = QHBoxLayout()
+        cap = QLabel("Fotoperiodo:")
+        cap.setStyleSheet(f"color:{T.TEXT_MUTED};")
+        row.addWidget(cap)
+        self._photo_spin = QDoubleSpinBox()
+        self._photo_spin.setRange(-1.0, 24.0)
+        self._photo_spin.setDecimals(1)
+        self._photo_spin.setSuffix(" h")
+        self._photo_spin.setSpecialValueText("—")  # mínimo (-1) = sin valor
+        self._photo_spin.setValue(-1.0 if photo_val is None else float(photo_val))
+        self._photo_spin.setMaximumWidth(110)
+        self._photo_spin.setStyleSheet(
+            f"QDoubleSpinBox {{ border:1px solid {T.BORDER}; border-radius:4px;"
+            f" padding:1px 4px; background:{T.SURFACE}; color:{T.TEXT}; }}"
+        )
+        row.addWidget(self._photo_spin)
+        row.addStretch()
+        self.monitor_form.addLayout(row)
+
+        photo_btn = QPushButton("💾 Guardar fotoperiodo")
+        photo_btn.setStyleSheet(
+            f"QPushButton {{ background:{T.BTN_BG}; color:{T.BTN_FG}; border:none;"
+            f" border-radius:4px; padding:3px 8px; font-size:10px; }}"
+            f" QPushButton:hover {{ background:{T.palette('primary', 30) or T.BTN_BG}; }}"
+        )
+        photo_btn.clicked.connect(self._on_photoperiod_save)
+        self.monitor_form.addWidget(photo_btn)
+        self._photo_feedback = QLabel("")
+        self._photo_feedback.setStyleSheet("font-size:10px;")
+        self.monitor_form.addWidget(self._photo_feedback)
         self.monitor_form.addStretch()
+
+    def _on_photoperiod_save(self):
+        if self._crop_id is None:
+            return
+        val = (
+            None
+            if self._photo_spin.value() == self._photo_spin.minimum()
+            else self._photo_spin.value()
+        )
+        try:
+            changed = self.db.save_setpoint_range(
+                self._crop_id, values={"photoperiod_h": val}, changed_by="explorer"
+            )
+        except Exception as exc:  # pragma: no cover - error path
+            self._photo_feedback.setStyleSheet(f"color:{T.ERROR}; font-size:10px;")
+            self._photo_feedback.setText(f"✗ error: {exc}")
+            return
+        color = T.SUCCESS if changed else T.TEXT_MUTED
+        self._photo_feedback.setStyleSheet(f"color:{color}; font-size:10px;")
+        self._photo_feedback.setText(
+            "✓ guardado — auditoría" if changed else "sin cambios"
+        )
 
     def _build_phase_widget(self, crop_id, has_data: bool) -> QWidget:
         """Cards editables (izq) + receta agrupada A/B/C como sidebar (der)."""
@@ -441,7 +556,7 @@ class DetailView(QWidget):
             gnode = QTreeWidgetItem(tree, [glabel, ""])
             gnode.setFirstColumnSpanned(False)
             for salt, grams in salts.items():
-                sname = salt.replace("_", " ")
+                sname = SALT_LABELS.get(salt, salt.replace("_", " ").title())
                 gval = f"{grams:g}" if isinstance(grams, (int, float)) else str(grams)
                 QTreeWidgetItem(gnode, [sname, gval])
             gnode.setExpanded(True)
@@ -505,11 +620,13 @@ class DetailView(QWidget):
         profile = self.profile_combo.currentData() or None
         pri_txt = self.priority_combo.currentText().strip()
         priority = float(pri_txt) if pri_txt else None
+        aeroponic = self.apt_check.isChecked()
         try:
             changed = self.db.save_classification(
                 self._crop_id,
                 profile=profile,
                 priority=priority,
+                aeroponic=aeroponic,
                 changed_by="explorer",
             )
         except Exception as exc:  # pragma: no cover - error path

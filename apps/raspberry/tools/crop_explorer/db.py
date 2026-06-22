@@ -203,6 +203,7 @@ class CropDB:
         *,
         profile: str | None = None,
         priority: float | None = None,
+        aeroponic: bool | None = None,
         changed_by: str = "explorer",
     ) -> bool:
         """Guarda perfil/prioridad de negocio con auditoría.
@@ -253,6 +254,23 @@ class CropDB:
                 value_text=None,
                 changed_by=changed_by,
                 note=f"prioridad {cur_priority} -> {priority}",
+            )
+            changed = True
+
+        cur_aero = bool(crop["aeroponic"])
+        if aeroponic is not None and bool(aeroponic) != cur_aero:
+            cur.execute(
+                "UPDATE crops SET aeroponic = ? WHERE id = ?",
+                (1 if aeroponic else 0, crop_id),
+            )
+            self._write_audit(
+                cur,
+                crop_id,
+                "aeroponic",
+                value_num=None,
+                value_text="SI" if aeroponic else "NO",
+                changed_by=changed_by,
+                note=f"aptitud nebuponía {cur_aero} -> {bool(aeroponic)}",
             )
             changed = True
 
