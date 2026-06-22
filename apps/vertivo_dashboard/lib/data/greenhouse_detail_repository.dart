@@ -39,11 +39,17 @@ class GreenhouseDetailRepository {
 
     final latest = <Measurement, EnvironmentalReading?>{};
     final history = <Measurement, List<EnvironmentalReading>>{};
-    for (final entry in _typeOf.entries) {
-      final readings = await client.greenhouse
-          .getReadings(greenhouseId, entry.value, limit: limit);
-      history[entry.key] = readings;
-      latest[entry.key] = readings.isEmpty ? null : readings.first;
+    // Las 5 lecturas (una por measurement) son independientes: las pedimos en
+    // paralelo con `Future.wait` en vez de seriales, para no acumular 5 RTT.
+    final entries = _typeOf.entries.toList();
+    final results = await Future.wait(
+      entries.map((entry) =>
+          client.greenhouse.getReadings(greenhouseId, entry.value, limit: limit)),
+    );
+    for (var i = 0; i < entries.length; i++) {
+      final readings = results[i];
+      history[entries[i].key] = readings;
+      latest[entries[i].key] = readings.isEmpty ? null : readings.first;
     }
     return GreenhouseDetail(greenhouse: gh, latest: latest, history: history);
   }
