@@ -10,16 +10,40 @@ class AnomaliesRepository {
   final Client client;
   const AnomaliesRepository(this.client);
 
+  /// Concurrencia acotada del fan-out: hasta [_poolSize] llamadas
+  /// `getForGreenhouse` en paralelo. Serial sobre 500 greenhouses provoca
+  /// timeout en el SSR; 500 en paralelo reventaría el backend. El pool acotado
+  /// es el punto medio.
+  static const _poolSize = 8;
+
   Future<List<Anomaly>> fetchForFleet({int perGreenhouse = 50}) async {
     final fleet = await client.adminFleet.listAll(limit: 500, offset: 0);
+    final ids = [for (final g in fleet) g.id].whereType<int>().toList();
+
     final all = <Anomaly>[];
-    for (final g in fleet) {
-      final id = g.id;
-      if (id == null) continue;
-      all.addAll(
-        await client.anomaly.getForGreenhouse(id, limit: perGreenhouse),
+    // Procesa en lotes de [_poolSize]: cada lote corre en paralelo con
+    // `Future.wait`, y un fallo por-greenhouse (try/catch) no tumba la página.
+    for (var i = 0; i < ids.length; i += _poolSize) {
+      final batch = ids.sublist(
+        i,
+        i + _poolSize > ids.length ? ids.length : i + _poolSize,
       );
+      final results = await Future.wait(
+        batch.map((id) async {
+          try {
+            return await client.anomaly
+                .getForGreenhouse(id, limit: perGreenhouse);
+          } catch (_) {
+            // Un greenhouse caído no debe tumbar la agregación de toda la flota.
+            return const <Anomaly>[];
+          }
+        }),
+      );
+      for (final r in results) {
+        all.addAll(r);
+      }
     }
+
     all.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return all;
   }
