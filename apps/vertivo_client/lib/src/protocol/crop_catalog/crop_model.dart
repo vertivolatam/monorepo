@@ -29,8 +29,24 @@ abstract class CropModel implements _i1.SerializableModel {
     required this.idealLightHoursMax,
     required this.idealPhMin,
     required this.idealPhMax,
+    this.idealPhIdeal,
     this.idealCo2Min,
     this.idealCo2Max,
+    this.idealEcMinDsM,
+    this.idealEcMaxDsM,
+    this.idealNightTemperatureMin,
+    this.idealNightTemperatureMax,
+    this.idealOrpMinMv,
+    this.idealOrpMaxMv,
+    this.ppfdMin,
+    this.ppfdMax,
+    this.photoperiodHours,
+    this.lightSpectrum,
+    this.ediblePart,
+    this.priority,
+    this.aeroponicSuitable,
+    this.profileKey,
+    this.nutrientRecipeJson,
     required this.waterRequirement,
     required this.growthDurationDays,
     this.commonDiseases,
@@ -59,8 +75,24 @@ abstract class CropModel implements _i1.SerializableModel {
     required double idealLightHoursMax,
     required double idealPhMin,
     required double idealPhMax,
+    double? idealPhIdeal,
     double? idealCo2Min,
     double? idealCo2Max,
+    double? idealEcMinDsM,
+    double? idealEcMaxDsM,
+    double? idealNightTemperatureMin,
+    double? idealNightTemperatureMax,
+    double? idealOrpMinMv,
+    double? idealOrpMaxMv,
+    double? ppfdMin,
+    double? ppfdMax,
+    double? photoperiodHours,
+    String? lightSpectrum,
+    String? ediblePart,
+    int? priority,
+    bool? aeroponicSuitable,
+    String? profileKey,
+    String? nutrientRecipeJson,
     required String waterRequirement,
     required int growthDurationDays,
     List<String>? commonDiseases,
@@ -96,8 +128,31 @@ abstract class CropModel implements _i1.SerializableModel {
           .toDouble(),
       idealPhMin: (jsonSerialization['idealPhMin'] as num).toDouble(),
       idealPhMax: (jsonSerialization['idealPhMax'] as num).toDouble(),
+      idealPhIdeal: (jsonSerialization['idealPhIdeal'] as num?)?.toDouble(),
       idealCo2Min: (jsonSerialization['idealCo2Min'] as num?)?.toDouble(),
       idealCo2Max: (jsonSerialization['idealCo2Max'] as num?)?.toDouble(),
+      idealEcMinDsM: (jsonSerialization['idealEcMinDsM'] as num?)?.toDouble(),
+      idealEcMaxDsM: (jsonSerialization['idealEcMaxDsM'] as num?)?.toDouble(),
+      idealNightTemperatureMin:
+          (jsonSerialization['idealNightTemperatureMin'] as num?)?.toDouble(),
+      idealNightTemperatureMax:
+          (jsonSerialization['idealNightTemperatureMax'] as num?)?.toDouble(),
+      idealOrpMinMv: (jsonSerialization['idealOrpMinMv'] as num?)?.toDouble(),
+      idealOrpMaxMv: (jsonSerialization['idealOrpMaxMv'] as num?)?.toDouble(),
+      ppfdMin: (jsonSerialization['ppfdMin'] as num?)?.toDouble(),
+      ppfdMax: (jsonSerialization['ppfdMax'] as num?)?.toDouble(),
+      photoperiodHours: (jsonSerialization['photoperiodHours'] as num?)
+          ?.toDouble(),
+      lightSpectrum: jsonSerialization['lightSpectrum'] as String?,
+      ediblePart: jsonSerialization['ediblePart'] as String?,
+      priority: jsonSerialization['priority'] as int?,
+      aeroponicSuitable: jsonSerialization['aeroponicSuitable'] == null
+          ? null
+          : _i1.BoolJsonExtension.fromJson(
+              jsonSerialization['aeroponicSuitable'],
+            ),
+      profileKey: jsonSerialization['profileKey'] as String?,
+      nutrientRecipeJson: jsonSerialization['nutrientRecipeJson'] as String?,
       waterRequirement: jsonSerialization['waterRequirement'] as String,
       growthDurationDays: jsonSerialization['growthDurationDays'] as int,
       commonDiseases: jsonSerialization['commonDiseases'] == null
@@ -165,9 +220,41 @@ abstract class CropModel implements _i1.SerializableModel {
 
   double idealPhMax;
 
+  double? idealPhIdeal;
+
   double? idealCo2Min;
 
   double? idealCo2Max;
+
+  double? idealEcMinDsM;
+
+  double? idealEcMaxDsM;
+
+  double? idealNightTemperatureMin;
+
+  double? idealNightTemperatureMax;
+
+  double? idealOrpMinMv;
+
+  double? idealOrpMaxMv;
+
+  double? ppfdMin;
+
+  double? ppfdMax;
+
+  double? photoperiodHours;
+
+  String? lightSpectrum;
+
+  String? ediblePart;
+
+  int? priority;
+
+  bool? aeroponicSuitable;
+
+  String? profileKey;
+
+  String? nutrientRecipeJson;
 
   String waterRequirement;
 
@@ -209,8 +296,24 @@ abstract class CropModel implements _i1.SerializableModel {
     double? idealLightHoursMax,
     double? idealPhMin,
     double? idealPhMax,
+    double? idealPhIdeal,
     double? idealCo2Min,
     double? idealCo2Max,
+    double? idealEcMinDsM,
+    double? idealEcMaxDsM,
+    double? idealNightTemperatureMin,
+    double? idealNightTemperatureMax,
+    double? idealOrpMinMv,
+    double? idealOrpMaxMv,
+    double? ppfdMin,
+    double? ppfdMax,
+    double? photoperiodHours,
+    String? lightSpectrum,
+    String? ediblePart,
+    int? priority,
+    bool? aeroponicSuitable,
+    String? profileKey,
+    String? nutrientRecipeJson,
     String? waterRequirement,
     int? growthDurationDays,
     List<String>? commonDiseases,
@@ -241,8 +344,26 @@ abstract class CropModel implements _i1.SerializableModel {
       'idealLightHoursMax': idealLightHoursMax,
       'idealPhMin': idealPhMin,
       'idealPhMax': idealPhMax,
+      if (idealPhIdeal != null) 'idealPhIdeal': idealPhIdeal,
       if (idealCo2Min != null) 'idealCo2Min': idealCo2Min,
       if (idealCo2Max != null) 'idealCo2Max': idealCo2Max,
+      if (idealEcMinDsM != null) 'idealEcMinDsM': idealEcMinDsM,
+      if (idealEcMaxDsM != null) 'idealEcMaxDsM': idealEcMaxDsM,
+      if (idealNightTemperatureMin != null)
+        'idealNightTemperatureMin': idealNightTemperatureMin,
+      if (idealNightTemperatureMax != null)
+        'idealNightTemperatureMax': idealNightTemperatureMax,
+      if (idealOrpMinMv != null) 'idealOrpMinMv': idealOrpMinMv,
+      if (idealOrpMaxMv != null) 'idealOrpMaxMv': idealOrpMaxMv,
+      if (ppfdMin != null) 'ppfdMin': ppfdMin,
+      if (ppfdMax != null) 'ppfdMax': ppfdMax,
+      if (photoperiodHours != null) 'photoperiodHours': photoperiodHours,
+      if (lightSpectrum != null) 'lightSpectrum': lightSpectrum,
+      if (ediblePart != null) 'ediblePart': ediblePart,
+      if (priority != null) 'priority': priority,
+      if (aeroponicSuitable != null) 'aeroponicSuitable': aeroponicSuitable,
+      if (profileKey != null) 'profileKey': profileKey,
+      if (nutrientRecipeJson != null) 'nutrientRecipeJson': nutrientRecipeJson,
       'waterRequirement': waterRequirement,
       'growthDurationDays': growthDurationDays,
       if (commonDiseases != null) 'commonDiseases': commonDiseases?.toJson(),
@@ -282,8 +403,24 @@ class _CropModelImpl extends CropModel {
     required double idealLightHoursMax,
     required double idealPhMin,
     required double idealPhMax,
+    double? idealPhIdeal,
     double? idealCo2Min,
     double? idealCo2Max,
+    double? idealEcMinDsM,
+    double? idealEcMaxDsM,
+    double? idealNightTemperatureMin,
+    double? idealNightTemperatureMax,
+    double? idealOrpMinMv,
+    double? idealOrpMaxMv,
+    double? ppfdMin,
+    double? ppfdMax,
+    double? photoperiodHours,
+    String? lightSpectrum,
+    String? ediblePart,
+    int? priority,
+    bool? aeroponicSuitable,
+    String? profileKey,
+    String? nutrientRecipeJson,
     required String waterRequirement,
     required int growthDurationDays,
     List<String>? commonDiseases,
@@ -310,8 +447,24 @@ class _CropModelImpl extends CropModel {
          idealLightHoursMax: idealLightHoursMax,
          idealPhMin: idealPhMin,
          idealPhMax: idealPhMax,
+         idealPhIdeal: idealPhIdeal,
          idealCo2Min: idealCo2Min,
          idealCo2Max: idealCo2Max,
+         idealEcMinDsM: idealEcMinDsM,
+         idealEcMaxDsM: idealEcMaxDsM,
+         idealNightTemperatureMin: idealNightTemperatureMin,
+         idealNightTemperatureMax: idealNightTemperatureMax,
+         idealOrpMinMv: idealOrpMinMv,
+         idealOrpMaxMv: idealOrpMaxMv,
+         ppfdMin: ppfdMin,
+         ppfdMax: ppfdMax,
+         photoperiodHours: photoperiodHours,
+         lightSpectrum: lightSpectrum,
+         ediblePart: ediblePart,
+         priority: priority,
+         aeroponicSuitable: aeroponicSuitable,
+         profileKey: profileKey,
+         nutrientRecipeJson: nutrientRecipeJson,
          waterRequirement: waterRequirement,
          growthDurationDays: growthDurationDays,
          commonDiseases: commonDiseases,
@@ -344,8 +497,24 @@ class _CropModelImpl extends CropModel {
     double? idealLightHoursMax,
     double? idealPhMin,
     double? idealPhMax,
+    Object? idealPhIdeal = _Undefined,
     Object? idealCo2Min = _Undefined,
     Object? idealCo2Max = _Undefined,
+    Object? idealEcMinDsM = _Undefined,
+    Object? idealEcMaxDsM = _Undefined,
+    Object? idealNightTemperatureMin = _Undefined,
+    Object? idealNightTemperatureMax = _Undefined,
+    Object? idealOrpMinMv = _Undefined,
+    Object? idealOrpMaxMv = _Undefined,
+    Object? ppfdMin = _Undefined,
+    Object? ppfdMax = _Undefined,
+    Object? photoperiodHours = _Undefined,
+    Object? lightSpectrum = _Undefined,
+    Object? ediblePart = _Undefined,
+    Object? priority = _Undefined,
+    Object? aeroponicSuitable = _Undefined,
+    Object? profileKey = _Undefined,
+    Object? nutrientRecipeJson = _Undefined,
     String? waterRequirement,
     int? growthDurationDays,
     Object? commonDiseases = _Undefined,
@@ -375,8 +544,44 @@ class _CropModelImpl extends CropModel {
       idealLightHoursMax: idealLightHoursMax ?? this.idealLightHoursMax,
       idealPhMin: idealPhMin ?? this.idealPhMin,
       idealPhMax: idealPhMax ?? this.idealPhMax,
+      idealPhIdeal: idealPhIdeal is double? ? idealPhIdeal : this.idealPhIdeal,
       idealCo2Min: idealCo2Min is double? ? idealCo2Min : this.idealCo2Min,
       idealCo2Max: idealCo2Max is double? ? idealCo2Max : this.idealCo2Max,
+      idealEcMinDsM: idealEcMinDsM is double?
+          ? idealEcMinDsM
+          : this.idealEcMinDsM,
+      idealEcMaxDsM: idealEcMaxDsM is double?
+          ? idealEcMaxDsM
+          : this.idealEcMaxDsM,
+      idealNightTemperatureMin: idealNightTemperatureMin is double?
+          ? idealNightTemperatureMin
+          : this.idealNightTemperatureMin,
+      idealNightTemperatureMax: idealNightTemperatureMax is double?
+          ? idealNightTemperatureMax
+          : this.idealNightTemperatureMax,
+      idealOrpMinMv: idealOrpMinMv is double?
+          ? idealOrpMinMv
+          : this.idealOrpMinMv,
+      idealOrpMaxMv: idealOrpMaxMv is double?
+          ? idealOrpMaxMv
+          : this.idealOrpMaxMv,
+      ppfdMin: ppfdMin is double? ? ppfdMin : this.ppfdMin,
+      ppfdMax: ppfdMax is double? ? ppfdMax : this.ppfdMax,
+      photoperiodHours: photoperiodHours is double?
+          ? photoperiodHours
+          : this.photoperiodHours,
+      lightSpectrum: lightSpectrum is String?
+          ? lightSpectrum
+          : this.lightSpectrum,
+      ediblePart: ediblePart is String? ? ediblePart : this.ediblePart,
+      priority: priority is int? ? priority : this.priority,
+      aeroponicSuitable: aeroponicSuitable is bool?
+          ? aeroponicSuitable
+          : this.aeroponicSuitable,
+      profileKey: profileKey is String? ? profileKey : this.profileKey,
+      nutrientRecipeJson: nutrientRecipeJson is String?
+          ? nutrientRecipeJson
+          : this.nutrientRecipeJson,
       waterRequirement: waterRequirement ?? this.waterRequirement,
       growthDurationDays: growthDurationDays ?? this.growthDurationDays,
       commonDiseases: commonDiseases is List<String>?

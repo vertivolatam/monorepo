@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Mega-tabs — switch base de cálculo (agua / aforado)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; padding:20px; background:#ffffff; color:#1c1a1e;
+         font-family: Inter, Arial, sans-serif; }
+  h2 { color:#772583; margin:0 0 4px; }
+  .sub { color:#555; margin:0 0 16px; }
+  .win { border:1px solid #5E1D6B; border-radius:8px; overflow:hidden; }
+  .tabs { display:flex; background:#2A0033; }
+  .tab { padding:10px 18px; color:#C178CB; }
+  .tab.active { color:#fff; background:#772583; font-weight:600; }
+  .tab.inactive { background:#1A0020; }
+  .body { display:flex; min-height:560px; background:#f6f3f8; }
+  .side { width:240px; border-right:1px solid #cbc5d0; background:#fff; }
+  .side .hdr { padding:8px 10px; font-size:11px; font-weight:bold; color:#777; border-bottom:1px solid #eee; }
+  .side .it { padding:9px 12px; border-bottom:1px solid #f2f2f2; }
+  .side .it.sel { background:#772583; color:#fff; }
+  .main { flex:1; padding:16px; }
+
+  .toprow { display:flex; align-items:center; gap:12px; }
+  .pname { font-size:16px; font-weight:bold; color:#772583; }
+  .toggle { margin-left:auto; display:inline-flex; border:1px solid #772583;
+            border-radius:6px; overflow:hidden; font-size:12px; }
+  .toggle .lbl { padding:5px 8px; color:#777; align-self:center; }
+  .toggle .opt { padding:5px 12px; cursor:pointer; }
+  .toggle .opt.on { background:#772583; color:#fff; font-weight:600; }
+  .toggle .opt.off { background:#fff; color:#772583; }
+  .warn { font-size:12px; color:#777; margin:5px 0 12px; }
+
+  .acc { border:1px solid #cbc5d0; border-radius:6px; overflow:hidden; margin-bottom:8px; }
+  .acc-head { display:flex; align-items:center; gap:8px; padding:9px 12px; font-weight:600; cursor:pointer; }
+  .acc-head .chev { margin-left:auto; font-weight:400; opacity:.85; }
+  .acc.veg .acc-head { background:#6C4FA1; color:#fff; }
+  .acc.rep .acc-head { background:#B03A6E; color:#fff; }
+  .acc.mad .acc-head { background:#2F77C2; color:#fff; }
+  .acc-body { padding:12px; background:#fff; }
+
+  .callout { display:flex; gap:12px; align-items:flex-start; background:#FFF4E0;
+             border:1px solid #FFB84D; border-left:5px solid #FF9E1B; border-radius:6px;
+             padding:12px 14px; margin-bottom:14px; }
+  .callout .ico { font-size:20px; } .callout .txt { font-size:13px; color:#6D3800; line-height:1.45; }
+  .callout .txt b { color:#4D2600; }
+  .mini { display:flex; gap:8px; align-items:flex-start; background:#FFF4E0;
+          border-left:4px solid #FF9E1B; border-radius:4px; padding:7px 9px; margin:0 0 10px; }
+  .mini .ico { font-size:14px; } .mini .txt { font-size:11px; color:#6D3800; line-height:1.35; }
+
+  .cols { display:flex; gap:12px; }
+  .col { flex:1; border:1px solid #e4dfe8; border-radius:6px; padding:10px; display:flex; flex-direction:column; }
+  .col h4 { margin:0 0 8px; color:#5F6A00; font-size:12px; border-bottom:1px solid #eee; padding-bottom:5px; }
+  .col h4 .unit { color:#999; font-weight:400; }
+  .cell { margin-bottom:12px; } .cell .lab { font-size:14px; font-weight:600; margin-bottom:4px; }
+  .stepper { display:flex; align-items:center; }
+  .stepper .b { border:1px solid #bbb; background:#f4eff6; padding:4px 10px; font-weight:bold; }
+  .stepper .v { border:1px solid #bbb; border-left:none; border-right:none; padding:4px 8px; flex:1; text-align:center; font-size:14px; }
+  .stepper .v .u { color:#999; font-size:12px; }
+  .vol { margin-top:auto; display:flex; gap:8px; align-items:center; background:#E0ECF7;
+         border-left:4px solid #2F77C2; border-radius:4px; padding:8px 10px; }
+  .vol .ico { font-size:15px; } .vol .txt { font-size:12px; color:#1c3a5e; } .vol .txt b { font-size:14px; }
+  .actions { margin-top:14px; display:flex; justify-content:flex-end; }
+  .save { background:#772583; color:#fff; border-radius:4px; padding:6px 16px; font-size:13px; }
+</style>
+</head>
+<body>
+  <h2>Mega-tabs — switch "base de cálculo"</h2>
+  <p class="sub">Toggle a nivel de perfil: <b>Por 1000 ml de agua</b> (dato real) ⟷ <b>Aforado a 1 L</b> (vista reescalada). Aquí en modo "agua".</p>
+
+  <div class="win">
+    <div class="tabs">
+      <div class="tab inactive">🌱 Catálogo de cultivos</div>
+      <div class="tab active">🧪 Perfiles &amp; Recetas</div>
+    </div>
+    <div class="body">
+      <div class="side">
+        <div class="hdr">PERFILES (6)</div>
+        <div class="it">Cultivos de Hoja — Vegetativa</div>
+        <div class="it">Hierbas Aromáticas — Vegetativa</div>
+        <div class="it sel">Cultivos de Fruto — Vegetativa</div>
+        <div class="it">Cultivos de Fruto — Reproductiva</div>
+        <div class="it">Frutos de Baya — Reproductiva</div>
+        <div class="it">Raíz / Bulbo / Tubérculo — Maduración</div>
+      </div>
+      <div class="main">
+        <div class="toprow">
+          <span class="pname">Cultivos de Fruto — Vegetativa</span>
+          <span class="toggle">
+            <span class="lbl">Base:</span>
+            <span class="opt on">Por 1000 ml de agua</span>
+            <span class="opt off">Aforado a 1 L</span>
+          </span>
+        </div>
+        <div class="warn">⚠ Editar aplica a los <b>22 cultivos</b> con este perfil · el dato se GUARDA siempre como "por 1000 ml de agua"; "aforado" es solo vista.</div>
+
+        <div class="acc veg">
+          <div class="acc-head">▼ Fase Vegetativa</div>
+          <div class="acc-body">
+            <div class="callout">
+              <span class="ico">💧</span>
+              <span class="txt"><b>Modo: por 1000 ml de agua.</b> Pesá la sal seca y disolvéla en
+              1000 ml de agua; NO se afora. El volumen final (&gt;1 L) se calcula abajo.
+              <i>Cambiá el switch a "Aforado a 1 L" para ver los gramos reescalados a 1 L exacto.</i></span>
+            </div>
+            <div class="cols">
+              <div class="col">
+                <h4>Solución A — Nitratos <span class="unit">· g / 1000 ml de agua</span></h4>
+                <div class="mini"><span class="ico">⚠️</span><span class="txt"><b>Stock A aparte.</b> No mezclar directo con B/C.</span></div>
+                <div class="cell"><div class="lab">Nitrato de Calcio</div>
+                  <div class="stepper"><span class="b">−</span><span class="v">520 <span class="u">g</span></span><span class="b">+</span></div></div>
+                <div class="cell"><div class="lab">Nitrato de Potasio</div>
+                  <div class="stepper"><span class="b">−</span><span class="v">274 <span class="u">g</span></span><span class="b">+</span></div></div>
+                <div class="vol"><span class="ico">📐</span><span class="txt">Volumen final ≈ <b>1,37 L</b></span></div>
+              </div>
+              <div class="col">
+                <h4>Solución B — Fosfatos / Sulfatos <span class="unit">· g / 1000 ml de agua</span></h4>
+                <div class="mini"><span class="ico">⚠️</span><span class="txt"><b>Stock B aparte.</b> No mezclar directo con A/C.</span></div>
+                <div class="cell"><div class="lab">Fosfato Monoamoníaco</div>
+                  <div class="stepper"><span class="b">−</span><span class="v">85 <span class="u">g</span></span><span class="b">+</span></div></div>
+                <div class="cell"><div class="lab">Sulfato de Magnesio</div>
+                  <div class="stepper"><span class="b">−</span><span class="v">122.8 <span class="u">g</span></span><span class="b">+</span></div></div>
+                <div class="vol"><span class="ico">📐</span><span class="txt">Volumen final ≈ <b>1,11 L</b></span></div>
+              </div>
+              <div class="col">
+                <h4>Solución C — Micro-Nutrientes <span class="unit">· g / 1000 ml de agua</span></h4>
+                <div class="mini"><span class="ico">⚠️</span><span class="txt"><b>Stock C aparte.</b> No mezclar directo con A/B.</span></div>
+                <div class="cell"><div class="lab">Manganeso</div>
+                  <div class="stepper"><span class="b">−</span><span class="v">62 <span class="u">g</span></span><span class="b">+</span></div></div>
+                <div class="cell"><div class="lab">Hierro</div>
+                  <div class="stepper"><span class="b">−</span><span class="v">12.58 <span class="u">g</span></span><span class="b">+</span></div></div>
+                <div class="cell"><div class="lab">Boro</div>
+                  <div class="stepper"><span class="b">−</span><span class="v">1.5 <span class="u">g</span></span><span class="b">+</span></div></div>
+                <div class="vol"><span class="ico">📐</span><span class="txt">Volumen final ≈ <b>1,04 L</b></span></div>
+              </div>
+            </div>
+            <div class="actions"><span class="save">💾 Guardar Vegetativa → 22 cultivos</span></div>
+          </div>
+        </div>
+
+        <div class="acc rep"><div class="acc-head">▶ Fase Reproductiva <span class="chev">(sin receta — clic para agregar)</span></div></div>
+        <div class="acc mad"><div class="acc-head">▶ Fase de Maduración <span class="chev">(sin receta — clic para agregar)</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="sub" style="margin-top:14px;">En modo <b>Aforado a 1 L</b> (al togglear): los gramos se reescalan ×(1000 / V_final) y cada "Volumen final" pasa a <b>1,00 L</b>, misma concentración. El switch es <b>solo de vista</b> — el guardado siempre persiste la base "por 1000 ml de agua".</p>
+</body>
+</html>

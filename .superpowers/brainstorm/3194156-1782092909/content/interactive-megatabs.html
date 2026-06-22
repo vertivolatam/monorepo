@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Crop Explorer — 3 mega-tabs (interactivo)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; padding:18px; background:#fff; color:#1c1a1e; font-family: Inter, Arial, sans-serif; }
+  h2 { color:#772583; margin:0 0 4px; }
+  .sub { color:#555; margin:0 0 14px; font-size:13px; }
+  .win { border:1px solid #5E1D6B; border-radius:8px; overflow:hidden; }
+  .tabs { display:flex; background:#2A0033; }
+  .tab { padding:10px 18px; color:#C178CB; cursor:pointer; user-select:none; }
+  .tab.active { color:#fff; background:#772583; font-weight:600; }
+  .body { display:flex; min-height:560px; background:#f6f3f8; }
+  .panel { display:none; width:100%; }
+  .panel.show { display:flex; }
+
+  .side { width:248px; border-right:1px solid #cbc5d0; background:#fff; flex:none; }
+  .side .hdr { padding:8px 10px; font-size:11px; font-weight:bold; color:#777; border-bottom:1px solid #eee; }
+  .side .it { padding:9px 12px; border-bottom:1px solid #f2f2f2; cursor:pointer; display:flex; justify-content:space-between; }
+  .side .it .cap { color:#999; font-size:12px; }
+  .side .it.sel { background:#772583; color:#fff; } .side .it.sel .cap { color:#e9d3f0; }
+
+  .main { flex:1; padding:16px; overflow:auto; }
+  .toprow { display:flex; align-items:center; gap:12px; margin-bottom:6px; flex-wrap:wrap; }
+  .pname { font-size:16px; font-weight:bold; color:#772583; }
+  .toggle { margin-left:auto; display:inline-flex; border:1px solid #772583; border-radius:6px; overflow:hidden; font-size:12px; }
+  .toggle .lbl { padding:5px 8px; color:#777; align-self:center; }
+  .toggle .opt { padding:5px 12px; cursor:pointer; }
+  .toggle .opt.on { background:#772583; color:#fff; font-weight:600; }
+  .toggle .opt.off { background:#fff; color:#772583; }
+  .warn { font-size:12px; color:#777; margin:5px 0 12px; }
+
+  .acc { border:1px solid #cbc5d0; border-radius:6px; overflow:hidden; margin-bottom:7px; }
+  .acc-head { padding:9px 12px; font-weight:600; cursor:pointer; user-select:none; display:flex; align-items:center; }
+  .acc-head .ct { margin-left:auto; font-weight:400; opacity:.85; font-size:12px; }
+  .acc.veg .acc-head { background:#6C4FA1; color:#fff; }
+  .acc.rep .acc-head { background:#B03A6E; color:#fff; }
+  .acc.mad .acc-head { background:#2F77C2; color:#fff; }
+  .acc-body { padding:11px; background:#fff; display:none; }
+  .acc.open .acc-body { display:block; }
+
+  .callout { display:flex; gap:10px; background:#FFF4E0; border-left:5px solid #FF9E1B; border-radius:6px;
+             padding:11px 13px; margin-bottom:12px; font-size:12.5px; color:#6D3800; } .callout b { color:#4D2600; }
+  .info { background:#E0ECF7; border-left:5px solid #2F77C2; color:#1c3a5e; }
+  .mini { display:flex; gap:7px; background:#FFF4E0; border-left:4px solid #FF9E1B; border-radius:4px;
+          padding:6px 8px; margin:0 0 9px; font-size:10.5px; color:#6D3800; }
+
+  .cols { display:flex; gap:10px; }
+  .col { flex:1; border:1px solid #e4dfe8; border-radius:6px; padding:9px; display:flex; flex-direction:column; }
+  .col h4 { margin:0 0 7px; color:#5F6A00; font-size:11.5px; border-bottom:1px solid #eee; padding-bottom:4px; }
+  .col h4 .u { color:#999; font-weight:400; }
+  .cell { margin-bottom:10px; } .cell .lab { font-size:13px; font-weight:600; margin-bottom:3px; }
+  .stepper { display:flex; align-items:center; }
+  .stepper .b { border:1px solid #bbb; background:#f4eff6; padding:3px 9px; font-weight:bold; }
+  .stepper .v { border:1px solid #bbb; border-left:none; border-right:none; padding:3px 6px; flex:1; text-align:center; font-size:13px; }
+  .stepper .v .uu { color:#999; font-size:11px; }
+  .vol { margin-top:auto; background:#E0ECF7; border-left:4px solid #2F77C2; border-radius:4px; padding:7px 9px; font-size:12px; color:#1c3a5e; } .vol b { font-size:13px; }
+  .save { background:#772583; color:#fff; border-radius:4px; padding:6px 14px; font-size:12.5px; display:inline-block; margin-top:10px; }
+
+  /* calculadora cards */
+  .ccards { display:flex; gap:10px; }
+  .ccard { flex:1; border:1px solid #e4dfe8; border-radius:7px; background:#fff; overflow:hidden; }
+  .ccard .hd { padding:6px 9px; color:#fff; font-weight:600; font-size:12px; }
+  .ccard.a .hd{background:#5F6A00}.ccard.b .hd{background:#8E4B00}.ccard.c .hd{background:#2F77C2}
+  .ccard .bd { padding:9px; }
+  .step { font-size:10px; color:#999; text-transform:uppercase; font-weight:bold; margin:6px 0 2px; }
+  .row { display:flex; justify-content:space-between; font-size:12px; margin:3px 0; } .row .k{color:#666} .row .v{font-weight:600}
+  .big { background:#f4eff6; border-radius:5px; padding:6px 8px; margin-top:7px; font-size:12px; } .big .v{font-weight:700;color:#772583}
+</style>
+</head>
+<body>
+  <h2>Crop Explorer — 3 mega-tabs (interactivo)</h2>
+  <p class="sub">Clickeá los tabs, los accordions, los items de las listas y el switch. La calculadora recalcula en vivo por envase.</p>
+
+  <div class="win">
+    <div class="tabs">
+      <div class="tab" data-p="cat">🌱 Catálogo de cultivos</div>
+      <div class="tab active" data-p="perf">🧪 Perfiles &amp; Recetas</div>
+      <div class="tab" data-p="calc">🧮 Calculadora de lote</div>
+    </div>
+    <div class="body">
+
+      <!-- CATÁLOGO (placeholder) -->
+      <div class="panel" data-panel="cat">
+        <div class="main"><p class="sub">(El Tab 1 "Catálogo de cultivos" es el explorador actual: sidebar pivot | detalle del cultivo. Acá nos enfocamos en los Tabs 2 y 3.)</p></div>
+      </div>
+
+      <!-- PERFILES & RECETAS -->
+      <div class="panel show" data-panel="perf">
+        <div class="side">
+          <div class="hdr">PERFILES (6)</div>
+          <div class="it sel" data-prof="Cultivos de Fruto — Vegetativa">Cultivos de Fruto — Vegetativa</div>
+          <div class="it" data-prof="Cultivos de Hoja — Vegetativa">Cultivos de Hoja — Vegetativa</div>
+          <div class="it" data-prof="Hierbas Aromáticas — Vegetativa">Hierbas Aromáticas — Vegetativa</div>
+          <div class="it" data-prof="Cultivos de Fruto — Reproductiva">Cultivos de Fruto — Reproductiva</div>
+          <div class="it" data-prof="Frutos de Baya — Reproductiva">Frutos de Baya — Reproductiva</div>
+          <div class="it" data-prof="Raíz / Bulbo / Tubérculo — Maduración">Raíz / Bulbo / Tubérculo — Maduración</div>
+        </div>
+        <div class="main">
+          <div class="toprow">
+            <span class="pname" id="pname">Cultivos de Fruto — Vegetativa</span>
+            <span class="toggle">
+              <span class="lbl">Base:</span>
+              <span class="opt on" id="bw" data-mode="water">Por 1000 ml de agua</span>
+              <span class="opt off" id="ba" data-mode="aforo">Aforado a 1 L</span>
+            </span>
+          </div>
+          <div class="warn">⚠ Editar aplica a los <b>22 cultivos</b> con este perfil · el dato se GUARDA como "por 1000 ml de agua"; "aforado" es solo vista.</div>
+
+          <div class="acc veg open">
+            <div class="acc-head">Fase Vegetativa</div>
+            <div class="acc-body">
+              <div class="callout info"><span>💧</span><span id="modeNote"></span></div>
+              <div class="cols" id="recipeCols"></div>
+              <span class="save">💾 Guardar Vegetativa → 22 cultivos</span>
+            </div>
+          </div>
+          <div class="acc rep"><div class="acc-head">Fase Reproductiva <span class="ct">(sin receta — clic para agregar)</span></div>
+            <div class="acc-body"><div class="callout info"><span>➕</span><span>No hay receta para esta fase. Definí las sales A/B/C aquí.</span></div></div></div>
+          <div class="acc mad"><div class="acc-head">Fase de Maduración <span class="ct">(sin receta — clic para agregar)</span></div>
+            <div class="acc-body"><div class="callout info"><span>➕</span><span>No hay receta para esta fase.</span></div></div></div>
+        </div>
+      </div>
+
+      <!-- CALCULADORA DE LOTE -->
+      <div class="panel" data-panel="calc">
+        <div class="side">
+          <div class="hdr">ENVASE (VOLUMEN FINAL)</div>
+          <div class="it sel" data-vol="18"><span>Pichinga 18 L</span><span class="cap">5 gal</span></div>
+          <div class="it" data-vol="56"><span>Pichinga 56 L</span><span class="cap">15 gal</span></div>
+          <div class="it" data-vol="5000"><span>Tanque 5000 L</span><span class="cap">1321 gal</span></div>
+          <div class="it" data-vol="7500"><span>Tanque 7500 L</span><span class="cap">1981 gal</span></div>
+          <div class="it" data-vol="10000"><span>Tanque 10000 L</span><span class="cap">2642 gal</span></div>
+          <div class="it" data-vol="15000"><span>Tanque 15000 L</span><span class="cap">3963 gal</span></div>
+          <div class="it" data-vol="22000"><span>Tanque 22000 L</span><span class="cap">5812 gal</span></div>
+          <div class="it" data-vol="27000"><span>Tanque 27000 L</span><span class="cap">7133 gal</span></div>
+        </div>
+        <div class="main">
+          <div class="toprow"><span class="pname" id="cvol">Pichinga 18 L → 18,0 L final</span></div>
+          <div class="callout info"><span>📐</span><span>Para el envase seleccionado, calcula hacia atrás el <b>agua inicial</b> + <b>sal de cada solución</b> para completar el volumen final con el desplazamiento (sin aforar). Cambiá el envase a la izquierda y mirá recalcular.</span></div>
+          <div class="acc veg open">
+            <div class="acc-head">Receta: Cultivos de Fruto — Vegetativa <span class="ct" id="cforenv">para Pichinga 18 L</span></div>
+            <div class="acc-body"><div class="ccards" id="calcCards"></div></div>
+          </div>
+          <div class="acc veg"><div class="acc-head">Cultivos de Hoja — Vegetativa</div></div>
+          <div class="acc rep"><div class="acc-head">Cultivos de Fruto — Reproductiva <span class="ct">(sin receta)</span></div></div>
+          <div class="acc mad"><div class="acc-head">Raíz / Bulbo / Tubérculo — Maduración</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+const RECIPE = {
+  A:{label:"Solución A — Nitratos", salts:[{n:"Nitrato de Calcio",g:520,rho:1.82},{n:"Nitrato de Potasio",g:274,rho:2.11}]},
+  B:{label:"Solución B — Fosfatos / Sulfatos", salts:[{n:"Fosfato Monoamoníaco",g:85,rho:1.80},{n:"Sulfato de Magnesio",g:122.8,rho:1.68}]},
+  C:{label:"Solución C — Micro-Nutrientes", salts:[{n:"Manganeso",g:62,rho:2.95},{n:"Hierro",g:12.58,rho:2.0},{n:"Boro",g:1.5,rho:1.73},{n:"Zinc",g:0.3,rho:3.5},{n:"Cobre",g:0.2,rho:3.6}]}
+};
+const fmt = (x,d=0)=> x.toLocaleString('es',{minimumFractionDigits:d,maximumFractionDigits:d});
+const unitFinalMl = s => 1000 + s.salts.reduce((a,x)=>a + x.g/x.rho, 0);
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+  document.querySelector('.panel[data-panel="'+t.dataset.p+'"]').classList.add('show');
+});
+// Accordions
+document.querySelectorAll('.acc-head').forEach(h=>h.onclick=()=>h.parentElement.classList.toggle('open'));
+// Lista de perfiles
+document.querySelectorAll('[data-prof]').forEach(it=>it.onclick=()=>{
+  document.querySelectorAll('[data-prof]').forEach(x=>x.classList.remove('sel'));
+  it.classList.add('sel'); document.getElementById('pname').textContent = it.dataset.prof;
+});
+// Switch base
+let mode='water';
+document.getElementById('bw').onclick=()=>setMode('water');
+document.getElementById('ba').onclick=()=>setMode('aforo');
+function setMode(m){ mode=m;
+  document.getElementById('bw').className='opt '+(m==='water'?'on':'off');
+  document.getElementById('ba').className='opt '+(m==='aforo'?'on':'off');
+  renderRecipe();
+}
+function renderRecipe(){
+  document.getElementById('modeNote').innerHTML = mode==='water'
+    ? '<b>Modo: por 1000 ml de agua.</b> Pesá la sal seca y disolvéla en 1000 ml de agua; NO se afora. El volumen final (&gt;1 L) se calcula abajo.'
+    : '<b>Modo: aforado a 1 L (solo vista).</b> Gramos reescalados a 1 L exacto, misma concentración; el guardado sigue siendo "por 1000 ml de agua".';
+  const cols = document.getElementById('recipeCols'); cols.innerHTML='';
+  ['A','B','C'].forEach(k=>{
+    const s=RECIPE[k], uf=unitFinalMl(s), f = mode==='aforo' ? 1000/uf : 1;
+    let salts = s.salts.map(x=>`<div class="cell"><div class="lab">${x.n}</div>
+      <div class="stepper"><span class="b">−</span><span class="v">${fmt(x.g*f, (x.g*f<10)?2:0)} <span class="uu">g</span></span><span class="b">+</span></div></div>`).join('');
+    const volTxt = mode==='aforo' ? 'Volumen final = <b>1,00 L</b> (aforado)' : `Volumen final ≈ <b>${fmt(uf/1000,2)} L</b>`;
+    cols.innerHTML += `<div class="col"><h4>${s.label} <span class="u">· g / 1000 ml de agua</span></h4>
+      <div class="mini">⚠️ Stock ${k} concentrado, aparte — no mezclar directo con los otros.</div>
+      ${salts}<div class="vol">📐 ${volTxt}</div></div>`;
+  });
+}
+// Calculadora
+document.querySelectorAll('[data-vol]').forEach(it=>it.onclick=()=>{
+  document.querySelectorAll('[data-vol]').forEach(x=>x.classList.remove('sel'));
+  it.classList.add('sel'); renderCalc(parseFloat(it.dataset.vol), it.querySelector('span').textContent);
+});
+function renderCalc(V, name){
+  document.getElementById('cvol').textContent = `${name} → ${fmt(V,V<100?1:0)} L final`;
+  document.getElementById('cforenv').textContent = 'para '+name;
+  const wrap = document.getElementById('calcCards'); wrap.innerHTML='';
+  ['A','B','C'].forEach(k=>{
+    const s=RECIPE[k], uf=unitFinalMl(s), units=(V*1000)/uf, water=units; // 1L agua por unidad
+    let salts = s.salts.slice(0,2).map(x=>`<div class="row"><span class="k">${x.n}</span><span class="v">${fmt(units*x.g, (units*x.g<10)?2:0)} g</span></div>`).join('');
+    if(s.salts.length>2) salts += `<div class="row"><span class="k">+ ${s.salts.length-2} más…</span><span class="v">…</span></div>`;
+    const bottles = Math.floor(V);
+    wrap.innerHTML += `<div class="ccard ${k.toLowerCase()}"><div class="hd">${s.label.replace('Solución ','')}</div><div class="bd">
+      <div class="step">1 · Agua inicial</div><div class="row"><span class="k">Agregar</span><span class="v">${fmt(water,water<100?1:0)} L</span></div>
+      <div class="step">2 · Disolver sales</div>${salts}
+      <div class="big">→ <span class="v">${fmt(V,V<100?1:0)} L</span> · 🍾 ${fmt(bottles)}×1 L</div></div></div>`;
+  });
+}
+renderRecipe(); renderCalc(18,'Pichinga 18 L');
+</script>
+</body>
+</html>

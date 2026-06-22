@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Mega-tabs — Perfiles &amp; Recetas (3 columnas)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; padding:20px; background:#ffffff; color:#1c1a1e;
+         font-family: Inter, Arial, sans-serif; }
+  h2 { color:#772583; margin:0 0 4px; }
+  .sub { color:#555; margin:0 0 16px; }
+  .win { border:1px solid #5E1D6B; border-radius:8px; overflow:hidden; }
+  .tabs { display:flex; background:#2A0033; }
+  .tab { padding:10px 18px; color:#C178CB; }
+  .tab.active { color:#fff; background:#772583; font-weight:600; }
+  .tab.inactive { background:#1A0020; }
+  .body { display:flex; min-height:430px; background:#f6f3f8; }
+  .side { width:240px; border-right:1px solid #cbc5d0; background:#fff; }
+  .side .hdr { padding:8px 10px; font-size:11px; font-weight:bold; color:#777;
+               border-bottom:1px solid #eee; }
+  .side .it { padding:9px 12px; border-bottom:1px solid #f2f2f2; }
+  .side .it.sel { background:#772583; color:#fff; }
+  .main { flex:1; padding:16px; }
+  .pname { font-size:16px; font-weight:bold; color:#772583; }
+  .warn { font-size:12px; color:#777; margin:3px 0 12px; }
+  .phases { display:flex; gap:3px; margin-bottom:12px; }
+  .ph { padding:6px 14px; border-radius:4px 4px 0 0; }
+  .ph.veg { background:#6C4FA1; color:#fff; }
+  .ph.rep { background:#f3e0ea; color:#B03A6E; }
+  .ph.mad { background:#e0ecf7; color:#2F77C2; }
+
+  /* --- 3 columnas A/B/C --- */
+  .cols { display:flex; gap:12px; align-items:stretch; }
+  .col { flex:1; background:#fff; border:1px solid #cbc5d0; border-radius:6px;
+         padding:10px; }
+  .col h4 { margin:0 0 8px; color:#5F6A00; font-size:13px;
+            border-bottom:1px solid #eee; padding-bottom:5px; }
+  .cell { margin-bottom:10px; }
+  .cell .lab { font-size:12px; color:#444; margin-bottom:3px; }
+  .stepper { display:flex; align-items:center; }
+  .stepper .b { border:1px solid #bbb; background:#f4eff6; padding:3px 9px;
+                font-weight:bold; }
+  .stepper .v { border:1px solid #bbb; border-left:none; border-right:none;
+                padding:3px 0; flex:1; text-align:center; }
+  .actions { margin-top:14px; display:flex; gap:8px; justify-content:flex-end; }
+  .add { border:1px dashed #999; border-radius:4px; padding:5px 12px; font-size:12px; }
+  .save { background:#772583; color:#fff; border-radius:4px; padding:5px 14px; font-size:12px; }
+</style>
+</head>
+<body>
+  <h2>Mega-tabs — receta en 3 columnas (A | B | C)</h2>
+  <p class="sub">Soluciones lado a lado; stepper debajo de cada label. ¿Así?</p>
+
+  <div class="win">
+    <div class="tabs">
+      <div class="tab inactive">🌱 Catálogo de cultivos</div>
+      <div class="tab active">🧪 Perfiles &amp; Recetas</div>
+    </div>
+    <div class="body">
+      <div class="side">
+        <div class="hdr">PERFILES (6)</div>
+        <div class="it">Cultivos de Hoja — Vegetativa</div>
+        <div class="it">Hierbas Aromáticas — Vegetativa</div>
+        <div class="it sel">Cultivos de Fruto — Vegetativa</div>
+        <div class="it">Cultivos de Fruto — Reproductiva</div>
+        <div class="it">Frutos de Baya — Reproductiva</div>
+        <div class="it">Raíz / Bulbo / Tubérculo — Maduración</div>
+      </div>
+      <div class="main">
+        <div class="pname">Cultivos de Fruto — Vegetativa</div>
+        <div class="warn">⚠ Editar aquí aplica a los <b>22 cultivos</b> con este perfil · g/1000 ml</div>
+        <div class="phases">
+          <div class="ph veg">Vegetativa</div>
+          <div class="ph rep">Reproductiva</div>
+          <div class="ph mad">Maduración</div>
+        </div>
+
+        <div class="cols">
+          <div class="col">
+            <h4>Solución A — Nitratos</h4>
+            <div class="cell"><div class="lab">Nitrato de Calcio</div>
+              <div class="stepper"><span class="b">−</span><span class="v">520</span><span class="b">+</span></div></div>
+            <div class="cell"><div class="lab">Nitrato de Potasio</div>
+              <div class="stepper"><span class="b">−</span><span class="v">274</span><span class="b">+</span></div></div>
+          </div>
+          <div class="col">
+            <h4>Solución B — Fosfatos / Sulfatos</h4>
+            <div class="cell"><div class="lab">Fosfato Monoamoníaco</div>
+              <div class="stepper"><span class="b">−</span><span class="v">85</span><span class="b">+</span></div></div>
+            <div class="cell"><div class="lab">Sulfato de Magnesio</div>
+              <div class="stepper"><span class="b">−</span><span class="v">122.8</span><span class="b">+</span></div></div>
+          </div>
+          <div class="col">
+            <h4>Solución C — Micro-Nutrientes</h4>
+            <div class="cell"><div class="lab">Manganeso</div>
+              <div class="stepper"><span class="b">−</span><span class="v">62</span><span class="b">+</span></div></div>
+            <div class="cell"><div class="lab">Cobre</div>
+              <div class="stepper"><span class="b">−</span><span class="v">0.2</span><span class="b">+</span></div></div>
+            <div class="cell"><div class="lab">Hierro</div>
+              <div class="stepper"><span class="b">−</span><span class="v">12.58</span><span class="b">+</span></div></div>
+            <div class="cell"><div class="lab">Zinc</div>
+              <div class="stepper"><span class="b">−</span><span class="v">0.3</span><span class="b">+</span></div></div>
+            <div class="cell"><div class="lab">Boro</div>
+              <div class="stepper"><span class="b">−</span><span class="v">1.5</span><span class="b">+</span></div></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <span class="add">+ Agregar sal</span>
+          <span class="save">💾 Guardar receta → 22 cultivos</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

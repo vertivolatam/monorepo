@@ -1,0 +1,799 @@
+# Copyright (c) 2024 Vertivo Horticultura Urbana Vertical S.R.L.
+# Cédula Jurídica 3-102-815230
+# San Francisco, Heredia, Heredia, Republic of Costa Rica
+# All Rights Reserved.
+#
+# This file is part of the Licensed Work under the Business Source License (BSL).
+# You may obtain a copy of the License at ./LICENSE.md
+# You may not use this file except in compliance with the License.
+
+"""DetailView — el panel de detalle que mapea los grupos de la hoja.
+
+Layout:
+  - Izquierda sticky: Datos Botánicos.
+  - Der-arriba sticky (3 cols): Soluciones del Negocio (Perfil/Prioridad
+    editables + Guardar→audit) · Constantes de Monitoreo.
+  - Der-abajo: 4 tabs (Vegetativa/Reproductiva/Maduración/Valor Nutricional).
+    Cada tab de fase = grid de InstrumentCard EDITABLES (de los setpoints
+    activos) a la izquierda + la receta de nutrientes (agrupada en Solución
+    A/B/C) como sidebar a la DERECHA. Tab Nutricional = tabla desde `nutrition`.
+
+Colores/tipografía vienen de ``tokens.py`` (design system de Vertivo). Editar
+un rango o el perfil escribe en ``setpoint_audit`` (rollback posible).
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sys
+
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QColor, QPainter
+from PySide6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QGridLayout,
+    QLabel,
+    QLineEdit,
+    QCheckBox,
+    QComboBox,
+    QPushButton,
+    QGroupBox,
+    QSplitter,
+    QTabWidget,
+    QTabBar,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QScrollArea,
+    QSizePolicy,
+)
+
+from db import is_discrepant
+from widgets.instrument_card import InstrumentCard, Stepper
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import tokens as T  # noqa: E402
+
+# --- Definición de tarjetas-instrumento -------------------------------------
+# (label, unidad, field_min, field_max, field_ideal). El gauge usa lo/hi/ideal.
+# (label, unidad, field_min, field_max, field_ideal). TODOS tienen field_ideal:
+# si el dato no existe el card muestra "—", pero al editarlo + Guardar se CREA
+# el setpoint ideal (INSERT auditado), por eso ya no debe ser None.
+CARD_DEFS = [
+    ("pH", "", "ph_min", "ph_max", "ph_ideal"),
+    ("EC", "dS/m", "ec_min_dsm", "ec_max_dsm", "ec_ideal_dsm"),
+    ("PPFD", "µmol/m²·s", "ppfd_min", "ppfd_max", "ppfd_ideal"),
+    ("Temp. día", "°C", "temp_day_min", "temp_day_max", "temp_day_ideal"),
+    ("Temp. noche", "°C", "temp_night_min", "temp_night_max", "temp_night_ideal"),
+    ("Humedad", "%", "humidity_min", "humidity_max", "humidity_ideal"),
+    ("ORP", "mV", "orp_min", "orp_max", "orp_ideal"),
+]
+
+# Prioridad en escala 0-100 (MAYOR = más prioritario). Tiers canónicos 100..60
+# (remapeo del viejo 1..5: 1→100, 2→90, 3→80, 4→70, 5→60).
+PRIORITY_CHOICES = ["100", "90", "80", "70", "60"]
+
+# Etiquetas en español para los grupos de la receta (A/B/C).
+# Etiquetas de los grupos de la receta — exactas como la hoja "Recetas Soluciones
+# Nutritivas" del Modelo Fitotécnico.
+RECIPE_GROUP_LABELS = {
+    "solucion_a_nitratos": "Solución A — Nitratos (Macro-Nutrientes)",
+    "solucion_b_fosfatos_sulfatos": "Solución B — Fosfatos y Sulfatos (Macro-Nutrientes)",
+    "solucion_c_micros": "Solución C — Micro-Nutrientes",
+}
+# Nombres significativos de cada sal/nutriente (como el XLSX), con acentos y
+# mayúsculas correctas; fallback a Title-Case si aparece una sal nueva.
+SALT_LABELS = {
+    "nitrato_de_calcio": "Nitrato de Calcio",
+    "nitrato_de_potasio": "Nitrato de Potasio",
+    "fosfato_monoamonico": "Fosfato Monoamoníaco",
+    "sulfato_de_magnesio": "Sulfato de Magnesio",
+    "manganeso": "Manganeso",
+    "cobre": "Cobre",
+    "hierro": "Hierro",
+    "zinc": "Zinc",
+    "boro": "Boro",
+}
+# Keys que NO son sales (provenance) y no deben renderizarse como ingredientes.
+_RECIPE_META_KEYS = {"citation", "confidence", "source", "note", "_provenance"}
+
+# Esqueleto estándar A/B/C (sales conocidas) para SEMBRAR una receta inexistente:
+# al editar una receta-stub, el editor parte de esta estructura en ceros.
+RECIPE_SKELETON = {
+    "solucion_a_nitratos": {"nitrato_de_calcio": 0, "nitrato_de_potasio": 0},
+    "solucion_b_fosfatos_sulfatos": {"fosfato_monoamonico": 0, "sulfato_de_magnesio": 0},
+    "solucion_c_micros": {
+        "manganeso": 0, "cobre": 0, "hierro": 0, "zinc": 0, "boro": 0,
+    },
+}
+
+NUTRIENT_LABELS = {
+    "energy": "Energía",
+    "carbohydrates_sugars": "Carbohidratos (azúcares)",
+    "dietary_fiber": "Fibra alimentaria",
+    "fat": "Grasas",
+    "protein": "Proteínas",
+    "water": "Agua",
+    "vit_a_retinol": "Vit. A (retinol)",
+    "vit_beta_carotene": "β-caroteno",
+    "vit_b1_thiamine": "Vit. B1 (tiamina)",
+    "vit_b2_riboflavin": "Vit. B2 (riboflavina)",
+    "vit_b3_niacin": "Vit. B3 (niacina)",
+    "vit_b5_pantothenic": "Vit. B5 (ác. pantoténico)",
+    "vit_b6": "Vit. B6",
+    "vit_b9_folate": "Vit. B9 (folato)",
+    "vit_choline": "Colina",
+    "vit_c": "Vit. C",
+    "vit_e": "Vit. E",
+    "vit_k": "Vit. K",
+    "min_calcium": "Calcio",
+    "min_iron": "Hierro",
+    "min_magnesium": "Magnesio",
+    "min_manganese": "Manganeso",
+    "min_phosphorus": "Fósforo",
+    "min_potassium": "Potasio",
+    "min_sodium": "Sodio",
+    "min_zinc": "Zinc",
+}
+
+
+# Colores de fase de la hoja (Modelo Fitotécnico): Vegetativa morado · Reproductiva
+# magenta · Maduración azul · Valor Nutricional verde.
+PHASE_COLORS = ["#6C4FA1", "#B03A6E", "#2F77C2", "#5AA64F"]
+
+
+class _PhaseTabBar(QTabBar):
+    """QTabBar que pinta cada tab con el color de su fase (como la hoja).
+
+    Seleccionado = color lleno + texto blanco; no-seleccionado = tinte
+    translúcido + texto del color. Replica las celdas color-codificadas.
+    """
+
+    def __init__(self, colors, parent=None):
+        super().__init__(parent)
+        self._colors = colors
+
+    def tabSizeHint(self, index):  # noqa: N802 (Qt override)
+        s = super().tabSizeHint(index)
+        s.setHeight(s.height() + 8)
+        s.setWidth(s.width() + 20)
+        return s
+
+    def paintEvent(self, _event):  # noqa: N802 (Qt override)
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        for i in range(self.count()):
+            rect = self.tabRect(i).adjusted(1, 2, -1, 0)
+            base = QColor(self._colors[i % len(self._colors)])
+            selected = i == self.currentIndex()
+            if selected:
+                p.fillRect(rect, base)
+                p.setPen(QColor("#FFFFFF"))
+            else:
+                tint = QColor(base)
+                tint.setAlpha(45)
+                p.fillRect(rect, tint)
+                p.setPen(base.darker(150))
+            font = self.font()
+            font.setBold(selected)
+            p.setFont(font)
+            p.drawText(self.tabRect(i), Qt.AlignCenter, self.tabText(i))
+        p.end()
+
+
+def _na_label(text: str = "No aplica") -> QLabel:
+    lbl = QLabel(text)
+    lbl.setAlignment(Qt.AlignCenter)
+    lbl.setStyleSheet(
+        f"color:{T.TEXT_MUTED}; font-style:italic; padding:24px;"
+        f" font-family:'{T.FONT_FAMILY}';"
+    )
+    return lbl
+
+
+class DetailView(QWidget):
+    """Panel de detalle de un cultivo."""
+
+    classificationSaved = Signal(int)
+
+    def __init__(self, db, parent=None):
+        super().__init__(parent)
+        self.db = db
+        self._crop_id: int | None = None
+        self._build()
+
+    # --- helpers de perfil (valor mostrado = label_es de crops.json) ---
+    def _profile_items(self) -> list[tuple[str, str]]:
+        profs = self.db._profiles()
+        out: list[tuple[str, str]] = []
+        for slug, p in profs.items():
+            label = (p.get("label_es") or slug) if isinstance(p, dict) else slug
+            out.append((slug, label))
+        return out
+
+    def _profile_label(self, slug: str | None) -> str:
+        if not slug:
+            return "—"
+        for s, label in self._profile_items():
+            if s == slug:
+                return label
+        return slug
+
+    def _build(self):
+        self.setStyleSheet(f"DetailView {{ font-family:'{T.FONT_FAMILY}'; }}")
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(8, 8, 8, 8)
+        outer.setSpacing(8)
+
+        self.title = QLabel("Selecciona un cultivo")
+        self.title.setStyleSheet(
+            f"font-size:18px; font-weight:bold; color:{T.PRIMARY};"
+            f" font-family:'{T.FONT_FAMILY}';"
+        )
+        outer.addWidget(self.title)
+
+        self.disc_banner = QLabel("")
+        self.disc_banner.setWordWrap(True)
+        self.disc_banner.setStyleSheet(
+            f"background:{T.palette('warning', 90) or '#FFDCAA'};"
+            f" color:{T.palette('warning', 20) or '#4D2600'};"
+            " padding:8px; border-radius:6px;"
+        )
+        self.disc_banner.hide()
+        outer.addWidget(self.disc_banner)
+
+        # --- secciones superiores: 2 columnas RESIZABLES (QSplitter):
+        #     [Datos Botánicos]  |  [Constantes de Monitoreo encima / Negocio debajo]
+        self.botanic_box = QGroupBox("Datos Botánicos")
+        self.botanic_box.setStyleSheet(T.groupbox_qss("botanic"))
+        self.botanic_form = QVBoxLayout(self.botanic_box)
+        self.botanic_form.setContentsMargins(12, 16, 12, 12)
+        self.botanic_form.setSpacing(7)
+
+        self.business_box = QGroupBox("Soluciones del Negocio")
+        self.business_box.setStyleSheet(T.groupbox_qss("business"))
+        biz = QVBoxLayout(self.business_box)
+        biz.setContentsMargins(12, 16, 12, 12)
+        biz.setSpacing(7)
+        # Aptitud para nebuponía: checkbox EDITABLE (se guarda auditado).
+        self.apt_check = QCheckBox("Apto para nebuponía")
+        biz.addWidget(self.apt_check)
+        row1 = QHBoxLayout()
+        row1.addWidget(QLabel("Perfil:"))
+        self.profile_combo = QComboBox()
+        self.profile_combo.addItem("— sin perfil —", "")
+        for slug, label in self._profile_items():
+            self.profile_combo.addItem(label, slug)
+        row1.addWidget(self.profile_combo, 1)
+        biz.addLayout(row1)
+        row2 = QHBoxLayout()
+        row2.addWidget(QLabel("Prioridad:"))
+        self.priority_combo = QComboBox()
+        self.priority_combo.addItems([""] + PRIORITY_CHOICES)
+        row2.addWidget(self.priority_combo, 1)
+        biz.addLayout(row2)
+        self.save_btn = QPushButton("💾 Guardar")
+        self.save_btn.setStyleSheet(
+            f"QPushButton {{ background:{T.BTN_BG}; color:{T.BTN_FG}; border:none;"
+            f" border-radius:6px; padding:5px 10px; font-weight:600; }}"
+            f" QPushButton:hover {{ background:{T.palette('primary', 30) or T.BTN_BG}; }}"
+        )
+        self.save_btn.clicked.connect(self._on_save)
+        biz.addWidget(self.save_btn)
+        self.toast = QLabel("")
+        self.toast.setStyleSheet("font-size:11px;")
+        biz.addWidget(self.toast)
+
+        self.monitor_box = QGroupBox("Constantes de Monitoreo")
+        self.monitor_box.setStyleSheet(T.groupbox_qss("monitor"))
+        self.monitor_form = QVBoxLayout(self.monitor_box)
+        self.monitor_form.setContentsMargins(12, 16, 12, 12)
+        self.monitor_form.setSpacing(7)
+
+        # Columna derecha: Monitoreo ENCIMA, Negocio debajo (splitter vertical).
+        right_split = QSplitter(Qt.Vertical)
+        right_split.setChildrenCollapsible(False)
+        right_split.addWidget(self.monitor_box)
+        right_split.addWidget(self.business_box)
+        right_split.setSizes([170, 300])
+
+        # 2 columnas resizables: Botánicos | columna derecha.
+        self._top_split = QSplitter(Qt.Horizontal)
+        self._top_split.setChildrenCollapsible(False)
+        self._top_split.addWidget(self.botanic_box)
+        self._top_split.addWidget(right_split)
+        self._top_split.setSizes([470, 730])
+
+        # --- tabs de fase ---
+        self.tabs = QTabWidget()
+        self.tabs.setTabBar(_PhaseTabBar(PHASE_COLORS))
+        self.tabs.setStyleSheet(
+            f"QTabWidget::pane {{ border:1px solid {T.BORDER}; border-radius:6px;"
+            " top:-1px; }"
+        )
+        self.tab_veg = QScrollArea()
+        self.tab_repro = QScrollArea()
+        self.tab_madur = QScrollArea()
+        self.tab_nutri = QScrollArea()
+        for area in (self.tab_veg, self.tab_repro, self.tab_madur, self.tab_nutri):
+            area.setWidgetResizable(True)
+        self.tabs.addTab(self.tab_veg, "Vegetativa")
+        self.tabs.addTab(self.tab_repro, "Reproductiva")
+        self.tabs.addTab(self.tab_madur, "Maduración")
+        self.tabs.addTab(self.tab_nutri, "Valor Nutricional")
+
+        # Splitter vertical: secciones superiores | tabs (todo resizable).
+        main_split = QSplitter(Qt.Vertical)
+        main_split.setChildrenCollapsible(False)
+        main_split.addWidget(self._top_split)
+        main_split.addWidget(self.tabs)
+        main_split.setSizes([340, 470])
+        outer.addWidget(main_split, 1)
+
+    # --- API pública ---
+    def setCrop(self, crop_id: int):
+        crop = self.db.crop(crop_id)
+        if crop is None:
+            return
+        self._crop_id = crop_id
+        self._fill_header(crop)
+        self._fill_botanic(crop)
+        self._fill_business(crop)
+        self._fill_monitor(crop_id)
+        self._fill_tabs(crop_id, crop)
+
+    # --- secciones ---
+    def _fill_header(self, crop):
+        # Dos labels (no doble paréntesis): español 🇨🇷 / inglés 🇺🇸.
+        es = crop["name_es"] or "—"
+        en = crop["name_en"] or "—"
+        self.title.setText(f"🇨🇷 {es}   /   🇺🇸 {en}")
+        if is_discrepant(crop["assigned_profile"], crop["sheet_harvest_type"]):
+            from build_db import PROFILE_TO_SHEET_TYPE
+
+            expected = PROFILE_TO_SHEET_TYPE.get(crop["assigned_profile"])
+            self.disc_banner.setText(
+                f"⚠ DISCREPANCIA: la hoja clasifica como "
+                f"'{crop['sheet_harvest_type']}' pero el perfil "
+                f"'{self._profile_label(crop['assigned_profile'])}' presupone "
+                f"'{expected}'."
+            )
+            self.disc_banner.show()
+        else:
+            self.disc_banner.hide()
+
+    @staticmethod
+    def _clear(layout):
+        while layout.count():
+            item = layout.takeAt(0)
+            w = item.widget()
+            if w is not None:
+                w.setParent(None)  # desacopla YA (deleteLater difiere la destrucción)
+                w.deleteLater()
+
+    def _fill_botanic(self, crop):
+        self._clear(self.botanic_form)
+        self._botanic_edits = {}
+        for label, key in [
+            ("Nombre (ES) 🇨🇷", "name_es"),
+            ("Nombre (EN) 🇺🇸", "name_en"),
+            ("Familia", "family"),
+            ("Especie", "species"),
+            ("Parte comestible", "edible_part"),
+            ("Origen", "origin"),
+            ("Uso general", "general_use"),
+            ("Uso común", "common_use"),
+        ]:
+            # Label a la IZQUIERDA, input a la DERECHA (compacto, menos vertical).
+            row = QHBoxLayout()
+            row.setSpacing(6)
+            cap = QLabel(label)
+            cap.setFixedWidth(104)
+            cap.setWordWrap(True)
+            cap.setStyleSheet(f"color:{T.TEXT_MUTED}; font-size:11px;")
+            row.addWidget(cap)
+            val = crop[key] if key in crop.keys() else None
+            edit = QLineEdit(val or "")
+            edit.setStyleSheet(
+                f"QLineEdit {{ border:1px solid {T.BORDER}; border-radius:4px;"
+                f" padding:2px 5px; background:{T.SURFACE}; color:{T.TEXT}; }}"
+            )
+            row.addWidget(edit, 1)
+            self.botanic_form.addLayout(row)
+            self._botanic_edits[key] = edit
+
+        save = QPushButton("💾 Guardar datos botánicos")
+        save.setStyleSheet(
+            f"QPushButton {{ background:{T.BTN_BG}; color:{T.BTN_FG}; border:none;"
+            f" border-radius:4px; padding:4px 8px; font-size:11px; margin-top:4px; }}"
+            f" QPushButton:hover {{ background:{T.palette('primary', 30) or T.BTN_BG}; }}"
+        )
+        save.clicked.connect(self._on_botanic_save)
+        self.botanic_form.addWidget(save)
+        self._botanic_feedback = QLabel("")
+        self._botanic_feedback.setStyleSheet("font-size:10px;")
+        self.botanic_form.addWidget(self._botanic_feedback)
+        self.botanic_form.addStretch()
+
+    def _on_botanic_save(self):
+        if self._crop_id is None:
+            return
+        fields = {k: e.text().strip() for k, e in self._botanic_edits.items()}
+        try:
+            changed = self.db.save_botanic(
+                self._crop_id, fields=fields, changed_by="explorer"
+            )
+        except Exception as exc:  # pragma: no cover - error path
+            self._botanic_feedback.setStyleSheet(f"color:{T.ERROR}; font-size:10px;")
+            self._botanic_feedback.setText(f"✗ error: {exc}")
+            return
+        color = T.SUCCESS if changed else T.TEXT_MUTED
+        self._botanic_feedback.setStyleSheet(f"color:{color}; font-size:10px;")
+        self._botanic_feedback.setText(
+            "✓ guardado — auditoría" if changed else "sin cambios"
+        )
+        if changed:
+            # refrescar el título (nombre pudo cambiar) sin reconstruir el form
+            self._fill_header(self.db.crop(self._crop_id))
+            self.classificationSaved.emit(self._crop_id)
+
+    def _fill_business(self, crop):
+        self.apt_check.setChecked(bool(crop["aeroponic"]))
+        # seleccionar por KEY (userData); el combo muestra el label_es en español.
+        idx = self.profile_combo.findData(crop["assigned_profile"] or "")
+        self.profile_combo.setCurrentIndex(idx if idx >= 0 else 0)
+        pri = crop["priority"]
+        self.priority_combo.setCurrentText("" if pri is None else f"{pri:g}")
+        self.toast.setText("")
+
+    def _fill_monitor(self, crop_id):
+        self._clear(self.monitor_form)
+        sps = {s["field"]: s for s in self.db.active_setpoints(crop_id)}
+        spectrum = sps.get("light_spectrum")
+        photo = sps.get("photoperiod_h")
+        spec_txt = spectrum["value_text"] if spectrum and spectrum["value_text"] else "—"
+        self.monitor_form.addWidget(
+            QLabel(
+                f"<span style='color:{T.TEXT_MUTED}'>Espectro de luz:</span>"
+                f" <b style='color:{T.TEXT}'>{spec_txt}</b>"
+            )
+        )
+
+        # Fotoperiodo: constante EDITABLE con su propio Guardar (auditado).
+        photo_val = photo["value_num"] if photo and photo["value_num"] is not None else None
+        row = QHBoxLayout()
+        cap = QLabel("Fotoperiodo:")
+        cap.setStyleSheet(f"color:{T.TEXT_MUTED};")
+        row.addWidget(cap)
+        self._photo_spin = Stepper(
+            photo_val, "h", minimum=-1.0, maximum=24.0, step=0.5, decimals=1
+        )
+        row.addWidget(self._photo_spin)
+        row.addStretch()
+        self.monitor_form.addLayout(row)
+
+        photo_btn = QPushButton("💾 Guardar fotoperiodo")
+        photo_btn.setStyleSheet(
+            f"QPushButton {{ background:{T.BTN_BG}; color:{T.BTN_FG}; border:none;"
+            f" border-radius:4px; padding:3px 8px; font-size:10px; }}"
+            f" QPushButton:hover {{ background:{T.palette('primary', 30) or T.BTN_BG}; }}"
+        )
+        photo_btn.clicked.connect(self._on_photoperiod_save)
+        self.monitor_form.addWidget(photo_btn)
+        self._photo_feedback = QLabel("")
+        self._photo_feedback.setStyleSheet("font-size:10px;")
+        self.monitor_form.addWidget(self._photo_feedback)
+        self.monitor_form.addStretch()
+
+    def _on_photoperiod_save(self):
+        if self._crop_id is None:
+            return
+        val = self._photo_spin.value()
+        try:
+            changed = self.db.save_setpoint_range(
+                self._crop_id, values={"photoperiod_h": val}, changed_by="explorer"
+            )
+        except Exception as exc:  # pragma: no cover - error path
+            self._photo_feedback.setStyleSheet(f"color:{T.ERROR}; font-size:10px;")
+            self._photo_feedback.setText(f"✗ error: {exc}")
+            return
+        color = T.SUCCESS if changed else T.TEXT_MUTED
+        self._photo_feedback.setStyleSheet(f"color:{color}; font-size:10px;")
+        self._photo_feedback.setText(
+            "✓ guardado — auditoría" if changed else "sin cambios"
+        )
+
+    def _build_phase_widget(self, crop_id, has_data: bool) -> QWidget:
+        """Cards editables (izq) + receta agrupada A/B/C como sidebar (der)."""
+        if not has_data:
+            holder = QWidget()
+            lay = QVBoxLayout(holder)
+            lay.addWidget(_na_label())
+            return holder
+
+        sps = {s["field"]: s for s in self.db.active_setpoints(crop_id)}
+        holder = QWidget()
+        outer = QVBoxLayout(holder)
+        outer.setContentsMargins(4, 4, 4, 4)
+
+        body = QSplitter(Qt.Horizontal)
+        body.setChildrenCollapsible(False)
+
+        # --- izquierda: grid de cards editables ---
+        cards_host = QWidget()
+        grid = QGridLayout(cards_host)
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setSpacing(10)
+        col = 0
+        rowi = 0
+        ncols = 3
+        for label, unit, fmin, fmax, fideal in CARD_DEFS:
+            lo = sps[fmin]["value_num"] if fmin in sps else None
+            hi = sps[fmax]["value_num"] if fmax in sps else None
+            ideal = sps[fideal]["value_num"] if fideal and fideal in sps else None
+            if lo is None and hi is None and ideal is None:
+                continue
+            if ideal is not None:
+                value = ideal
+            elif lo is not None and hi is not None:
+                value = (lo + hi) / 2
+            else:
+                value = lo if lo is not None else hi
+            src_row = sps.get(fmin) or sps.get(fmax) or (sps.get(fideal) if fideal else None)
+            card = InstrumentCard(
+                label=label,
+                value=value,
+                unit=unit,
+                lo=lo,
+                hi=hi,
+                ideal=ideal,
+                source=src_row["source"] if src_row else None,
+                confidence=src_row["confidence"] if src_row else None,
+                citation=src_row["citation"] if src_row else None,
+                editable=True,
+                min_field=fmin,
+                ideal_field=fideal,
+                max_field=fmax,
+            )
+            card.rangeEdited.connect(
+                lambda payload, c=card: self._on_setpoint_save(payload, c)
+            )
+            card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            grid.addWidget(card, rowi, col)
+            col += 1
+            if col >= ncols:
+                col = 0
+                rowi += 1
+        grid.setRowStretch(rowi + 1, 1)
+        body.addWidget(cards_host)
+
+        # --- derecha: receta de nutrientes como sidebar RESIZABLE ---
+        recipe = sps.get("nutrient_recipe_json")
+        recipe_w = self._recipe_sidebar(
+            crop_id, recipe["value_text"] if recipe else None
+        )
+        body.addWidget(recipe_w)
+        body.setSizes([800, 320])
+
+        outer.addWidget(body, 1)
+        return holder
+
+    def _recipe_sidebar(self, crop_id, recipe_json: str | None) -> QWidget:
+        """Sidebar de la receta: árbol A/B/C + botón Editar/Agregar (auditado)."""
+        box = QGroupBox("Receta de nutrientes  ·  g / 1000 ml")
+        box.setStyleSheet(T.groupbox_qss("business"))
+        lay = QVBoxLayout(box)
+        lay.setContentsMargins(10, 16, 10, 10)
+        lay.setSpacing(6)
+
+        try:
+            recipe = json.loads(recipe_json) if recipe_json else {}
+        except Exception:
+            recipe = {}
+
+        groups = {k: v for k, v in recipe.items()
+                  if k not in _RECIPE_META_KEYS and isinstance(v, dict)}
+
+        if not groups:
+            # Receta-stub: sólo provenance. Mostramos el hueco + la cita.
+            lay.addWidget(_na_label("Sin receta detallada"))
+            cite = recipe.get("citation")
+            if cite:
+                note = QLabel(f"<i>Referencia:</i> {cite}")
+                note.setWordWrap(True)
+                note.setStyleSheet(f"color:{T.TEXT_MUTED}; font-size:10px;")
+                lay.addWidget(note)
+        else:
+            tree = QTreeWidget()
+            tree.setHeaderLabels(["Grupo / Sal", "g/1000ml"])
+            tree.setColumnWidth(0, 200)
+            tree.setStyleSheet(
+                f"QTreeWidget {{ border:1px solid {T.BORDER}; border-radius:6px;"
+                f" background:{T.SURFACE}; font-family:'{T.FONT_FAMILY}'; }}"
+            )
+            for gkey, salts in groups.items():
+                glabel = RECIPE_GROUP_LABELS.get(gkey, gkey.replace("_", " ").title())
+                gnode = QTreeWidgetItem(tree, [glabel, ""])
+                gnode.setFirstColumnSpanned(False)
+                for salt, grams in salts.items():
+                    sname = SALT_LABELS.get(salt, salt.replace("_", " ").title())
+                    gval = f"{grams:g}" if isinstance(grams, (int, float)) else str(grams)
+                    QTreeWidgetItem(gnode, [sname, gval])
+                gnode.setExpanded(True)
+            tree.expandAll()
+            lay.addWidget(tree)
+
+        # Editar/Agregar receta (también para stubs: parte del esqueleto estándar).
+        edit_btn = QPushButton("✏️  Editar / Agregar receta")
+        edit_btn.setStyleSheet(
+            f"QPushButton {{ background:{T.BTN_BG}; color:{T.BTN_FG}; border:none;"
+            f" border-radius:4px; padding:4px 8px; font-size:11px; }}"
+            f" QPushButton:hover {{ background:{T.palette('primary', 30) or T.BTN_BG}; }}"
+        )
+        edit_btn.clicked.connect(lambda: self._edit_recipe(crop_id, recipe_json))
+        lay.addWidget(edit_btn)
+        if not groups:
+            lay.addStretch()
+        return box
+
+    def _edit_recipe(self, crop_id, recipe_json: str | None):
+        """Diálogo para editar/crear la receta (JSON A/B/C). Guardado auditado."""
+        from PySide6.QtWidgets import (
+            QDialog,
+            QPlainTextEdit,
+            QDialogButtonBox,
+            QMessageBox,
+        )
+
+        try:
+            existing = json.loads(recipe_json) if recipe_json else {}
+        except Exception:
+            existing = {}
+        groups = {k: v for k, v in existing.items()
+                  if k not in _RECIPE_META_KEYS and isinstance(v, dict)}
+        base = groups if groups else RECIPE_SKELETON
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Editar receta de nutrientes (g / 1000 ml)")
+        dlg.resize(480, 440)
+        dl = QVBoxLayout(dlg)
+        info = QLabel(
+            "Edita el JSON: grupos Solución A/B/C → sal → gramos por 1000 ml. "
+            "Si el cultivo no tenía receta, parte del esqueleto estándar en ceros."
+        )
+        info.setWordWrap(True)
+        dl.addWidget(info)
+        editor = QPlainTextEdit()
+        editor.setStyleSheet(f"font-family:monospace; background:{T.SURFACE}; color:{T.TEXT};")
+        editor.setPlainText(json.dumps(base, ensure_ascii=False, indent=2))
+        dl.addWidget(editor, 1)
+        bb = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        dl.addWidget(bb)
+        if dlg.exec() != QDialog.Accepted:
+            return
+
+        txt = editor.toPlainText().strip()
+        try:
+            parsed = json.loads(txt)
+        except Exception as exc:
+            QMessageBox.warning(self, "JSON inválido", f"No se pudo parsear:\n{exc}")
+            return
+        try:
+            self.db.save_setpoint_text(
+                crop_id,
+                "nutrient_recipe_json",
+                json.dumps(parsed, ensure_ascii=False),
+                changed_by="explorer",
+            )
+        except Exception as exc:  # pragma: no cover - error path
+            QMessageBox.warning(self, "Error al guardar", str(exc))
+            return
+        crop = self.db.crop(crop_id)
+        if crop is not None:
+            self._fill_tabs(crop_id, crop)  # refresca el árbol de la receta
+
+    def _nutrition_widget(self, crop_id) -> QWidget:
+        rows = self.db.nutrition(crop_id)
+        holder = QWidget()
+        lay = QVBoxLayout(holder)
+        if not rows:
+            lay.addWidget(_na_label("Sin datos nutricionales"))
+            return holder
+        src = rows[0]["source"]
+        badge = "🟦 sheet" if src == "sheet" else "🟨 researched"
+        lay.addWidget(QLabel(f"<b>Valor nutricional por 100 g</b>  ·  {badge}"))
+        tree = QTreeWidget()
+        tree.setHeaderLabels(["Nutriente", "Valor", "Unidad"])
+        tree.setColumnWidth(0, 220)
+        tree.setStyleSheet(
+            f"QTreeWidget {{ border:1px solid {T.BORDER}; border-radius:6px;"
+            f" background:{T.SURFACE}; font-family:'{T.FONT_FAMILY}'; }}"
+        )
+        vit_node = QTreeWidgetItem(tree, ["Vitaminas", "", ""])
+        min_node = QTreeWidgetItem(tree, ["Minerales", "", ""])
+        for r in rows:
+            n = r["nutrient"]
+            label = NUTRIENT_LABELS.get(n, n)
+            val = "—" if r["value_num"] is None else f"{r['value_num']:g}"
+            unit = r["unit"] or ""
+            if n.startswith("vit_"):
+                QTreeWidgetItem(vit_node, [label, val, unit])
+            elif n.startswith("min_"):
+                QTreeWidgetItem(min_node, [label, val, unit])
+            else:
+                QTreeWidgetItem(tree, [label, val, unit])
+        vit_node.setExpanded(True)
+        min_node.setExpanded(True)
+        lay.addWidget(tree)
+        return holder
+
+    def _fill_tabs(self, crop_id, crop):
+        has_profile = bool(crop["assigned_profile"])
+        self.tab_veg.setWidget(self._build_phase_widget(crop_id, has_profile))
+        # Reproductiva / Maduración: la hoja está VACÍA -> No aplica.
+        self.tab_repro.setWidget(self._build_phase_widget(crop_id, False))
+        self.tab_madur.setWidget(self._build_phase_widget(crop_id, False))
+        self.tab_nutri.setWidget(self._nutrition_widget(crop_id))
+
+    # --- toast helper ---
+    def _set_toast(self, text: str, *, error: bool = False):
+        color = T.ERROR if error else T.SUCCESS
+        self.toast.setStyleSheet(f"color:{color}; font-size:11px;")
+        self.toast.setText(text)
+
+    # --- guardar clasificación (perfil/prioridad) ---
+    def _on_save(self):
+        if self._crop_id is None:
+            return
+        profile = self.profile_combo.currentData() or None
+        pri_txt = self.priority_combo.currentText().strip()
+        priority = float(pri_txt) if pri_txt else None
+        aeroponic = self.apt_check.isChecked()
+        try:
+            changed = self.db.save_classification(
+                self._crop_id,
+                profile=profile,
+                priority=priority,
+                aeroponic=aeroponic,
+                changed_by="explorer",
+            )
+        except Exception as exc:  # pragma: no cover - error path
+            self._set_toast(f"✗ error: {exc}", error=True)
+            return
+        if changed:
+            self.setCrop(self._crop_id)
+            self._set_toast("✓ guardado — auditoría registrada")
+            self.classificationSaved.emit(self._crop_id)
+        else:
+            self._set_toast("sin cambios")
+
+    # --- guardar edición de rango numérico (auditada) ---
+    def _on_setpoint_save(self, payload: dict, card=None):
+        if self._crop_id is None:
+            return
+        values: dict[str, float | None] = {}
+        if payload.get("min_field"):
+            values[payload["min_field"]] = payload.get("lo")
+        if payload.get("ideal_field"):
+            values[payload["ideal_field"]] = payload.get("ideal")
+        if payload.get("max_field"):
+            values[payload["max_field"]] = payload.get("hi")
+        try:
+            changed = self.db.save_setpoint_range(
+                self._crop_id, values=values, changed_by="explorer"
+            )
+        except Exception as exc:  # pragma: no cover - error path
+            if card is not None:
+                card.set_save_feedback(f"✗ error: {exc}", ok=False)
+            return
+        # Operación ACID propia del card: feedback EN el card (no en el panel de
+        # negocio) y SIN reconstruir el tab (perdería el card y su feedback).
+        # El gauge reflejará los valores nuevos al re-seleccionar el cultivo.
+        if card is not None:
+            card.set_save_feedback(
+                "✓ guardado — auditoría" if changed else "sin cambios", ok=changed
+            )

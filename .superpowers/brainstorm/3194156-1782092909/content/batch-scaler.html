@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Preparación de lote — tanques &amp; botellas</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; padding:20px; background:#ffffff; color:#1c1a1e; font-family: Inter, Arial, sans-serif; }
+  h2 { color:#772583; margin:0 0 4px; }
+  .sub { color:#555; margin:0 0 16px; }
+  .panel { border:1px solid #cbc5d0; border-radius:8px; padding:16px; background:#f9f6fb; }
+  .ctx { font-size:13px; color:#772583; font-weight:600; margin-bottom:10px; }
+
+  .inputs { display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap; margin-bottom:14px; }
+  .field { display:flex; flex-direction:column; gap:3px; }
+  .field .lab { font-size:11px; color:#777; text-transform:uppercase; font-weight:bold; }
+  .field .box { border:1px solid #bbb; border-radius:5px; padding:6px 10px; background:#fff; min-width:90px; }
+  .recalc { background:#772583; color:#fff; border-radius:5px; padding:8px 14px; font-size:13px; }
+
+  .callout { display:flex; gap:10px; background:#FFF4E0; border-left:5px solid #FF9E1B;
+             border-radius:6px; padding:10px 12px; margin-bottom:14px; font-size:12px; color:#6D3800; }
+
+  .cards { display:flex; gap:12px; }
+  .card { flex:1; border:1px solid #e4dfe8; border-radius:8px; background:#fff; overflow:hidden; }
+  .card .hd { padding:8px 10px; color:#fff; font-weight:600; font-size:13px; }
+  .card.a .hd { background:#5F6A00; }
+  .card.b .hd { background:#8E4B00; }
+  .card.c .hd { background:#2F77C2; }
+  .card .bd { padding:10px; }
+  .row { display:flex; justify-content:space-between; font-size:13px; margin:5px 0; }
+  .row .k { color:#666; } .row .v { font-weight:600; }
+  .salts { border-top:1px dashed #ddd; margin-top:6px; padding-top:6px; }
+  .salts .row { font-size:12px; }
+  .out { margin-top:8px; background:#E0ECF7; border-left:4px solid #2F77C2; border-radius:5px;
+         padding:8px 10px; font-size:13px; color:#1c3a5e; }
+  .out b { font-size:15px; }
+  .bot { font-size:22px; letter-spacing:1px; margin-top:2px; }
+</style>
+</head>
+<body>
+  <h2>Preparación de lote — tanques &amp; botellas</h2>
+  <p class="sub">¿Esta es la idea? (calculadora aparte del editor de receta). Confirmá el supuesto del tanque.</p>
+
+  <div class="panel">
+    <div class="ctx">Receta: Cultivos de Fruto — Fase Vegetativa · base "por 1000 ml de agua" (sin aforar)</div>
+
+    <div class="inputs">
+      <div class="field"><span class="lab">Tamaño de tanque</span><span class="box">20 L</span></div>
+      <div class="field"><span class="lab"># Tanques</span><span class="box">3 (A · B · C)</span></div>
+      <div class="field"><span class="lab">Botella</span><span class="box">1 L</span></div>
+      <span class="recalc">↻ Recalcular</span>
+    </div>
+
+    <div class="callout">⚠️ Supuesto: <b style="color:#4D2600">el tanque de 20 L es el VOLUMEN FINAL</b> (agua + sal, con desplazamiento, SIN aforar). La app escala la receta de 1000 ml hasta llenar ese volumen y dice cuántas botellas de 1 L salen.</div>
+
+    <div class="cards">
+      <div class="card a">
+        <div class="hd">Solución A — Nitratos · Tanque 1</div>
+        <div class="bd">
+          <div class="row"><span class="k">Agua a agregar</span><span class="v">14,6 L</span></div>
+          <div class="salts">
+            <div class="row"><span class="k">Nitrato de Calcio</span><span class="v">7 592 g</span></div>
+            <div class="row"><span class="k">Nitrato de Potasio</span><span class="v">4 000 g</span></div>
+          </div>
+          <div class="out">Volumen final ≈ <b>20,0 L</b><div class="bot">🍾×20 <span style="font-size:12px">botellas de 1 L</span></div></div>
+        </div>
+      </div>
+      <div class="card b">
+        <div class="hd">Solución B — Fosfatos/Sulfatos · Tanque 2</div>
+        <div class="bd">
+          <div class="row"><span class="k">Agua a agregar</span><span class="v">18,0 L</span></div>
+          <div class="salts">
+            <div class="row"><span class="k">Fosfato Monoamoníaco</span><span class="v">1 530 g</span></div>
+            <div class="row"><span class="k">Sulfato de Magnesio</span><span class="v">2 210 g</span></div>
+          </div>
+          <div class="out">Volumen final ≈ <b>20,0 L</b><div class="bot">🍾×20 <span style="font-size:12px">botellas de 1 L</span></div></div>
+        </div>
+      </div>
+      <div class="card c">
+        <div class="hd">Solución C — Micro-Nutrientes · Tanque 3</div>
+        <div class="bd">
+          <div class="row"><span class="k">Agua a agregar</span><span class="v">19,2 L</span></div>
+          <div class="salts">
+            <div class="row"><span class="k">Manganeso</span><span class="v">1 190 g</span></div>
+            <div class="row"><span class="k">Hierro</span><span class="v">242 g</span></div>
+            <div class="row"><span class="k">Boro</span><span class="v">29 g</span></div>
+            <div class="row"><span class="k">Zinc · Cobre …</span><span class="v">…</span></div>
+          </div>
+          <div class="out">Volumen final ≈ <b>20,0 L</b><div class="bot">🍾×20 <span style="font-size:12px">botellas de 1 L</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="sub" style="margin-top:14px;">Pregunta clave: cuando decís "tanque de 20 L", ¿es <b>20 L de volumen FINAL</b> (lo de arriba), o <b>20 L de AGUA</b> que agregás (y el final queda en &gt;20 L → ~27 botellas)?</p>
+</body>
+</html>
