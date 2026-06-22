@@ -1,0 +1,8 @@
+# Dependencias del crop_explorer (catálogo de cultivos VRTV-96).
+# Instalación: pip install -r apps/raspberry/tools/crop_explorer/requirements.txt
+
+# GUI Qt del explorador (crop_explorer.py + widgets/).
+PySide6>=6.7,<6.9
+
+# Lectura de la hoja "Modelo Fitotécnico" (.xlsx) en build_db.py.
+openpyxl>=3.1,<3.2

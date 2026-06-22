@@ -18,22 +18,21 @@ de Monitoreo · 4 tabs de fase con InstrumentCard + árbol de receta).
 ``crops.db`` (SQLite) es la FUENTE DE VERDAD local construida por build_db.py
 (seed-if-empty). Editar perfil/prioridad escribe en setpoint_audit (rollback).
 
-Requiere: Python >= 3.10, PySide6 (auto-instalado si falta).
+Requiere: Python >= 3.10, PySide6 (ver requirements.txt).
 Uso: python crop_explorer.py [ruta/a/crops.db]
 """
 
-import subprocess
 import sys
 from pathlib import Path
 
-# --- Auto-ensure PySide6 -----------------------------------------------------
+# --- Dependencia: PySide6 (no se auto-instala; ver requirements.txt) ----------
 try:
-    from PySide6.QtCore import Qt  # noqa: F401
-except ImportError:
-    print("[crop_explorer] PySide6 no encontrado — instalando con pip…")
-    subprocess.run([sys.executable, "-m", "pip", "install", "PySide6"], check=False)
-
-from PySide6.QtCore import Qt
+    from PySide6.QtCore import Qt
+except ImportError as exc:
+    raise ImportError(
+        "PySide6 no está instalado. Corré: "
+        "pip install -r apps/raspberry/tools/crop_explorer/requirements.txt"
+    ) from exc
 from PySide6.QtGui import QAction, QColor, QFont, QPalette
 from PySide6.QtWidgets import (
     QApplication,

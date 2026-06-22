@@ -35,21 +35,14 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# --- Auto-ensure openpyxl (la hoja XLSX es opcional pero recomendada) --------
+# --- Dependencia: openpyxl (no se auto-instala; ver requirements.txt) --------
 try:
     import openpyxl  # noqa: F401
-except ImportError:  # pragma: no cover
-    import subprocess
-
-    print("[build_db] openpyxl no encontrado — instalando con pip…")
-    subprocess.run(
-        [sys.executable, "-m", "pip", "install", "openpyxl"], check=False
-    )
-    try:
-        import openpyxl  # noqa: F401
-    except ImportError:
-        openpyxl = None  # seguimos sin la hoja; sheet_harvest_type vendrá del json
-        print("[build_db] openpyxl no disponible — se omitirá lectura del XLSX.")
+except ImportError as exc:
+    raise ImportError(
+        "openpyxl no está instalado. Corré: "
+        "pip install -r apps/raspberry/tools/crop_explorer/requirements.txt"
+    ) from exc
 
 # --- Rutas por defecto (este archivo vive en tools/crop_explorer/) -----------
 HERE = Path(__file__).resolve().parent

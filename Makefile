@@ -407,6 +407,7 @@ dev-raspberry-i2c-sim-scenarios: ## List available simulation scenarios
 dev-crop-explorer: ## Build crops.db (seed-if-empty from crops.json) + launch PySide6 crop explorer
 	@echo "$(BLUE)Building local crop catalog DB (seed-if-empty)...$(NC)"
 	@cd apps/raspberry && ( [ -d .venv ] || python3 -m venv .venv )
+	@cd apps/raspberry && .venv/bin/python3 -m pip install -r tools/crop_explorer/requirements.txt
 	@cd apps/raspberry && .venv/bin/python3 tools/crop_explorer/build_db.py
 	@echo "$(BLUE)Launching crop explorer (Qt)...$(NC)"
 	@cd apps/raspberry && .venv/bin/python3 tools/crop_explorer/crop_explorer.py
