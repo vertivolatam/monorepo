@@ -43,3 +43,40 @@ def test_loaders_missing_file_does_not_crash(tmp_path):
     # Apuntar a un archivo inexistente -> dict/list vacíos, sin excepción.
     assert rd.load_salt_densities(tmp_path / "nope.json") == {}
     assert rd.load_container_catalog(tmp_path / "nope.json") == []
+
+
+# --- validación defensiva (regresión CodeRabbit) ---
+def test_salt_densities_skip_nonpositive(tmp_path):
+    import json
+
+    p = tmp_path / "dens.json"
+    p.write_text(
+        json.dumps(
+            {"densities": {"buena": 1.5, "cero": 0, "negativa": -2.0, "txt": "x"}}
+        ),
+        encoding="utf-8",
+    )
+    dens = rd.load_salt_densities(p)
+    assert dens == {"buena": 1.5}  # cero, negativa y no-numérica descartadas
+
+
+def test_container_catalog_skip_invalid_capacity(tmp_path):
+    import json
+
+    p = tmp_path / "cat.json"
+    p.write_text(
+        json.dumps(
+            {
+                "containers": [
+                    {"model": "OK", "capacity_L": 18},
+                    {"model": "Cero", "capacity_L": 0},
+                    {"model": "Neg", "capacity_L": -5},
+                    {"model": "Texto", "capacity_L": "grande"},
+                    {"model": "SinCap"},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    cats = rd.load_container_catalog(p)
+    assert [c["model"] for c in cats] == ["OK"]

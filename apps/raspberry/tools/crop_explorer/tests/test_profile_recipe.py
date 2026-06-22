@@ -101,5 +101,47 @@ def test_profile_recipe_absent_returns_none(temp_db):
     db.close()
 
 
+# --- contrato / alineación (regresión CodeRabbit) ---
+def test_profile_recipe_nonobject_json_returns_none(temp_db):
+    db = CropDB(temp_db)
+    # JSON válido pero NO-objeto (lista/string) viola el contrato dict -> None.
+    db.conn.execute(
+        "INSERT INTO profile_recipes (profile_key, phase, recipe_json, "
+        "changed_at, changed_by) VALUES (?,?,?,?,?)",
+        ("raro_lista", PHASE, json.dumps([1, 2, 3]), "now", "t"),
+    )
+    db.conn.execute(
+        "INSERT INTO profile_recipes (profile_key, phase, recipe_json, "
+        "changed_at, changed_by) VALUES (?,?,?,?,?)",
+        ("raro_str", PHASE, json.dumps("no soy receta"), "now", "t"),
+    )
+    db.conn.commit()
+    assert db.profile_recipe("raro_lista", PHASE) is None
+    assert db.profile_recipe("raro_str", PHASE) is None
+    db.close()
+
+
+def test_save_profile_recipe_setpoint_matches_active_audit(temp_db):
+    # El VALOR del setpoint debe coincidir con el audit activo (escritura del
+    # setpoint ANTES del audit: quedan alineados, sin audit sin valor).
+    db = CropDB(temp_db)
+    for crop_id in db.crops_using_profile(PROFILE):
+        db.save_profile_recipe(PROFILE, PHASE, RECIPE, changed_by="t")
+        sp = db.conn.execute(
+            "SELECT value_text FROM setpoints "
+            "WHERE crop_id = ? AND field = 'nutrient_recipe_json'",
+            (crop_id,),
+        ).fetchone()
+        au = db.conn.execute(
+            "SELECT value_text FROM setpoint_audit "
+            "WHERE crop_id = ? AND field = 'nutrient_recipe_json' AND is_active = 1",
+            (crop_id,),
+        ).fetchone()
+        assert sp is not None and au is not None
+        assert sp["value_text"] == au["value_text"]
+        break
+    db.close()
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-q"]))

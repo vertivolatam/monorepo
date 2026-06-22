@@ -103,3 +103,24 @@ def test_scale_to_volume_missing_density_none_volumen():
     # No calculable: agua/masas None, pero no rompe.
     assert out["agua_L"] is None
     assert out["masas_g"] is None
+
+
+# --- branches defensivos (regresión CodeRabbit) ---
+def test_unit_final_ml_negative_mass_returns_none():
+    # Una masa negativa no tiene sentido físico -> receta no-determinable.
+    assert rm.unit_final_ml({"nitrato_de_calcio": -10}, DENS) is None
+
+
+def test_unit_final_ml_nonpositive_density_returns_none():
+    # Densidad cero o negativa -> volumen no calculable (no dividir por <= 0).
+    assert rm.unit_final_ml({"x": 100}, {"x": 0}) is None
+    assert rm.unit_final_ml({"x": 100}, {"x": -1.5}) is None
+
+
+def test_scale_to_volume_nonpositive_bottle_returns_zero_bottles():
+    # bottle_L <= 0 -> 0 botellas, sin ZeroDivisionError; el cálculo sigue.
+    out = rm.scale_to_volume(SALTS_A, 18000.0, DENS, bottle_L=0.0)
+    assert out["botellas"] == 0
+    assert out["agua_L"] is not None  # el resto del solver no se rompe
+    out_neg = rm.scale_to_volume(SALTS_A, 18000.0, DENS, bottle_L=-1.0)
+    assert out_neg["botellas"] == 0

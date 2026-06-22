@@ -40,8 +40,13 @@ def unit_final_ml(salts: dict[str, float], densities: dict[str, float]) -> float
     for salt, grams in salts.items():
         if not grams:
             continue
+        # Una masa negativa no tiene sentido físico (la sal no "resta" volumen);
+        # tratamos la receta como no-determinable -> None.
+        if grams < 0:
+            return None
         rho = densities.get(salt)
-        if not rho:
+        # Densidad ausente, cero o negativa -> volumen no calculable (design.md §8).
+        if rho is None or rho <= 0:
             return None
         total += grams / rho
     return total

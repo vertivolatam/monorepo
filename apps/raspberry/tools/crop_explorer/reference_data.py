@@ -48,7 +48,13 @@ def load_salt_densities(path: Path | None = None) -> dict[str, float]:
     for salt, value in densities.items():
         if salt.startswith("_"):
             continue
-        if isinstance(value, (int, float)) and not isinstance(value, bool):
+        # Solo densidades numéricas ESTRICTAMENTE positivas: una densidad <= 0
+        # daría volúmenes sin sentido (y rompería la división en recipe_math).
+        if (
+            isinstance(value, (int, float))
+            and not isinstance(value, bool)
+            and value > 0
+        ):
             out[salt] = float(value)
     return out
 
@@ -58,11 +64,27 @@ def salt_density(salt: str, densities: dict[str, float]) -> float | None:
     return densities.get(salt)
 
 
+def _valid_capacity(value) -> bool:
+    """``capacity_L`` debe ser numérico ESTRICTAMENTE positivo (no bool)."""
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and value > 0
+    )
+
+
 def load_container_catalog(path: Path | None = None) -> list[dict]:
-    """Devuelve [{model, capacity_L, gal}, …]. Vacío si el archivo falta/inválido."""
+    """Devuelve [{model, capacity_L, gal}, …]. Vacío si el archivo falta/inválido.
+
+    Descarta entradas sin ``capacity_L`` numérico positivo (un envase de volumen
+    cero/negativo/no-numérico no es seleccionable en la calculadora)."""
     data = _read_json(path or DEFAULT_CONTAINER_CATALOG)
     if isinstance(data, dict):
         data = data.get("containers", [])
     if not isinstance(data, list):
         return []
-    return [c for c in data if isinstance(c, dict) and "capacity_L" in c]
+    return [
+        c
+        for c in data
+        if isinstance(c, dict) and _valid_capacity(c.get("capacity_L"))
+    ]

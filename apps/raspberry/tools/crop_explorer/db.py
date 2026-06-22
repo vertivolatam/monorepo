@@ -468,9 +468,12 @@ class CropDB:
         if row is None:
             return None
         try:
-            return json.loads(row["recipe_json"])
+            parsed = json.loads(row["recipe_json"])
         except (ValueError, TypeError):
             return None
+        # Contrato: la receta es un objeto {solución: {sal: g}}. Una lista o
+        # string (JSON válido pero no-dict) viola el contrato -> None.
+        return parsed if isinstance(parsed, dict) else None
 
     def save_profile_recipe(
         self,
@@ -507,15 +510,9 @@ class CropDB:
         crop_ids = self.crops_using_profile(profile_key)
         note = f"receta del perfil '{profile_key}' fase '{phase}'"
         for crop_id in crop_ids:
-            self._write_audit(
-                cur,
-                crop_id,
-                "nutrient_recipe_json",
-                value_num=None,
-                value_text=recipe_json,
-                changed_by=changed_by,
-                note=note,
-            )
+            # Escribir el VALOR del setpoint ANTES del audit: así el setpoint
+            # operativo y su registro de auditoría quedan alineados (el audit
+            # nunca referencia un valor que aún no se persistió).
             row = self.conn.execute(
                 "SELECT id FROM setpoints WHERE crop_id = ? AND field = ? LIMIT 1",
                 (crop_id, "nutrient_recipe_json"),
@@ -532,5 +529,14 @@ class CropDB:
                     "WHERE crop_id = ? AND field = ?",
                     (recipe_json, crop_id, "nutrient_recipe_json"),
                 )
+            self._write_audit(
+                cur,
+                crop_id,
+                "nutrient_recipe_json",
+                value_num=None,
+                value_text=recipe_json,
+                changed_by=changed_by,
+                note=note,
+            )
         self.conn.commit()
         return len(crop_ids)
