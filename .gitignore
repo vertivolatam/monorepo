@@ -173,3 +173,5 @@ examples/**/.packages
 
 # Preserve .gitkeep files in ignored directories
 !.gitkeep
+# Brainstorming visual companion (mockups efímeros; los aprobados se copian a openspec/)
+.superpowers/
