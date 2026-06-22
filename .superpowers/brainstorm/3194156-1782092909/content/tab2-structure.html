@@ -1,0 +1,65 @@
+<h2>Mega-tabs — estructura general</h2>
+<p class="subtitle">Wireframe del Tab 2 "Perfiles &amp; Recetas" (lo nuevo). ¿La estructura general es correcta?</p>
+
+<div style="border:1px solid #5E1D6B;border-radius:8px;overflow:hidden;font-family:Inter,sans-serif;">
+  <!-- root mega-tab bar -->
+  <div style="display:flex;background:#2A0033;">
+    <div style="padding:10px 18px;color:#C178CB;background:#1A0020;">🌱 Catálogo de cultivos</div>
+    <div style="padding:10px 18px;color:#fff;background:#772583;font-weight:600;">🧪 Perfiles &amp; Recetas</div>
+  </div>
+
+  <div style="display:flex;min-height:420px;background:#F4EFF6;">
+    <!-- left: QListView de perfiles (sin grouping) -->
+    <div style="width:230px;border-right:1px solid #CBC5D0;background:#fff;">
+      <div style="padding:8px 10px;font-size:11px;font-weight:bold;color:#79757C;border-bottom:1px solid #eee;">PERFILES (6)</div>
+      <div style="padding:8px 12px;">Cultivos de Hoja — Vegetativa</div>
+      <div style="padding:8px 12px;">Hierbas Aromáticas — Vegetativa</div>
+      <div style="padding:8px 12px;background:#772583;color:#fff;">Cultivos de Fruto — Vegetativa</div>
+      <div style="padding:8px 12px;">Cultivos de Fruto — Reproductiva</div>
+      <div style="padding:8px 12px;">Frutos de Baya — Reproductiva</div>
+      <div style="padding:8px 12px;">Raíz / Bulbo / Tubérculo — Maduración</div>
+    </div>
+
+    <!-- right: editor del perfil seleccionado -->
+    <div style="flex:1;padding:14px;">
+      <div style="font-size:16px;font-weight:bold;color:#772583;">Cultivos de Fruto — Vegetativa</div>
+      <div style="font-size:12px;color:#79757C;margin:2px 0 10px;">⚠ Editar aquí aplica a los <b>22 cultivos</b> con este perfil</div>
+
+      <!-- phase selector -->
+      <div style="display:flex;gap:2px;margin-bottom:10px;">
+        <div style="padding:5px 12px;background:#6C4FA1;color:#fff;border-radius:4px 4px 0 0;">Vegetativa</div>
+        <div style="padding:5px 12px;background:#B03A6E33;color:#B03A6E;">Reproductiva</div>
+        <div style="padding:5px 12px;background:#2F77C233;color:#2F77C2;">Maduración</div>
+      </div>
+
+      <!-- recipe editor: A/B/C con filas editables -->
+      <div style="background:#fff;border:1px solid #CBC5D0;border-radius:6px;padding:10px;">
+        <div style="font-weight:bold;color:#5F6A00;margin-bottom:4px;">Solución A — Nitratos</div>
+        <div style="display:flex;align-items:center;gap:8px;margin:3px 0;">
+          <span style="width:160px;">Nitrato de Calcio</span>
+          <span style="border:1px solid #ccc;border-radius:4px;padding:2px 6px;">−</span>
+          <span style="border:1px solid #ccc;padding:2px 14px;">520</span>
+          <span style="border:1px solid #ccc;border-radius:4px;padding:2px 6px;">+</span>
+          <span style="color:#999;font-size:11px;">g/1000ml</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin:3px 0;">
+          <span style="width:160px;">Nitrato de Potasio</span>
+          <span style="border:1px solid #ccc;border-radius:4px;padding:2px 6px;">−</span>
+          <span style="border:1px solid #ccc;padding:2px 14px;">274</span>
+          <span style="border:1px solid #ccc;border-radius:4px;padding:2px 6px;">+</span>
+        </div>
+        <div style="font-weight:bold;color:#5F6A00;margin:8px 0 4px;">Solución B — Fosfatos / Sulfatos</div>
+        <div style="color:#999;font-size:12px;margin:3px 0;">Fosfato Monoamoníaco · Sulfato de Magnesio …</div>
+        <div style="font-weight:bold;color:#5F6A00;margin:8px 0 4px;">Solución C — Micro-Nutrientes</div>
+        <div style="color:#999;font-size:12px;margin:3px 0;">Manganeso · Cobre · Hierro · Zinc · Boro …</div>
+        <div style="margin-top:10px;display:flex;gap:8px;">
+          <span style="border:1px dashed #999;border-radius:4px;padding:4px 10px;font-size:12px;">+ Agregar sal</span>
+          <span style="background:#772583;color:#fff;border-radius:4px;padding:4px 12px;font-size:12px;">💾 Guardar receta → 22 cultivos</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:14px;">Puntos clave: (1) tab raíz arriba · (2) izquierda = lista plana de perfiles (QListView, sin grouping) · (3) selector de <b>fase</b> con colores de la hoja · (4) editor de receta A/B/C con steppers · (5) Guardar advierte "→ N cultivos".</p>
+<p>¿Te cuadra esta estructura, o ajustamos algo (la fase, la advertencia, dónde va el botón)? Respóndeme en el terminal.</p>

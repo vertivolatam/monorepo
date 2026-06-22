@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Calculadora de lote — por volumen final del envase</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; padding:20px; background:#ffffff; color:#1c1a1e; font-family: Inter, Arial, sans-serif; }
+  h2 { color:#772583; margin:0 0 4px; }
+  .sub { color:#555; margin:0 0 16px; }
+  .panel { border:1px solid #cbc5d0; border-radius:8px; padding:16px; background:#f9f6fb; }
+  .ctx { font-size:13px; color:#772583; font-weight:600; margin-bottom:10px; }
+
+  .inputs { display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap; margin-bottom:12px; }
+  .field { display:flex; flex-direction:column; gap:3px; }
+  .field .lab { font-size:11px; color:#777; text-transform:uppercase; font-weight:bold; }
+  .sel { border:1px solid #772583; border-radius:5px; padding:7px 10px; background:#fff; min-width:230px;
+         display:flex; justify-content:space-between; align-items:center; }
+  .sel .cap { font-weight:600; color:#772583; }
+  .box { border:1px solid #bbb; border-radius:5px; padding:7px 10px; background:#fff; min-width:80px; }
+  .recalc { background:#772583; color:#fff; border-radius:5px; padding:8px 14px; font-size:13px; }
+  .opts { font-size:11px; color:#999; margin:-6px 0 12px; }
+
+  .callout { display:flex; gap:10px; background:#E0ECF7; border-left:5px solid #2F77C2;
+             border-radius:6px; padding:10px 12px; margin-bottom:14px; font-size:13px; color:#1c3a5e; }
+  .callout b { color:#143a5e; }
+
+  .cards { display:flex; gap:12px; }
+  .card { flex:1; border:1px solid #e4dfe8; border-radius:8px; background:#fff; overflow:hidden; }
+  .card .hd { padding:8px 10px; color:#fff; font-weight:600; font-size:13px; }
+  .card.a .hd { background:#5F6A00; } .card.b .hd { background:#8E4B00; } .card.c .hd { background:#2F77C2; }
+  .card .bd { padding:10px; }
+  .step { font-size:11px; color:#999; text-transform:uppercase; font-weight:bold; margin:8px 0 2px; }
+  .row { display:flex; justify-content:space-between; font-size:13px; margin:4px 0; }
+  .row .k { color:#666; } .row .v { font-weight:600; }
+  .big { background:#f4eff6; border-radius:5px; padding:7px 9px; margin-top:8px; font-size:13px; }
+  .big .v { font-weight:700; color:#772583; }
+</style>
+</head>
+<body>
+  <h2>Calculadora de lote — por volumen final del envase</h2>
+  <p class="sub">Seleccionás el envase (= volumen FINAL) → la app deriva agua inicial + sal. ¿Así?</p>
+
+  <div class="panel">
+    <div class="ctx">Receta: Cultivos de Fruto — Fase Vegetativa · base "por 1000 ml de agua" (sin aforar)</div>
+
+    <div class="inputs">
+      <div class="field">
+        <span class="lab">Envase (volumen final)</span>
+        <span class="sel"><span class="cap">Pichinga 18 L</span> <span style="color:#999">▾</span></span>
+      </div>
+      <div class="field"><span class="lab">Envasar en</span><span class="box">Botellas 1 L</span></div>
+      <span class="recalc">↻ Calcular</span>
+    </div>
+    <div class="opts">Catálogo: Pichinga 18 L · Pichinga 56 L · Tanque 5000 / 7500 / 10000 / 15000 / 22000 / 27000 L · Personalizado…</div>
+
+    <div class="callout">📐 Trabaja <b>hacia atrás</b> desde el volumen final (18 L): calcula cuánta <b>agua inicial</b> y cuántos <b>gramos de cada sal</b> hay que disolver para que, <b>con el desplazamiento (sin aforar)</b>, se complete exactamente 18 L.</div>
+
+    <div class="cards">
+      <div class="card a">
+        <div class="hd">Solución A — Nitratos</div>
+        <div class="bd">
+          <div class="step">1 · Agua inicial</div>
+          <div class="row"><span class="k">Agregar agua</span><span class="v">13,1 L</span></div>
+          <div class="step">2 · Disolver sales</div>
+          <div class="row"><span class="k">Nitrato de Calcio</span><span class="v">6 838 g</span></div>
+          <div class="row"><span class="k">Nitrato de Potasio</span><span class="v">3 603 g</span></div>
+          <div class="big">→ Completa <span class="v">18,0 L</span> · 🍾 18 botellas de 1 L</div>
+        </div>
+      </div>
+      <div class="card b">
+        <div class="hd">Solución B — Fosfatos/Sulfatos</div>
+        <div class="bd">
+          <div class="step">1 · Agua inicial</div>
+          <div class="row"><span class="k">Agregar agua</span><span class="v">16,2 L</span></div>
+          <div class="step">2 · Disolver sales</div>
+          <div class="row"><span class="k">Fosfato Monoamoníaco</span><span class="v">1 380 g</span></div>
+          <div class="row"><span class="k">Sulfato de Magnesio</span><span class="v">1 993 g</span></div>
+          <div class="big">→ Completa <span class="v">18,0 L</span> · 🍾 18 botellas de 1 L</div>
+        </div>
+      </div>
+      <div class="card c">
+        <div class="hd">Solución C — Micro-Nutrientes</div>
+        <div class="bd">
+          <div class="step">1 · Agua inicial</div>
+          <div class="row"><span class="k">Agregar agua</span><span class="v">17,5 L</span></div>
+          <div class="step">2 · Disolver sales</div>
+          <div class="row"><span class="k">Manganeso</span><span class="v">1 083 g</span></div>
+          <div class="row"><span class="k">Hierro</span><span class="v">220 g</span></div>
+          <div class="row"><span class="k">Boro · Zinc · Cobre…</span><span class="v">…</span></div>
+          <div class="big">→ Completa <span class="v">18,0 L</span> · 🍾 18 botellas de 1 L</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="sub" style="margin-top:14px;">Flujo por solución: <b>1)</b> agregar el agua inicial · <b>2)</b> disolver las sales (la sal desplaza volumen) · <b>3)</b> se completa el volumen final del envase · <b>4)</b> envasar en botellas de 1 L.</p>
+</body>
+</html>
