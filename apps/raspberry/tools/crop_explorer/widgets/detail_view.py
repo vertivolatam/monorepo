@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QGridLayout,
     QLabel,
+    QLineEdit,
     QCheckBox,
     QComboBox,
     QDoubleSpinBox,
@@ -321,8 +322,10 @@ class DetailView(QWidget):
 
     # --- secciones ---
     def _fill_header(self, crop):
-        en = crop["name_en"] or ""
-        self.title.setText(f"{crop['name_es']}  ({en})")
+        # Dos labels (no doble paréntesis): español 🇨🇷 / inglés 🇺🇸.
+        es = crop["name_es"] or "—"
+        en = crop["name_en"] or "—"
+        self.title.setText(f"🇨🇷 {es}   /   🇺🇸 {en}")
         if is_discrepant(crop["assigned_profile"], crop["sheet_harvest_type"]):
             from build_db import PROFILE_TO_SHEET_TYPE
 
@@ -348,7 +351,10 @@ class DetailView(QWidget):
 
     def _fill_botanic(self, crop):
         self._clear(self.botanic_form)
+        self._botanic_edits = {}
         for label, key in [
+            ("Nombre (ES) 🇨🇷", "name_es"),
+            ("Nombre (EN) 🇺🇸", "name_en"),
             ("Familia", "family"),
             ("Especie", "species"),
             ("Parte comestible", "edible_part"),
@@ -356,14 +362,52 @@ class DetailView(QWidget):
             ("Uso general", "general_use"),
             ("Uso común", "common_use"),
         ]:
+            cap = QLabel(label)
+            cap.setStyleSheet(f"color:{T.TEXT_MUTED}; font-size:11px;")
+            self.botanic_form.addWidget(cap)
             val = crop[key] if key in crop.keys() else None
-            row = QLabel(
-                f"<span style='color:{T.TEXT_MUTED}'>{label}:</span>"
-                f" <b style='color:{T.TEXT}'>{val if val else '—'}</b>"
+            edit = QLineEdit(val or "")
+            edit.setStyleSheet(
+                f"QLineEdit {{ border:1px solid {T.BORDER}; border-radius:4px;"
+                f" padding:2px 5px; background:{T.SURFACE}; color:{T.TEXT}; }}"
             )
-            row.setWordWrap(True)
-            self.botanic_form.addWidget(row)
+            self.botanic_form.addWidget(edit)
+            self._botanic_edits[key] = edit
+
+        save = QPushButton("💾 Guardar datos botánicos")
+        save.setStyleSheet(
+            f"QPushButton {{ background:{T.BTN_BG}; color:{T.BTN_FG}; border:none;"
+            f" border-radius:4px; padding:4px 8px; font-size:11px; margin-top:4px; }}"
+            f" QPushButton:hover {{ background:{T.palette('primary', 30) or T.BTN_BG}; }}"
+        )
+        save.clicked.connect(self._on_botanic_save)
+        self.botanic_form.addWidget(save)
+        self._botanic_feedback = QLabel("")
+        self._botanic_feedback.setStyleSheet("font-size:10px;")
+        self.botanic_form.addWidget(self._botanic_feedback)
         self.botanic_form.addStretch()
+
+    def _on_botanic_save(self):
+        if self._crop_id is None:
+            return
+        fields = {k: e.text().strip() for k, e in self._botanic_edits.items()}
+        try:
+            changed = self.db.save_botanic(
+                self._crop_id, fields=fields, changed_by="explorer"
+            )
+        except Exception as exc:  # pragma: no cover - error path
+            self._botanic_feedback.setStyleSheet(f"color:{T.ERROR}; font-size:10px;")
+            self._botanic_feedback.setText(f"✗ error: {exc}")
+            return
+        color = T.SUCCESS if changed else T.TEXT_MUTED
+        self._botanic_feedback.setStyleSheet(f"color:{color}; font-size:10px;")
+        self._botanic_feedback.setText(
+            "✓ guardado — auditoría" if changed else "sin cambios"
+        )
+        if changed:
+            # refrescar el título (nombre pudo cambiar) sin reconstruir el form
+            self._fill_header(self.db.crop(self._crop_id))
+            self.classificationSaved.emit(self._crop_id)
 
     def _fill_business(self, crop):
         self.apt_check.setChecked(bool(crop["aeroponic"]))

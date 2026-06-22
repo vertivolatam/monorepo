@@ -44,5 +44,5 @@ def test_saved_signal_refreshes_sidebar(qapp, temp_db):
     # emit a saved signal and ensure no crash on refresh
     cid = db.conn.execute("SELECT id FROM crops LIMIT 1").fetchone()["id"]
     win._on_saved(cid)
-    assert win.sidebar.visible_count() == 107
+    assert win.sidebar.visible_count() == 108
     db.close()

@@ -1425,10 +1425,25 @@
       "profile": "raiz_engrosamiento"
     },
     {
-      "name_es": "Chayote",
-      "name_en": "Chayote",
+      "name_es": "Ayote",
+      "name_en": "Tropical Pumpkin",
       "family": "Cucurbitaceae",
-      "species": "Sechium edule",
+      "species": "Cucurbita moschata",
+      "origin": "Herbácea",
+      "general_use": "Alimentario",
+      "common_use": "Ensalada",
+      "edible_part": "Fruto (Fruit)",
+      "aeroponic": false,
+      "priority": null,
+      "access_difficulty": null,
+      "source_row": 38,
+      "_provenance": "sheet"
+    },
+    {
+      "name_es": "Zapallo",
+      "name_en": "Field Pumpkin / Summer Squash",
+      "family": "Cucurbitaceae",
+      "species": "Cucurbita pepo",
       "origin": "Herbácea",
       "general_use": "Alimentario",
       "common_use": "Ensalada",

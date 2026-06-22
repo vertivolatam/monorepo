@@ -36,13 +36,13 @@ def sidebar(qapp, temp_db):
 
 
 def test_lists_all_crops(sidebar):
-    assert sidebar.visible_count() == 107
+    assert sidebar.visible_count() == 108
 
 
 def test_search_narrows(sidebar):
     sidebar.search.setText("Espinaca")
     n = sidebar.visible_count()
-    assert 0 < n < 107
+    assert 0 < n < 108
 
 
 def test_search_matches_family(sidebar):

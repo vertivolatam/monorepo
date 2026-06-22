@@ -611,7 +611,7 @@ def smoke(db_path: Path) -> int:
     conn.close()
 
     ok = True
-    print(f"[smoke] crops      = {n_crops}  (esperado 107)")
+    print(f"[smoke] crops      = {n_crops}  (esperado 108)")
     print(f"[smoke] setpoints  = {n_sp}     (esperado > 0)")
     print(f"[smoke] audit      = {n_audit}  (esperado > 0)")
     print(f"[smoke] nutrition  = {n_nut}    (esperado > 0)")
@@ -621,8 +621,8 @@ def smoke(db_path: Path) -> int:
         for n, s, p in disc[:5]:
             print(f"          - {n}: hoja='{s}' vs profile='{p}'")
 
-    if n_crops != 107:
-        print("[smoke] FALLO: crops != 107")
+    if n_crops != 108:
+        print("[smoke] FALLO: crops != 108")
         ok = False
     if n_sp <= 0:
         print("[smoke] FALLO: setpoints == 0")

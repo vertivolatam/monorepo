@@ -50,8 +50,8 @@ def _assert_no_provenance(obj):
 def test_load_catalog_returns_catalog():
     catalog = load_catalog()
     assert isinstance(catalog, CropCatalog)
-    # The complete v2 catalog ships 107 crops.
-    assert len(catalog.list_crops()) == 107
+    # The complete v2 catalog ships 108 crops (Zapallo/Ayote split into 2 species).
+    assert len(catalog.list_crops()) == 108
 
 
 def test_list_crops_contains_known_crop():

@@ -278,6 +278,52 @@ class CropDB:
             self.conn.commit()
         return changed
 
+    def save_botanic(
+        self,
+        crop_id: int,
+        *,
+        fields: dict[str, str | None],
+        changed_by: str = "explorer",
+    ) -> bool:
+        """Edición AUDITADA de los datos botánicos (columnas de texto de `crops`).
+
+        ``fields`` mapea columna -> nuevo texto (solo de un set permitido). Cada
+        campo que cambie actualiza `crops` y deja un `setpoint_audit`
+        (source='experiment', supersedes, is_active). Devuelve True si hubo cambio.
+        """
+        allowed = {
+            "name_es", "name_en", "family", "species",
+            "edible_part", "origin", "general_use", "common_use",
+        }
+        crop = self.crop(crop_id)
+        if crop is None:
+            raise ValueError(f"crop_id {crop_id} no existe")
+        cur = self.conn.cursor()
+        changed = False
+        for field, val in fields.items():
+            if field not in allowed:
+                continue
+            cur_val = crop[field] if field in crop.keys() else None
+            new_val = val or None
+            if new_val == (cur_val or None):
+                continue
+            cur.execute(
+                f'UPDATE crops SET "{field}" = ? WHERE id = ?', (new_val, crop_id)
+            )
+            self._write_audit(
+                cur,
+                crop_id,
+                field,
+                value_num=None,
+                value_text=new_val,
+                changed_by=changed_by,
+                note=f"botánico {field}: '{cur_val}' -> '{new_val}'",
+            )
+            changed = True
+        if changed:
+            self.conn.commit()
+        return changed
+
     def save_setpoint_range(
         self,
         crop_id: int,

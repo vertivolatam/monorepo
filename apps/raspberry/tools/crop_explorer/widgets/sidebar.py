@@ -87,6 +87,11 @@ class _MultiCombo(QComboBox):
 
         self._model = QStandardItemModel(self)
         self.setModel(self._model)
+        # Item de acción "Seleccionar todo / limpiar" (no es un valor de filtro).
+        all_item = QStandardItem("☰  Seleccionar todo / limpiar")
+        all_item.setEditable(False)
+        all_item.setData("__all__", Qt.UserRole)
+        self._model.appendRow(all_item)
         for label, value in items:
             item = QStandardItem(self._BLANK + label)
             item.setEditable(False)
@@ -96,18 +101,35 @@ class _MultiCombo(QComboBox):
             self._label_of[value] = label
         self.view().pressed.connect(self._toggle)
 
+    def _real_items(self):
+        return [
+            self._model.item(i)
+            for i in range(self._model.rowCount())
+            if self._model.item(i).data(Qt.UserRole) != "__all__"
+        ]
+
+    def _set_item_checked(self, item, on: bool):
+        base = item.data(Qt.UserRole + 1)
+        item.setText((self._CHECK if on else self._BLANK) + base)
+
     def _toggle(self, index):
         item = self._model.itemFromIndex(index)
         if not item:
             return
         value = item.data(Qt.UserRole)
-        base = item.data(Qt.UserRole + 1)
-        if value in self._checked:
+        if value == "__all__":
+            real = self._real_items()
+            all_on = len(self._checked) == len(real)
+            # si ya están todos -> limpiar; si no -> seleccionar todo.
+            self._checked = set() if all_on else {it.data(Qt.UserRole) for it in real}
+            for it in real:
+                self._set_item_checked(it, it.data(Qt.UserRole) in self._checked)
+        elif value in self._checked:
             self._checked.discard(value)
-            item.setText(self._BLANK + base)
+            self._set_item_checked(item, False)
         else:
             self._checked.add(value)
-            item.setText(self._CHECK + base)
+            self._set_item_checked(item, True)
         labels = [self._label_of.get(v, v) for v in self._checked]
         self.lineEdit().setText(
             ", ".join(sorted(labels)) if labels else self._placeholder
