@@ -361,16 +361,22 @@ class DetailView(QWidget):
             ("Uso general", "general_use"),
             ("Uso común", "common_use"),
         ]:
+            # Label a la IZQUIERDA, input a la DERECHA (compacto, menos vertical).
+            row = QHBoxLayout()
+            row.setSpacing(6)
             cap = QLabel(label)
+            cap.setFixedWidth(104)
+            cap.setWordWrap(True)
             cap.setStyleSheet(f"color:{T.TEXT_MUTED}; font-size:11px;")
-            self.botanic_form.addWidget(cap)
+            row.addWidget(cap)
             val = crop[key] if key in crop.keys() else None
             edit = QLineEdit(val or "")
             edit.setStyleSheet(
                 f"QLineEdit {{ border:1px solid {T.BORDER}; border-radius:4px;"
                 f" padding:2px 5px; background:{T.SURFACE}; color:{T.TEXT}; }}"
             )
-            self.botanic_form.addWidget(edit)
+            row.addWidget(edit, 1)
+            self.botanic_form.addLayout(row)
             self._botanic_edits[key] = edit
 
         save = QPushButton("💾 Guardar datos botánicos")
