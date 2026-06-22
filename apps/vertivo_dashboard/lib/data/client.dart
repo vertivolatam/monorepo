@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:vertivo_client/vertivo_client.dart';
 
 /// Serverpod client for the dashboard cockpit.
@@ -33,4 +35,12 @@ import 'package:vertivo_client/vertivo_client.dart';
 ///
 /// Named `backendClient` (not `client`) to avoid colliding with Jaspr's
 /// `client` annotation when both are imported into a page.
-final Client backendClient = Client('http://localhost:8080/');
+///
+/// La URL del backend se lee de la env var `BACKEND_URL` (SSR server-side, así
+/// que `Platform.environment` está disponible). Fallback a `localhost:8080`
+/// para desarrollo local. En deploy DEBE definirse `BACKEND_URL` apuntando al
+/// Serverpod real (p.ej. el NodePort/Service del clúster), si no el dashboard
+/// renderiza el estado de error contra un backend inexistente.
+final String _baseUrl =
+    Platform.environment['BACKEND_URL'] ?? 'http://localhost:8080/';
+final Client backendClient = Client(_baseUrl);
