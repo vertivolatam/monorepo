@@ -323,6 +323,19 @@ class InstrumentCard(QWidget):
         save.clicked.connect(self._emit_edit)
         lay.addWidget(save)
 
+        # Feedback propio del card (operación ACID separada de la del negocio).
+        self._feedback = QLabel("")
+        self._feedback.setStyleSheet("font-size:10px;")
+        lay.addWidget(self._feedback)
+
+    def set_save_feedback(self, text: str, ok: bool = True):
+        """Muestra el resultado del guardado DENTRO del card (no en otro panel)."""
+        if not hasattr(self, "_feedback"):
+            return
+        color = STATUS_COLOR["ok"] if ok else STATUS_COLOR["alert"]
+        self._feedback.setStyleSheet(f"color:{color}; font-size:10px;")
+        self._feedback.setText(text)
+
     def _emit_edit(self):
         self.rangeEdited.emit(
             {

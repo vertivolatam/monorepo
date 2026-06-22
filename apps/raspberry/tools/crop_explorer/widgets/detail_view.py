@@ -53,14 +53,17 @@ import tokens as T  # noqa: E402
 
 # --- Definición de tarjetas-instrumento -------------------------------------
 # (label, unidad, field_min, field_max, field_ideal). El gauge usa lo/hi/ideal.
+# (label, unidad, field_min, field_max, field_ideal). TODOS tienen field_ideal:
+# si el dato no existe el card muestra "—", pero al editarlo + Guardar se CREA
+# el setpoint ideal (INSERT auditado), por eso ya no debe ser None.
 CARD_DEFS = [
     ("pH", "", "ph_min", "ph_max", "ph_ideal"),
-    ("EC", "dS/m", "ec_min_dsm", "ec_max_dsm", None),
-    ("PPFD", "µmol/m²·s", "ppfd_min", "ppfd_max", None),
-    ("Temp. día", "°C", "temp_day_min", "temp_day_max", None),
-    ("Temp. noche", "°C", "temp_night_min", "temp_night_max", None),
-    ("Humedad", "%", "humidity_min", "humidity_max", None),
-    ("ORP", "mV", "orp_min", "orp_max", None),
+    ("EC", "dS/m", "ec_min_dsm", "ec_max_dsm", "ec_ideal_dsm"),
+    ("PPFD", "µmol/m²·s", "ppfd_min", "ppfd_max", "ppfd_ideal"),
+    ("Temp. día", "°C", "temp_day_min", "temp_day_max", "temp_day_ideal"),
+    ("Temp. noche", "°C", "temp_night_min", "temp_night_max", "temp_night_ideal"),
+    ("Humedad", "%", "humidity_min", "humidity_max", "humidity_ideal"),
+    ("ORP", "mV", "orp_min", "orp_max", "orp_ideal"),
 ]
 
 PRIORITY_CHOICES = ["1.0", "2.0", "3.0", "4.0", "5.0"]
@@ -377,7 +380,9 @@ class DetailView(QWidget):
                 ideal_field=fideal,
                 max_field=fmax,
             )
-            card.rangeEdited.connect(self._on_setpoint_save)
+            card.rangeEdited.connect(
+                lambda payload, c=card: self._on_setpoint_save(payload, c)
+            )
             card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
             grid.addWidget(card, rowi, col)
             col += 1
@@ -518,7 +523,7 @@ class DetailView(QWidget):
             self._set_toast("sin cambios")
 
     # --- guardar edición de rango numérico (auditada) ---
-    def _on_setpoint_save(self, payload: dict):
+    def _on_setpoint_save(self, payload: dict, card=None):
         if self._crop_id is None:
             return
         values: dict[str, float | None] = {}
@@ -533,11 +538,13 @@ class DetailView(QWidget):
                 self._crop_id, values=values, changed_by="explorer"
             )
         except Exception as exc:  # pragma: no cover - error path
-            self._set_toast(f"✗ error: {exc}", error=True)
+            if card is not None:
+                card.set_save_feedback(f"✗ error: {exc}", ok=False)
             return
-        if changed:
-            self.setCrop(self._crop_id)
-            self._set_toast("✓ rango guardado — auditoría registrada")
-            self.classificationSaved.emit(self._crop_id)
-        else:
-            self._set_toast("sin cambios")
+        # Operación ACID propia del card: feedback EN el card (no en el panel de
+        # negocio) y SIN reconstruir el tab (perdería el card y su feedback).
+        # El gauge reflejará los valores nuevos al re-seleccionar el cultivo.
+        if card is not None:
+            card.set_save_feedback(
+                "✓ guardado — auditoría" if changed else "sin cambios", ok=changed
+            )
