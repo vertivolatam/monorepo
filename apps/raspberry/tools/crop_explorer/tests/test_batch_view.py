@@ -78,3 +78,31 @@ def test_bottle_selector_changes_count(app, db_with_recipe):
     # 0,5 L está en índice 1 de BOTTLE_SIZES.
     view.bottle_combo.setCurrentIndex(1)
     assert view._bottle_L == 0.5
+
+
+def test_phase_selector_uses_phase_recipe(app, temp_db):
+    # Decisión de diseño: la calculadora soporta las 3 fases. Guardamos receta
+    # solo en Reproductiva y verificamos que al seleccionarla se usa.
+    db = CropDB(temp_db)
+    db.save_profile_recipe("fruto_vegetativa", "reproductiva", RECIPE, changed_by="t")
+    view = BatchView(db)
+    view.list.setCurrentRow(0)
+    assert {view.phase_combo.itemData(i) for i in range(view.phase_combo.count())} == {
+        "vegetativa", "reproductiva", "maduracion",
+    }
+    # Seleccionar Reproductiva (índice 1).
+    view.phase_combo.setCurrentIndex(1)
+    assert view._phase == "reproductiva"
+    db.close()
+
+
+def test_bottle_change_with_invalid_custom_does_not_render_stale(app, db_with_recipe):
+    # Fix CodeRabbit: cambiar de botella con un envase custom inválido (<=0) no
+    # debe renderizar un cálculo con volumen stale; queda en estado inválido.
+    view = BatchView(db_with_recipe)
+    custom_row = view.list.count() - 1
+    view.custom_spin.setValue(0.0)
+    view.list.setCurrentRow(custom_row)
+    assert view._valid is False
+    view.bottle_combo.setCurrentIndex(1)  # cambiar botella no debe romper
+    assert view._valid is False

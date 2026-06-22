@@ -422,10 +422,13 @@ class ProfilesView(QWidget):
         }
 
     def _factor_for(self, salts: dict) -> float | None:
+        """Factor de display: 1.0 en base agua; el factor de aforo en modo aforo;
+        None si el aforo no es computable (densidad faltante) -> NO reescalar."""
         if self._mode != "aforo":
             return 1.0
-        f = rm.aforo_factor(salts, self._densities)
-        return f if f is not None else 1.0
+        # Si falta densidad, aforo_factor es None: devolvemos None (no fingimos
+        # un factor 1.0 que mostraría los gramos crudos como si fueran aforados).
+        return rm.aforo_factor(salts, self._densities)
 
     def _refresh_volume_badge(self, phase_key, sk):
         badge = self._vol_badges.get((phase_key, sk))
@@ -433,7 +436,12 @@ class ProfilesView(QWidget):
             return
         salts = self._current_salts(phase_key, sk)
         if self._mode == "aforo":
-            badge.setText("📐 Volumen final = 1,00 L (aforado)")
+            # Solo afirmamos "1,00 L (aforado)" si el aforo es realmente
+            # computable; si falta densidad, no podemos aforar -> avisar.
+            if rm.aforo_factor(salts, self._densities) is None:
+                badge.setText("📐 Aforado a 1 L no disponible — falta densidad")
+            else:
+                badge.setText("📐 Volumen final = 1,00 L (aforado)")
             return
         v = rm.unit_final_ml(salts, self._densities)
         if v is None:

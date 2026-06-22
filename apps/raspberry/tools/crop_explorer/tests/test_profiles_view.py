@@ -63,3 +63,27 @@ def test_save_propagates(app, temp_db):
     stored = db.profile_recipe("fruto_vegetativa", "vegetativa")
     assert stored["solucion_a_nitratos"]["nitrato_de_calcio"] == 520.0
     db.close()
+
+
+def test_aforo_with_missing_density_does_not_fake_one_liter(app, temp_db):
+    # Regresión CodeRabbit: en aforo, si falta densidad el factor NO es
+    # computable -> _factor_for None y el badge NO afirma "1,00 L (aforado)".
+    db = CropDB(temp_db)
+    recipe = {
+        "solucion_a_nitratos": {"nitrato_de_calcio": 520, "nitrato_de_potasio": 274},
+        "solucion_b_fosfatos_sulfatos": {},
+        "solucion_c_micros": {},
+    }
+    db.save_profile_recipe("fruto_vegetativa", "vegetativa", recipe, changed_by="t")
+    view = ProfilesView(db)
+    view._select_profile(0)
+    # Simula densidad faltante para una sal con valor en la solución A.
+    view._densities = {
+        k: v for k, v in view._densities.items() if k != "nitrato_de_calcio"
+    }
+    view._set_mode("aforo")
+    salts = view._current_salts("vegetativa", "solucion_a_nitratos")
+    assert view._factor_for(salts) is None  # no se finge factor 1.0
+    badge = view._vol_badges[("vegetativa", "solucion_a_nitratos")]
+    assert "falta densidad" in badge.text()
+    db.close()

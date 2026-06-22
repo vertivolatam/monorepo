@@ -97,6 +97,8 @@ class BatchView(QWidget):
         self._model_name = (
             self._catalog[0]["model"] if self._catalog else "Pichinga 18 L"
         )
+        self._phase = PHASES[0][0]  # fase activa de la calculadora
+        self._valid = True  # envase seleccionado tiene volumen válido
         self._build()
         if self.list.count():
             self.list.setCurrentRow(0)
@@ -147,6 +149,20 @@ class BatchView(QWidget):
         custom_row.addWidget(self.custom_spin, 1)
         left.addLayout(custom_row)
 
+        # Selector de fase (Vegetativa / Reproductiva / Maduración): la
+        # calculadora usa la receta del perfil×FASE seleccionada.
+        phase_row = QHBoxLayout()
+        phase_row.addWidget(QLabel("Fase:"))
+        self.phase_combo = QComboBox()
+        for phase_key, phase_label, _color in PHASES:
+            # "Fase Vegetativa" -> "Vegetativa"; "Fase de Maduración" -> "Maduración".
+            self.phase_combo.addItem(
+                phase_label.replace("Fase de ", "").replace("Fase ", ""), phase_key
+            )
+        self.phase_combo.currentIndexChanged.connect(self._on_phase_changed)
+        phase_row.addWidget(self.phase_combo, 1)
+        left.addLayout(phase_row)
+
         # Selector de botella (default 1 L).
         bottle_row = QHBoxLayout()
         bottle_row.addWidget(QLabel("Botella:"))
@@ -180,12 +196,14 @@ class BatchView(QWidget):
             self.custom_spin.setEnabled(True)
             v = self.custom_spin.value()
             if v <= 0:
-                self._render(valid=False)
+                self._valid = False
+                self._render()
                 return
             self._v_final_L = v
         else:
             self.custom_spin.setEnabled(False)
             self._v_final_L = float(vol)
+        self._valid = True
         self._render()
 
     def _on_custom_changed(self, _value: float):
@@ -194,6 +212,12 @@ class BatchView(QWidget):
 
     def _on_bottle_changed(self, _idx: int):
         self._bottle_L = self.bottle_combo.currentData() or 1.0
+        # Re-render respetando el estado de validez del envase (un custom <= 0 no
+        # debe renderizar un cálculo con volumen stale al cambiar de botella).
+        self._render()
+
+    def _on_phase_changed(self, _idx: int):
+        self._phase = self.phase_combo.currentData() or PHASES[0][0]
         self._render()
 
     # --- render ---
@@ -209,12 +233,12 @@ class BatchView(QWidget):
             if child is not None:
                 BatchView._clear_layout(child)
 
-    def _render(self, *, valid: bool = True):
+    def _render(self):
         self._clear_layout(self.right_lay)
 
         head = QLabel(
             f"{self._model_name} → {_fmt_L(self._v_final_L)} L final"
-            if valid
+            if self._valid
             else f"{self._model_name}: ingresá un volumen > 0 a la izquierda."
         )
         head.setStyleSheet(
@@ -223,7 +247,7 @@ class BatchView(QWidget):
         )
         self.right_lay.addWidget(head)
 
-        if not valid:
+        if not self._valid:
             self.right_lay.addStretch()
             return
 
@@ -237,12 +261,16 @@ class BatchView(QWidget):
             )
         )
 
+        # Color de la fase seleccionada (cabecera de los accordions).
+        phase_color = next(
+            (c for k, _l, c in PHASES if k == self._phase), PHASES[0][2]
+        )
         for idx, (profile_key, profile_label) in enumerate(PROFILE_LABELS):
-            phase_key, _pl, color = PHASES[0]  # fase con receta operativa
-            recipe = self.db.profile_recipe(profile_key, phase_key)
+            recipe = self.db.profile_recipe(profile_key, self._phase)
             has = isinstance(recipe, dict) and any(
                 isinstance(recipe.get(sk), dict) for sk, _, _ in SOLUTIONS
             )
+            color = phase_color
             subtitle = f"para {self._model_name}" if has else "(sin receta)"
             acc = _Accordion(profile_label, color, subtitle=subtitle)
             if has:
