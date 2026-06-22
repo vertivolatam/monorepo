@@ -37,6 +37,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QDoubleSpinBox,
+    QAbstractSpinBox,
     QPushButton,
     QSizePolicy,
 )
@@ -148,6 +149,78 @@ class _RangeGauge(QWidget):
         p.end()
 
 
+# --- Stepper -----------------------------------------------------------------
+class Stepper(QWidget):
+    """Stepper numérico ``[−] valor [+]`` con botones visibles.
+
+    Reemplaza el spinbox pelón (cuyas flechas se rompen con QSS custom) por un
+    control tipo stepper: botón menos · campo (editable, sin flechas nativas) ·
+    botón más. El mínimo se muestra como "—" (= sin valor); desde "—", [+] arranca
+    en 0. ``value()`` devuelve None cuando está en "—".
+    """
+
+    valueChanged = Signal()
+
+    def __init__(
+        self,
+        value: float | None,
+        unit: str = "",
+        *,
+        minimum: float = _SPIN_NONE,
+        maximum: float = 100000.0,
+        step: float = 0.1,
+        decimals: int = 2,
+        parent=None,
+    ):
+        super().__init__(parent)
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+        self._minus = QPushButton("−")
+        self._plus = QPushButton("+")
+        self._spin = QDoubleSpinBox()
+        self._spin.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self._spin.setRange(minimum, maximum)
+        self._spin.setDecimals(decimals)
+        self._spin.setSingleStep(step)
+        self._spin.setSpecialValueText("—")
+        if unit:
+            self._spin.setSuffix(f" {unit}")
+        self._spin.setValue(minimum if value is None else float(value))
+        self._spin.setAlignment(Qt.AlignCenter)
+
+        btn_css = (
+            f"QPushButton {{ background:{T.SURFACE_SUNKEN}; color:{T.TEXT};"
+            f" border:1px solid {T.BORDER}; font-weight:bold; min-width:22px;"
+            f" max-width:24px; padding:2px; }}"
+            f" QPushButton:hover {{ background:{T.PRIMARY}; color:{T.BTN_FG}; }}"
+        )
+        self._minus.setStyleSheet(btn_css)
+        self._plus.setStyleSheet(btn_css)
+        self._spin.setStyleSheet(
+            f"QDoubleSpinBox {{ border:1px solid {T.BORDER}; border-left:none;"
+            f" border-right:none; padding:2px 4px; background:{T.SURFACE};"
+            f" color:{T.TEXT}; }}"
+        )
+        self._minus.clicked.connect(lambda: self._step(-1))
+        self._plus.clicked.connect(lambda: self._step(1))
+        self._spin.valueChanged.connect(lambda *_: self.valueChanged.emit())
+        lay.addWidget(self._minus)
+        lay.addWidget(self._spin, 1)
+        lay.addWidget(self._plus)
+        self.setMaximumWidth(160)
+
+    def _step(self, n: int):
+        if self._spin.value() == self._spin.minimum():
+            # Desde "—": [+] arranca en 0; [−] se queda en "—".
+            self._spin.setValue(0.0 if n > 0 else self._spin.minimum())
+        else:
+            self._spin.stepBy(n)
+
+    def value(self) -> float | None:
+        return None if self._spin.value() == self._spin.minimum() else self._spin.value()
+
+
 # --- Card --------------------------------------------------------------------
 class InstrumentCard(QWidget):
     """Tarjeta-instrumento (solo-lectura o editable).
@@ -221,27 +294,6 @@ class InstrumentCard(QWidget):
             return ""
         return SOURCE_BADGE.get(self._source, self._source)
 
-    # --- spin-box helpers (editable mode) ---
-    @staticmethod
-    def _spin(val: float | None, unit: str) -> QDoubleSpinBox:
-        sb = QDoubleSpinBox()
-        sb.setRange(_SPIN_NONE, 100000.0)
-        sb.setDecimals(2)
-        sb.setSpecialValueText("—")  # el mínimo se muestra como "—" (= sin valor)
-        if unit:
-            sb.setSuffix(f" {unit}")
-        sb.setValue(_SPIN_NONE if val is None else float(val))
-        sb.setMaximumWidth(120)
-        sb.setStyleSheet(
-            f"QDoubleSpinBox {{ border:1px solid {T.BORDER}; border-radius:4px;"
-            f" padding:1px 4px; background:{T.SURFACE}; color:{T.TEXT}; }}"
-        )
-        return sb
-
-    @staticmethod
-    def _read(sb: QDoubleSpinBox) -> float | None:
-        return None if sb.value() == sb.minimum() else sb.value()
-
     def _build(self):
         color = STATUS_COLOR.get(self.status, T.STATUS_COLOR["n/a"])
         self.setStyleSheet(
@@ -307,7 +359,7 @@ class InstrumentCard(QWidget):
             cap.setFixedWidth(34)
             cap.setStyleSheet(f"color:{T.TEXT_MUTED}; font-size:10px;")
             row.addWidget(cap)
-            sb = self._spin(val, unit)
+            sb = Stepper(val, unit)
             setattr(self, attr, sb)
             row.addWidget(sb)
             row.addStretch()
@@ -342,8 +394,8 @@ class InstrumentCard(QWidget):
                 "min_field": self._min_field,
                 "ideal_field": self._ideal_field,
                 "max_field": self._max_field,
-                "lo": self._read(self._sb_lo),
-                "ideal": self._read(self._sb_ideal),
-                "hi": self._read(self._sb_hi),
+                "lo": self._sb_lo.value(),
+                "ideal": self._sb_ideal.value(),
+                "hi": self._sb_hi.value(),
             }
         )

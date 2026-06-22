@@ -80,6 +80,7 @@ class _MultiCombo(QComboBox):
         self._placeholder = placeholder
         self._checked: set[str] = set()  # guarda VALUES, no labels
         self._label_of: dict[str, str] = {}
+        self._keep_open = False  # True solo justo tras togglear un item
         self.setEditable(True)
         self.lineEdit().setReadOnly(True)
         self.lineEdit().setText(placeholder)
@@ -116,6 +117,7 @@ class _MultiCombo(QComboBox):
         item = self._model.itemFromIndex(index)
         if not item:
             return
+        self._keep_open = True  # un click en item NO debe cerrar el popup
         value = item.data(Qt.UserRole)
         if value == "__all__":
             real = self._real_items()
@@ -139,8 +141,13 @@ class _MultiCombo(QComboBox):
     def checked(self) -> set[str]:
         return set(self._checked)
 
-    def hidePopup(self):  # mantener abierto al clickear
-        pass
+    def hidePopup(self):
+        # Tras togglear un item, mantener abierto (multi-select). Pero un click
+        # AFUERA del popup (o en el chevron) sí lo cierra confirmando la selección.
+        if self._keep_open:
+            self._keep_open = False
+            return
+        super().hidePopup()
 
 
 class Sidebar(QWidget):

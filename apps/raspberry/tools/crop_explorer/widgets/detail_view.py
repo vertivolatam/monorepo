@@ -39,7 +39,6 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QCheckBox,
     QComboBox,
-    QDoubleSpinBox,
     QPushButton,
     QGroupBox,
     QTabWidget,
@@ -51,7 +50,7 @@ from PySide6.QtWidgets import (
 )
 
 from db import is_discrepant
-from widgets.instrument_card import InstrumentCard
+from widgets.instrument_card import InstrumentCard, Stepper
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import tokens as T  # noqa: E402
@@ -437,16 +436,8 @@ class DetailView(QWidget):
         cap = QLabel("Fotoperiodo:")
         cap.setStyleSheet(f"color:{T.TEXT_MUTED};")
         row.addWidget(cap)
-        self._photo_spin = QDoubleSpinBox()
-        self._photo_spin.setRange(-1.0, 24.0)
-        self._photo_spin.setDecimals(1)
-        self._photo_spin.setSuffix(" h")
-        self._photo_spin.setSpecialValueText("—")  # mínimo (-1) = sin valor
-        self._photo_spin.setValue(-1.0 if photo_val is None else float(photo_val))
-        self._photo_spin.setMaximumWidth(110)
-        self._photo_spin.setStyleSheet(
-            f"QDoubleSpinBox {{ border:1px solid {T.BORDER}; border-radius:4px;"
-            f" padding:1px 4px; background:{T.SURFACE}; color:{T.TEXT}; }}"
+        self._photo_spin = Stepper(
+            photo_val, "h", minimum=-1.0, maximum=24.0, step=0.5, decimals=1
         )
         row.addWidget(self._photo_spin)
         row.addStretch()
@@ -468,11 +459,7 @@ class DetailView(QWidget):
     def _on_photoperiod_save(self):
         if self._crop_id is None:
             return
-        val = (
-            None
-            if self._photo_spin.value() == self._photo_spin.minimum()
-            else self._photo_spin.value()
-        )
+        val = self._photo_spin.value()
         try:
             changed = self.db.save_setpoint_range(
                 self._crop_id, values={"photoperiod_h": val}, changed_by="explorer"
