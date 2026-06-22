@@ -1,136 +1,136 @@
-import 'package:jaspr/jaspr.dart';
 import 'package:jaspr/dom.dart';
+import 'package:jaspr/server.dart';
+import 'package:vertivo_client/vertivo_client.dart';
 
-import '../components/sensor_chart.dart';
+import '../components/async_states.dart';
 import '../components/gauge_chart.dart';
+import '../data/client.dart';
+import '../data/greenhouse_detail_repository.dart';
+import '../data/instrument_range.dart';
 
-class GreenhouseDetailPage extends StatelessComponent {
+/// Greenhouse detail — live gauges + history, ranges from InstrumentCard.
+class GreenhouseDetailPage extends AsyncStatelessComponent {
   final String greenhouseId;
 
   const GreenhouseDetailPage({required this.greenhouseId, super.key});
 
-  @override
-  Component build(BuildContext context) {
-    return div(classes: 'page', [
-      // Breadcrumb
-      div(classes: 'breadcrumb', [
-        a(href: '/greenhouses', [Component.text('Invernaderos')]),
-        span(classes: 'breadcrumb__sep', [Component.text(' / ')]),
-        span([Component.text('GH-$greenhouseId')]),
-      ]),
+  static const _labels = {
+    Measurement.ph: ('pH', ''),
+    Measurement.temperature: ('Temperatura', 'C'),
+    Measurement.humidity: ('Humedad', '%'),
+    Measurement.co2: ('CO2', 'ppm'),
+    Measurement.light: ('Luz', 'h'),
+  };
 
-      // Header
+  // Display axis bounds per measurement (the gauge dial range, distinct from
+  // the in/out-of-range setpoints resolved by instrument_range).
+  static const _axis = {
+    Measurement.ph: (0.0, 14.0),
+    Measurement.temperature: (0.0, 50.0),
+    Measurement.humidity: (0.0, 100.0),
+    Measurement.co2: (0.0, 2000.0),
+    Measurement.light: (0.0, 24.0),
+  };
+
+  @override
+  Future<Component> build(BuildContext context) async {
+    final id = int.tryParse(greenhouseId);
+    if (id == null) {
+      return div(classes: 'page', [errorState('ID inválido: $greenhouseId')]);
+    }
+
+    final repo = GreenhouseDetailRepository(backendClient);
+    final GreenhouseDetail? detail;
+    try {
+      detail = await repo.fetch(id);
+    } catch (e) {
+      return div(classes: 'page', [
+        _breadcrumb(),
+        errorState(e, title: 'No se pudo cargar el invernadero'),
+      ]);
+    }
+
+    if (detail == null) {
+      return div(classes: 'page', [
+        _breadcrumb(),
+        emptyState('Invernadero GH-$greenhouseId no encontrado.'),
+      ]);
+    }
+
+    final gh = detail.greenhouse;
+    return div(classes: 'page', [
+      _breadcrumb(),
       div(classes: 'page__header page__header--detail', [
         div([
           h1([Component.text('GH-$greenhouseId')]),
           p(classes: 'page__subtitle', [
-            Component.text('Invernadero Central — Indoor Hydroponics'),
+            Component.text('${gh.name} — ${gh.irrigationType}'),
           ]),
         ]),
-        div(classes: 'page__header-actions', [
-          span(classes: 'badge badge--segment-industrial', [
-            Component.text('Industrial'),
-          ]),
-          span(classes: 'status-dot status-dot--online', []),
-          span([Component.text('Online')]),
-        ]),
       ]),
+      _meta(gh),
+      _gauges(detail),
+    ]);
+  }
 
-      // Metadata
-      div(classes: 'detail-meta', [
-        div(classes: 'detail-meta__item', [
-          span(classes: 'detail-meta__label', [Component.text('Modo')]),
-          span([Component.text('Indoor')]),
-        ]),
-        div(classes: 'detail-meta__item', [
-          span(classes: 'detail-meta__label', [Component.text('Irrigacion')]),
-          span([Component.text('NFT Hidroponico')]),
-        ]),
-        div(classes: 'detail-meta__item', [
-          span(classes: 'detail-meta__label', [Component.text('Bandejas')]),
-          span([Component.text('6')]),
-        ]),
-        div(classes: 'detail-meta__item', [
-          span(classes: 'detail-meta__label', [Component.text('Ubicacion')]),
-          span([Component.text('Bogota, Colombia')]),
-        ]),
-      ]),
+  Component _breadcrumb() {
+    return div(classes: 'breadcrumb', [
+      a(href: '/greenhouses', [Component.text('Invernaderos')]),
+      span(classes: 'breadcrumb__sep', [Component.text(' / ')]),
+      span([Component.text('GH-$greenhouseId')]),
+    ]);
+  }
 
-      // Gauge row — all 8 sensors
-      div(classes: 'section', [
-        h2(classes: 'section__title', [Component.text('Lecturas Actuales')]),
-        div(classes: 'grid grid--4', [
-          _gaugePanel('CO2', 537.9, 300, 800, 400, 700, 'ppm'),
-          _gaugePanel('Humedad', 62.3, 0, 100, 40, 80, '%'),
-          _gaugePanel('Temperatura', 22.1, 10, 40, 18, 28, 'C'),
-          _gaugePanel('pH', 6.12, 0, 14, 5.5, 6.5, ''),
-          _gaugePanel('EC', 1502.0, 0, 3000, 1200, 1800, 'uS/cm'),
-          _gaugePanel('TDS', 1005.0, 0, 2000, 800, 1200, 'mg/L'),
-          _gaugePanel('DO', 6.48, 0, 14, 5.0, 8.0, 'mg/L'),
-          _gaugePanel('ORP', 398.0, 0, 600, 300, 500, 'mV'),
-        ]),
-      ]),
+  Component _meta(Greenhouse gh) {
+    return div(classes: 'detail-meta', [
+      _metaItem('Cliente', gh.userId),
+      _metaItem('Irrigación', gh.irrigationType),
+      _metaItem('Bandejas', '${gh.totalTrays}'),
+      _metaItem('Ubicación', gh.location ?? '—'),
+    ]);
+  }
 
-      // Time-series charts — 2 columns
-      div(classes: 'section', [
-        h2(classes: 'section__title', [
-          Component.text('Historico — Ultimas 24h'),
-        ]),
-        div(classes: 'grid grid--2', [
-          _chartPanel('CO2', 'co2', 'ppm', 400, 700),
-          _chartPanel('Humedad', 'humidity', '%', 40, 80),
-          _chartPanel('pH', 'ph', '', 5.5, 6.5),
-          _chartPanel('Temperatura', 'temperature', 'C', 18, 28),
-          _chartPanel('EC', 'ec', 'uS/cm', 1200, 1800),
-          _chartPanel('DO', 'do', 'mg/L', 5.0, 8.0),
-          _chartPanel('TDS', 'tds', 'mg/L', 800, 1200),
-          _chartPanel('ORP', 'orp', 'mV', 300, 500),
-        ]),
+  Component _metaItem(String label, String value) {
+    return div(classes: 'detail-meta__item', [
+      span(classes: 'detail-meta__label', [Component.text(label)]),
+      span([Component.text(value)]),
+    ]);
+  }
+
+  Component _gauges(GreenhouseDetail detail) {
+    return div(classes: 'section', [
+      h2(classes: 'section__title', [Component.text('Lecturas Actuales')]),
+      div(classes: 'grid grid--4', [
+        for (final m in _labels.keys) _gauge(m, detail),
       ]),
     ]);
   }
 
-  Component _gaugePanel(
-    String label,
-    double value,
-    double min,
-    double max,
-    double lowerBound,
-    double upperBound,
-    String unit,
-  ) {
-    final id = '$greenhouseId-${label.toLowerCase()}';
+  Component _gauge(Measurement m, GreenhouseDetail detail) {
+    final (label, unit) = _labels[m]!;
+    final reading = detail.latest[m];
+    if (reading == null) {
+      // No data for this sensor → explicit N/D, not a fake needle.
+      return div(classes: 'panel panel--compact', [
+        div(classes: 'panel__header', [
+          span(classes: 'panel__title', [Component.text(label)]),
+        ]),
+        emptyState('N/D'),
+      ]);
+    }
+    // Range from the greenhouse setpoint (→ crop ideal → static fallback).
+    final range = resolveRange(m, greenhouse: detail.greenhouse);
+    final (axisMin, axisMax) = _axis[m]!;
     return div(classes: 'panel panel--compact', [
       GaugeChart(
-        gaugeId: id,
-        value: value,
-        min: min,
-        max: max,
-        lowerBound: lowerBound,
-        upperBound: upperBound,
+        gaugeId: '$greenhouseId-${m.name}',
+        value: reading.value,
+        min: axisMin,
+        max: axisMax,
+        lowerBound: range.min,
+        upperBound: range.max,
         unit: unit,
         label: label,
-      ),
-    ]);
-  }
-
-  Component _chartPanel(
-    String label,
-    String sensorType,
-    String unit,
-    double minBound,
-    double maxBound,
-  ) {
-    return div(classes: 'panel', [
-      div(classes: 'panel__header', [
-        span(classes: 'panel__title', [Component.text('$label ($unit)')]),
-      ]),
-      SensorChart(
-        chartId: '$greenhouseId-$sensorType',
-        sensorType: sensorType,
-        unit: unit,
-        minBound: minBound,
-        maxBound: maxBound,
       ),
     ]);
   }

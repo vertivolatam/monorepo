@@ -38,6 +38,8 @@ cropCatalog:
   - update:
   - getGrowthStages:
   - createGrowthStage:
+adminFleet:
+  - listAll:
 greenhouse:
   - create:
   - get:

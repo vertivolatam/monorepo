@@ -567,6 +567,44 @@ class EndpointCropCatalog extends _i1.EndpointRef {
   );
 }
 
+/// Admin-only fleet view across ALL tenants.
+///
+/// The 13 existing endpoints are per-tenant (`greenhouse.listByUser` filters by
+/// `session.authenticated.userIdentifier`) or per-greenhouse. None of them can
+/// list the whole fleet, which the operator cockpit (`vertivo_dashboard`) needs.
+///
+/// Access is restricted to sessions holding [Scope.admin]. Overriding
+/// [requiredScopes] implicitly enables [requireLogin], so Serverpod rejects any
+/// unauthenticated or non-admin caller before the method body runs — no manual
+/// scope check is needed here.
+///
+/// NOTE on roles: there is no roles table or `User.isAdmin` field yet
+/// (`User.segment` is residential/commercial/industrial/expert, not an
+/// authorization role). The `serverpod.admin` scope is granted via the auth
+/// token. A real RBAC system is a separate change.
+/// {@category Endpoint}
+class EndpointAdminFleet extends _i1.EndpointRef {
+  EndpointAdminFleet(_i1.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'adminFleet';
+
+  /// List the entire active fleet across every tenant, ordered by owner.
+  ///
+  /// Paginated (`limit`/`offset`) so the cockpit can page large fleets.
+  _i2.Future<List<_i12.Greenhouse>> listAll({
+    required int limit,
+    required int offset,
+  }) => caller.callServerEndpoint<List<_i12.Greenhouse>>(
+    'adminFleet',
+    'listAll',
+    {
+      'limit': limit,
+      'offset': offset,
+    },
+  );
+}
+
 /// {@category Endpoint}
 class EndpointGreenhouse extends _i1.EndpointRef {
   EndpointGreenhouse(_i1.EndpointCaller caller) : super(caller);
@@ -574,7 +612,7 @@ class EndpointGreenhouse extends _i1.EndpointRef {
   @override
   String get name => 'greenhouse';
 
-  /// Create a new greenhouse
+  /// Create a new greenhouse owned by the authenticated user
   _i2.Future<_i12.Greenhouse> create(_i12.Greenhouse greenhouse) =>
       caller.callServerEndpoint<_i12.Greenhouse>(
         'greenhouse',
@@ -1126,6 +1164,7 @@ class Client extends _i1.ServerpodClientShared {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
     cropCatalog = EndpointCropCatalog(this);
+    adminFleet = EndpointAdminFleet(this);
     greenhouse = EndpointGreenhouse(this);
     greeting = EndpointGreeting(this);
     harvestPrediction = EndpointHarvestPrediction(this);
@@ -1147,6 +1186,8 @@ class Client extends _i1.ServerpodClientShared {
   late final EndpointJwtRefresh jwtRefresh;
 
   late final EndpointCropCatalog cropCatalog;
+
+  late final EndpointAdminFleet adminFleet;
 
   late final EndpointGreenhouse greenhouse;
 
@@ -1172,6 +1213,7 @@ class Client extends _i1.ServerpodClientShared {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
     'cropCatalog': cropCatalog,
+    'adminFleet': adminFleet,
     'greenhouse': greenhouse,
     'greeting': greeting,
     'harvestPrediction': harvestPrediction,
