@@ -379,3 +379,50 @@ class CropDB:
         if changed:
             self.conn.commit()
         return changed
+
+    def save_setpoint_text(
+        self,
+        crop_id: int,
+        field: str,
+        text: str | None,
+        *,
+        changed_by: str = "explorer",
+    ) -> bool:
+        """Edición AUDITADA de un setpoint de TEXTO (p.ej. ``nutrient_recipe_json``).
+
+        Crea el setpoint si no existe (INSERT) o lo actualiza, y deja un
+        ``setpoint_audit``. Devuelve True si hubo cambio.
+        """
+        if self.crop(crop_id) is None:
+            raise ValueError(f"crop_id {crop_id} no existe")
+        row = self.conn.execute(
+            "SELECT value_text FROM setpoints WHERE crop_id = ? AND field = ? LIMIT 1",
+            (crop_id, field),
+        ).fetchone()
+        cur_val = row["value_text"] if row else None
+        new_val = text or None
+        if new_val == (cur_val or None):
+            return False
+        cur = self.conn.cursor()
+        if row is None:
+            cur.execute(
+                "INSERT INTO setpoints (crop_id, field, value_num, value_text) "
+                "VALUES (?,?,NULL,?)",
+                (crop_id, field, new_val),
+            )
+        else:
+            cur.execute(
+                "UPDATE setpoints SET value_text = ? WHERE crop_id = ? AND field = ?",
+                (new_val, crop_id, field),
+            )
+        self._write_audit(
+            cur,
+            crop_id,
+            field,
+            value_num=None,
+            value_text=new_val,
+            changed_by=changed_by,
+            note=f"edición de texto de {field}",
+        )
+        self.conn.commit()
+        return True

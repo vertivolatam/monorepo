@@ -208,7 +208,7 @@ class Stepper(QWidget):
         lay.addWidget(self._minus)
         lay.addWidget(self._spin, 1)
         lay.addWidget(self._plus)
-        self.setMaximumWidth(160)
+        self._spin.setMinimumWidth(96)  # espacio para "250,00 µmol/m²·s"
 
     def _step(self, n: int):
         if self._spin.value() == self._spin.minimum():
@@ -361,8 +361,7 @@ class InstrumentCard(QWidget):
             row.addWidget(cap)
             sb = Stepper(val, unit)
             setattr(self, attr, sb)
-            row.addWidget(sb)
-            row.addStretch()
+            row.addWidget(sb, 1)
             grid.addLayout(row)
         lay.addLayout(grid)
 
