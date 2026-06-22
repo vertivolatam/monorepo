@@ -33,12 +33,31 @@ https://www.tigerdata.com/docs/deploy/self-hosted/migration
 
 ## What (Decisiones y recomendaciones)
 
+### Decisión central — D0: desacoplar el hypertable del ORM Serverpod
+
+Antes que cualquier detalle de TimescaleDB, **la decisión que destraba todo lo demás** es sacar
+`environmental_readings` del ORM de Serverpod. Es el corazón del change (todas las decisiones de
+infra de abajo cuelgan de ésta); por eso se enuncia primero y aparte de la tabla.
+
+> **D0.** `EnvironmentalReading` deja de ser una tabla gestionada por Serverpod (se le quita `table:`
+> del `.spy.yaml`); pasa a ser un **modelo serializable** de la API/`vertivo_client`. **La migración
+> SQL (el Job idempotente) crea y posee el hypertable**, con la estructura amigable a TimescaleDB.
+> Ingesta y lectura usan **SQL crudo** (`session.db.unsafeQuery`/`unsafeExecute`), no el CRUD
+> generado; las lecturas de rollup mapean a un modelo nuevo **`EnvironmentalReadingRollup`** (no a
+> `EnvironmentalReading`).
+>
+> **Por qué es central:** como la tabla deja de ser "de Serverpod", el ORM **nunca intenta ponerle
+> el `id`-PK** → el conflicto de PK con TimescaleDB (R1) **desaparece de raíz**: sin PK compuesta,
+> sin drift, sin cirugía sobre SQL autogenerado. Para telemetría de alta frecuencia, SQL crudo es lo
+> correcto de todos modos. Detalle completo en [`design.md` §2 D0](./design.md).
+
+### Decisiones de infra TimescaleDB (cuelgan de D0)
+
 | # | Decisión | Racional |
 |---|---|---|
 | 1 | **Habilitar la extensión `timescaledb`** (imagen `timescale/timescaledb-ha:pg16` + pgvector, OQ1) en el Postgres de **dev y prod** y convertir `environmental_readings` en **hypertable** particionada por `createdAt`, con **chunk interval de 1 día** (OQ2). | Particionado temporal transparente: chunks por intervalo de tiempo, inserts/queries acotados al chunk relevante. Chunk de 1 día (no el default de 7) da **granularidad fina** para comprimir/dropear por antigüedad a nivel de chunk: la frontera de compresión (>7d) y de retención (>90d) cae limpia entre chunks, sin medio-chunk caliente. |
-| 2 | **Continuous aggregates** (materialized views incrementales) para ventanas **1 min / 5 min / 1 hora / 1 día** (OQ6), agregando por `(greenhouseId, measurementType)` con `avg/min/max/count` del `value`. El **1d es un CAGG jerárquico** (se computa sobre el 1h, no sobre crudos). | Los charts consultan el rollup pre-downsampleado en vez de full-scan de crudos. El **1d sobrevive al drop de crudos a 90 días** → habilita la vista de "temporada completa" / histórico largo sin conservar crudos. `getReadings` (o una variante por ventana) sirve directo del CAGG de la resolución adecuada. |
-| 3 | **Compresión** de chunks crudos **> 7 días** + **retention policy** que dropea chunks crudos **> 90 días** (los CAGGs sobreviven, con su propia política más larga o infinita). | Baja el costo de almacenamiento caliente sin perder la serie agregada; los crudos se conservan solo durante la ventana operativa (90d), mientras los rollups —en especial el 1d— preservan el histórico largo. |
-| 4 | **Desacoplar el hypertable del ORM Serverpod.** `EnvironmentalReading` deja de ser una tabla gestionada por Serverpod (se le quita `table:` del `.spy.yaml`); pasa a ser un modelo serializable de la API/`vertivo_client`. **La migración SQL (el Job idempotente) crea y posee el hypertable**, con la estructura amigable a TimescaleDB. Ingesta y `getReadings` usan **SQL crudo** (`session.db.unsafeQuery`/`unsafeExecute`), no el CRUD generado. | Como la tabla deja de ser "de Serverpod", el ORM **nunca intenta ponerle el `id`-PK** → el conflicto de PK con TimescaleDB (R1) **desaparece de raíz**: sin PK compuesta, sin drift, sin cirugía sobre SQL autogenerado. Para telemetría de alta frecuencia, SQL crudo es lo correcto de todos modos. |
+| 2 | **Continuous aggregates** (materialized views incrementales) para ventanas **1 min / 5 min / 1 hora / 1 día** (OQ6), agregando por `(greenhouseId, measurementType)` con `avg/min/max/count` del `value`. El **1d es un CAGG jerárquico** (se computa sobre el 1h, no sobre crudos). | Los charts consultan el rollup pre-downsampleado en vez de full-scan de crudos. El **1d sobrevive al drop de crudos a 90 días** → habilita la vista de "temporada completa" / histórico largo sin conservar crudos. Las variantes por ventana sirven del CAGG de la resolución adecuada, mapeando a `EnvironmentalReadingRollup`. |
+| 3 | **Compresión** de chunks crudos **> 7 días** + **retention policy** que dropea chunks crudos **> 90 días** (los CAGGs sobreviven, con su propia política más larga o infinita; el `_1h` fuente del `_1d` **no** lleva retención corta). | Baja el costo de almacenamiento caliente sin perder la serie agregada; los crudos se conservan solo durante la ventana operativa (90d), mientras los rollups —en especial el 1d— preservan el histórico largo. |
 
 El modelo `EnvironmentalReading` (`environmental_reading.spy.yaml`) **conserva su forma**
 (mismas columnas: `greenhouseId`, `measurementType`, `value`, `unit`, `source`, `isAnomaly`,
@@ -61,7 +80,7 @@ Implicaciones de diseño para que la extracción futura no requiera reescribir:
   de una frontera estrecha y bien nombrada (un servicio/módulo de telemetría), no esparcidos por
   el endpoint. Esa frontera es la costura: hoy resuelve contra el Postgres+TimescaleDB local de
   Vertivo; mañana resuelve contra `timeseries_core` sin que el caller cambie.
-- El **desacople del ORM** (decisión 4) refuerza esto: al no atar la tabla al CRUD generado de
+- El **desacople del ORM** (decisión central D0) refuerza esto: al no atar la tabla al CRUD generado de
   Serverpod, la telemetría ya queda detrás de una capa de acceso explícita — exactamente lo que
   un microservicio extraído necesita reemplazar.
 - La **extracción a `timeseries_core` es out-of-scope pero anticipada**: gatillada por el spike
@@ -79,7 +98,7 @@ El usuario resolvió las open questions. Dejan de ser "abiertas" y pasan a ser d
 | **OQ2 — Chunk interval** | **1 día** (no el default de 7). | Granularidad fina para comprimir/dropear por antigüedad a nivel de chunk; las fronteras 7d/90d caen limpias entre chunks. |
 | **OQ3 — Compresión / retención** | Comprimir crudos **> 7 días**; dropear crudos **> 90 días**. Los CAGGs persisten. | Política idéntica en dev y prod (mismo intervalo); la diferencia dev↔prod es el storage, no la política. |
 | **OQ4 — Vehículo del SQL** | **Kubernetes `Job` idempotente** versionado en `k8s/`. | Mismo Job (kustomize base) aplicado en ambos overlays; idempotente para re-ejecución segura. |
-| **OQ5 — PK de la hypertable (R1)** | **RESUELTA por el desacople del ORM** (decisión 4): se quita `table:`, la tabla deja de ser de Serverpod, el conflicto de PK desaparece de raíz. | Sin cambios respecto al reframe; ver design D0. |
+| **OQ5 — PK de la hypertable (R1)** | **RESUELTA por el desacople del ORM** (decisión central D0): se quita `table:`, la tabla deja de ser de Serverpod, el conflicto de PK desaparece de raíz. | Sin cambios respecto al reframe; ver design D0. |
 | **OQ6 — Resoluciones de charts** | **1m / 5m / 1h / 1d**. El **1d** es un CAGG jerárquico (sobre el 1h) **agregado por el usuario** para vistas de temporada completa. | El 1d es el rollup que **sobrevive al drop de crudos a 90d** → habilita el histórico largo. |
 | **OQ7 — Alcance** | **DEV + PROD en este mismo change.** | Amplía el scope: design y tasks cubren el StatefulSet/PVC/storage de prod + la ventana de mantenimiento de la conversión inicial, no sólo dev. |
 

@@ -42,24 +42,9 @@
 
 ## 2. Decisión
 
-> Orden de lectura: **D0 es la decisión central** (desacople del ORM, resuelve el crux de la PK);
-> lógicamente precede a las demás. Se enumera D0 para no recorrer la numeración existente (D1–D5).
-
-### D1 — Imagen Postgres con TimescaleDB **y** pgvector (OQ1 → cerrada)
-
-`pgvector` ya está en uso, así que **no** podemos simplemente cambiar a la imagen oficial
-`timescale/timescaledb` (que no trae pgvector). Se evaluaron dos caminos:
-
-- **(a) ELEGIDA** — Imagen base **`timescale/timescaledb-ha:pg16`** + instalar `pgvector` encima
-  (ambas son sólo extensiones de Postgres 16; conviven en el mismo cluster con `CREATE EXTENSION`).
-- (b) Imagen base `pgvector/pgvector:pg16` (actual) + instalar el paquete `timescaledb` encima vía
-  un Dockerfile propio. **Descartada.**
-
-**Decisión (OQ1): (a) `timescale/timescaledb-ha:pg16` + pgvector**, en **ambos overlays (dev y
-prod)**. La imagen `-ha` oficial ya trae `shared_preload_libraries=timescaledb` configurado
-(requisito de la extensión, R3), evitando tocar `postgresql.conf` a mano. La migración SQL ejecuta
-`CREATE EXTENSION IF NOT EXISTS timescaledb;` (y `vector`). La misma imagen sirve dev y prod; lo que
-difiere por overlay es el storage (PVC/StorageClass), no la imagen — ver D6 (despliegue prod).
+> **D0 es la decisión central** (desacople del ORM, resuelve el crux de la PK) y por eso encabeza la
+> sección; las demás (D1–D6) son consecuencias o complementos de infra. La numeración D0…D6 refleja
+> el orden lógico de lectura, no un orden cronológico.
 
 ### D0 — Desacoplar el modelo del ORM Serverpod (decisión central, resuelve R1)
 
@@ -84,6 +69,22 @@ telemetría IoT de alta frecuencia, el SQL crudo es lo correcto de todos modos: 
 no aporta y el acceso por ventana/resolución (rollups, `time_bucket`) no es expresable con el CRUD
 generado. Se cede una comodidad que esta tabla no iba a usar, a cambio de eliminar por completo la
 fricción Serverpod↔TimescaleDB.
+
+### D1 — Imagen Postgres con TimescaleDB **y** pgvector (OQ1 → cerrada)
+
+`pgvector` ya está en uso, así que **no** podemos simplemente cambiar a la imagen oficial
+`timescale/timescaledb` (que no trae pgvector). Se evaluaron dos caminos:
+
+- **(a) ELEGIDA** — Imagen base **`timescale/timescaledb-ha:pg16`** + instalar `pgvector` encima
+  (ambas son sólo extensiones de Postgres 16; conviven en el mismo cluster con `CREATE EXTENSION`).
+- (b) Imagen base `pgvector/pgvector:pg16` (actual) + instalar el paquete `timescaledb` encima vía
+  un Dockerfile propio. **Descartada.**
+
+**Decisión (OQ1): (a) `timescale/timescaledb-ha:pg16` + pgvector**, en **ambos overlays (dev y
+prod)**. La imagen `-ha` oficial ya trae `shared_preload_libraries=timescaledb` configurado
+(requisito de la extensión, R3), evitando tocar `postgresql.conf` a mano. La migración SQL ejecuta
+`CREATE EXTENSION IF NOT EXISTS timescaledb;` (y `vector`). La misma imagen sirve dev y prod; lo que
+difiere por overlay es el storage (PVC/StorageClass), no la imagen — ver D6 (despliegue prod).
 
 ### D2 — Hypertable poseído por la migración SQL
 
@@ -122,12 +123,36 @@ Serverpod (`session.db.unsafeQuery` / `session.db.unsafeExecute`), no `Environme
 - **Ingesta** (`SensorIngestionService._handleMessage`): el `insertRow` por mensaje MQTT pasa a un
   `unsafeExecute('INSERT INTO "environmental_readings" (...) VALUES (...)')` parametrizado. El
   mensaje MQTT, el flujo y la deserialización del payload no cambian; sólo el `insert`.
-- **Lectura** (`getReadings` y las variantes por ventana): `unsafeQuery` contra la tabla cruda
-  (últimas-N) o contra el continuous aggregate (charts por rango+resolución), mapeando filas a
-  `EnvironmentalReading` (que sigue siendo serializable para `vertivo_client`).
+- **Lectura de crudos** (`getReadings`, últimas-N): `unsafeQuery` contra la tabla cruda, mapeando
+  filas a **`EnvironmentalReading`** (que sigue siendo serializable para `vertivo_client`).
+- **Lectura de rollups** (variantes por ventana/charts contra el CAGG): `unsafeQuery` contra el
+  continuous aggregate, mapeando filas a un **modelo distinto, `EnvironmentalReadingRollup`** (ver
+  abajo) — **no** a `EnvironmentalReading`.
 
-Esta capa de acceso SQL crudo, encapsulada detrás de una frontera estrecha (un servicio/módulo de
-telemetría), **es la costura** hacia `timeseries_core` (ver §6).
+**Modelo de rollup — `EnvironmentalReadingRollup` (decisión del usuario, resuelve C3/M1).** Las
+filas de un CAGG **no tienen la forma de una lectura cruda**: no hay `value`/`unit`/`source`/
+`isAnomaly`/`id`, sino un bucket temporal y estadísticos agregados. Forzarlas dentro de
+`EnvironmentalReading` falsearía el tipo (campos vacíos o reinterpretados). Por eso se define un
+**modelo serializable nuevo y propio**, expuesto vía `vertivo_client`:
+
+```
+EnvironmentalReadingRollup {
+  bucket           : DateTime   // time_bucket del CAGG (1m/5m/1h/1d)
+  greenhouseId     : int
+  measurementType  : String
+  avgValue         : double
+  minValue         : double
+  maxValue         : double
+  sampleCount      : int
+}
+```
+Es un modelo **sin `table:`** (igual que `EnvironmentalReading` tras D0): Serverpod no le gestiona
+tabla; es sólo el tipo de transporte de las queries de rollup hacia el cliente. Su `.spy.yaml` se
+define en Fase 5 (tasks). El caller de charts pide rango+resolución y recibe `List<EnvironmentalReadingRollup>`.
+
+Esta capa de acceso SQL crudo (crudos → `EnvironmentalReading`, rollups → `EnvironmentalReadingRollup`),
+encapsulada detrás de una frontera estrecha (un servicio/módulo de telemetría), **es la costura**
+hacia `timeseries_core` (ver §6).
 
 ### D3 — Continuous aggregates 1m / 5m / 1h / 1d (OQ6 → cerrada)
 
@@ -186,6 +211,14 @@ continuous aggregates **sobreviven** a la retención de crudos: **no** llevan `a
 el **1d** (D3, computado desde el 1h, no desde crudos) es el rollup que mantiene la serie de
 temporada completa después de que los crudos se dropean a los 90 días — esa es su razón de existir.
 
+> **Restricción crítica (N1): el `_1h` es la fuente del `_1d` jerárquico, así que NO debe llevar
+> una retención corta.** Si al `_1h` se le pusiera `add_retention_policy` con un intervalo corto
+> (p.ej. < a unos pocos días), dropearía sus buckets horarios **antes** de que el `_1d` alcance a
+> re-agregarlos, sabotenado el rollup diario que justamente debe sobrevivir al drop de crudos.
+> Regla: el `_1h` **sin retención**, o con una retención **significativamente más larga que el lag
+> de refresco del `_1d`** (el `end_offset` + el período de su `add_continuous_aggregate_policy`).
+> El `_1d` puede tener retención larga/infinita según el horizonte de "temporada completa".
+
 > Misma política (7d/90d) en **dev y prod**; lo que cambia entre overlays es el storage subyacente
 > (tamaño del PVC / StorageClass), no los intervalos. Ver D6.
 
@@ -216,16 +249,20 @@ y **dos overlays** (`k8s/overlays/dev/`, `k8s/overlays/prod/`) que sólo patchea
 | Dimensión | Dev | Prod |
 |-----------|-----|------|
 | **Imagen** | `timescale/timescaledb-ha:pg16` + pgvector | **idéntica** (sin drift de motor entre entornos) |
-| **Storage** | PVC chico, StorageClass de dev | **StatefulSet con PVC dimensionado + StorageClass de prod** (durable, con backup); tamaño acorde al volumen real de telemetría |
+| **Workload type** | **StatefulSet** (igual que prod, ver N2) | **StatefulSet** |
+| **Storage** | PVC chico, StorageClass de dev | PVC dimensionado + StorageClass de prod (durable, con backup); tamaño acorde al volumen real de telemetría |
 | **Migración SQL** | mismo `Job` idempotente | mismo `Job` idempotente |
 | **Políticas (chunk 1d, compresión 7d, retención 90d, CAGGs 1m/5m/1h/1d)** | iguales | **iguales** (la política no cambia por entorno) |
 | **Conversión inicial (`migrate_data`)** | trivial (tabla chica) | **ventana de mantenimiento** si la tabla ya tiene volumen (R5): `create_hypertable(... migrate_data=>TRUE)` copia/bloquea; planificar como paso operativo |
 
 Puntos de diseño específicos de prod:
 
-- **StatefulSet, no Deployment, para la DB de prod.** Postgres es stateful; el PVC debe ser durable
-  y la identidad de pod estable. (Si dev hoy usa un Deployment con PVC, prod estandariza a
-  StatefulSet; documentar la diferencia en el overlay.)
+- **StatefulSet en la base, para dev y prod (N2 — resuelto, sin condicional).** Postgres es stateful;
+  el PVC debe ser durable y la identidad de pod estable. La **base de kustomize define un StatefulSet**
+  y **ambos** overlays lo usan: dev no se queda en Deployment. Razón: que dev y prod compartan el
+  mismo tipo de workload elimina drift estructural (lo único que cambia por overlay es el tamaño/
+  StorageClass del PVC, no la forma del recurso). Si dev hoy corre un Deployment con PVC, este change
+  lo migra a StatefulSet como parte de la base.
 - **La migración inicial en prod es una ventana de mantenimiento** (R5): si `environmental_readings`
   ya tiene filas en prod al momento de convertir, `migrate_data => TRUE` es una operación que copia
   y toma locks. Debe correrse en ventana, siguiendo la guía de migración self-hosted de TigerData.
@@ -294,7 +331,7 @@ dependencia de orden frente al paso 2 para esta tabla concreta (R2 relajado).
 | **R3** | **`shared_preload_libraries`.** TimescaleDB requiere precargar la librería; sin eso `CREATE EXTENSION timescaledb` falla. | Imagen elegida `timescale/timescaledb-ha:pg16` (D1, OQ1) que ya lo configura — en dev y prod. |
 | **R4** | **pgvector + timescaledb en la misma imagen.** Cambiar de imagen no debe romper el uso actual de pgvector. | Verificar que ambas extensiones cargan (`\dx`) y que el dominio que usa vector sigue funcionando antes de mergear — en ambos overlays. |
 | **R5** | **`migrate_data => TRUE` en tabla grande (ahora IN-SCOPE: prod).** Convertir una tabla con muchas filas bloquea/copia. Con prod dentro del change (OQ7), esto deja de ser un follow-up. | En dev la tabla es chica. **En prod: ventana de mantenimiento** para la conversión inicial (D6), siguiendo la guía de migración self-hosted de TigerData. Chunk de 1 día (OQ2) acota el costo por chunk. |
-| **R6** | **Doble fuente de lectura.** Si `getReadings` (ahora SQL crudo, D2bis) mezcla crudos (recientes, aún no agregados) con rollup, puede haber gaps en el borde de la ventana. | Definir política de lectura en la frontera de telemetría (la costura): rollup para histórico + crudos para el último bucket, o `real_time` continuous aggregates (que combinan materializado + datos frescos). Esta política es **lógica canónica** → debe vivir en un solo lugar (§6). |
+| **R6** | **Doble fuente de lectura.** Si una query de rollup mezcla buckets materializados con el bucket en curso (aún no refrescado), puede haber un gap en el borde de la ventana. | **Resuelto por default en TimescaleDB 2.x (A4):** los continuous aggregates son **`real_time` por defecto** (`timescaledb.materialized_only = false`) — la vista **combina automáticamente** los datos materializados con el bucket en curso computado al vuelo desde los crudos. Es decir, **"no hacer nada" ya resuelve R6**: mientras no se ponga `materialized_only = true`, el borde de ventana viene cubierto. Sólo hay que documentar el comportamiento y no desactivarlo. Esta política de lectura es **lógica canónica** → vive en un solo lugar (§6). |
 | **R7** | **Pérdida del CRUD generado (trade-off de D0).** Quitar `table:` elimina `EnvironmentalReading.db.*`; cualquier código que hoy dependa del CRUD generado para esta tabla deja de compilar. | Auditar usos de `EnvironmentalReading.db.*` antes de quitar `table:` (hoy: ingesta + `getReadings`, ambos migran a SQL crudo en este change). El modelo sigue serializable, así que `vertivo_client` y la API no se ven afectados. Trade-off aceptado: esta tabla no iba a beneficiarse del ORM fila-a-fila. |
 
 ## 5. Decisiones cerradas (OQ1–OQ7)
@@ -342,6 +379,17 @@ Vertivo). El spike que lo define vive en `chimeranext/better-microservices` **is
   lectura, la política de borde de ventana (R6) — debe vivir en **un solo lugar** detrás de esa
   frontera, no esparcida por el endpoint ni duplicada por cliente. Así, mover el cómputo a
   `timeseries_core` es cambiar el *backend* de la costura, no reescribir el dominio.
+- **Criterio de aceptación verificable (M2), no narrativo.** "Está canónico" se chequea, no se
+  asume. La frontera de telemetría vive en un módulo/directorio único (p.ej.
+  `apps/vertivo_server/lib/src/telemetry/`); el criterio es que **fuera de ese módulo no exista
+  lógica de resolución/ventana ni SQL de telemetría**. Verificación concreta (Fase 5):
+  - `rg -n "time_bucket|unsafeQuery|unsafeExecute|environmental_readings_(1m|5m|1h|1d)" apps/vertivo_server/lib`
+    sólo debe arrojar matches **dentro** del módulo de telemetría (cero matches en `greenhouses/` u
+    otros endpoints).
+  - `rg -n "EnvironmentalReadingRollup" apps/vertivo_server/lib` no debe mostrar construcción de
+    rollups fuera del módulo (los callers reciben el tipo ya armado, no lo computan).
+  Si esos `rg` muestran matches fuera de la frontera, la costura **no** está canónica y la extracción
+  futura requeriría reescritura — falla el criterio.
 - **Estado:** la extracción de `timeseries_core` es **out-of-scope pero anticipada**, gatillada por
   el spike #76 — no por este change. Aquí sólo se deja la costura limpia.
 

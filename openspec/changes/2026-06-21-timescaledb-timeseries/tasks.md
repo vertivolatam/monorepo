@@ -17,9 +17,15 @@
 
 ## Fase 0.5 — Desacople del ORM (D0, habilita todo lo demás)
 - [ ] Auditar usos de `EnvironmentalReading.db.*` en el backend (esperado: ingesta + `getReadings`) — R7.
+- [ ] **(A2) ANTES de quitar `table:`: verificar qué emite `serverpod generate` en entorno limpio.**
+      Generar las migraciones y mirar el `definition.sql` resultante: si al quitar `table:` Serverpod
+      emite un **`DROP TABLE environmental_readings`** (porque ya no "conoce" la tabla), **tomar
+      control manual del directorio de migraciones para ese commit** — editar/omitir el `DROP` para
+      no borrar datos de dev/prod. La tabla debe quedar viva y pasar a manos de la migración SQL (D5),
+      no ser dropeada por la regeneración.
 - [ ] Quitar `table:` de `environmental_reading.spy.yaml` → modelo serializable sin tabla;
       regenerar `vertivo_client` y confirmar que el tipo de API no cambia.
-- [ ] Confirmar que `--apply-migrations` ya **no** crea/gestiona `environmental_readings`.
+- [ ] Confirmar que `--apply-migrations` ya **no** crea/gestiona `environmental_readings` **ni la dropea**.
 - [ ] Commit: `refactor(server): decouple EnvironmentalReading from Serverpod ORM (untable)`.
 
 ## Fase 1 — Imagen Postgres (base kustomize → dev y prod)
@@ -42,7 +48,9 @@
 - [ ] Crear `environmental_readings_1m` / `_5m` / `_1h` (`time_bucket` + avg/min/max/count, group by `greenhouseId,measurementType`) **sobre crudos**.
 - [ ] Crear `environmental_readings_1d` como **CAGG jerárquico sobre `_1h`** (no sobre crudos): re-agrega `min/max/sum(sample_count)` exacto; definir si `avg` es simple o ponderado por `sample_count` (nota de ponderación en design D3).
 - [ ] `add_continuous_aggregate_policy` por vista, **incluido el 1d** (refresco incremental).
-- [ ] Decidir `real_time` aggregate o no (R6, borde de ventana).
+- [ ] **(A4) Borde de ventana (R6): no hacer nada — el `real_time` aggregate es el default en
+      TimescaleDB 2.x** (`timescaledb.materialized_only = false`), que combina materializado + bucket
+      en curso. Verificar simplemente que **no** se ponga `materialized_only = true` en ninguna vista.
 - [ ] Verificar: las cuatro vistas se pueblan y refrescan; el 1d refresca desde el 1h; comparar contra agregación manual.
 - [ ] Commit: `feat(db): continuous aggregates 1m/5m/1h + hierarchical 1d for environmental_readings`.
 
@@ -50,20 +58,40 @@
 - [ ] `ALTER TABLE ... SET (timescaledb.compress, compress_segmentby='"greenhouseId","measurementType"')`.
 - [ ] `add_compression_policy('environmental_readings', INTERVAL '7 days')` + `add_retention_policy('environmental_readings', INTERVAL '90 days')` (OQ3).
 - [ ] Confirmar que la retención de crudos **no** afecta los CAGGs (sin retention policy en las vistas, o mucho más larga) — en especial que el **1d sobrevive**.
+- [ ] **(N1) El `_1h` es la FUENTE del `_1d` jerárquico → NO ponerle retención corta.** Verificar que
+      el `_1h` queda **sin** `add_retention_policy`, o con una **significativamente más larga que el
+      lag de refresco del `_1d`** (`end_offset` + período de su policy). Una retención corta en `_1h`
+      dropearía buckets antes de que el `_1d` los re-agregue, sabotenado el rollup diario.
 - [ ] Verificar: `timescaledb_information.jobs` lista las policies; chunks viejos se comprimen; tras simular >90d, el 1d sigue poblado y los crudos se dropean.
 - [ ] Commit: `feat(db): compression (>7d) + retention (>90d) policies for telemetry`.
 
 ## Fase 5 — Ingesta + Lectura por SQL crudo (D2bis) detrás de la frontera de telemetría
+- [ ] **(C3/M1) Definir el modelo `EnvironmentalReadingRollup`** en su propio `.spy.yaml`
+      (`apps/vertivo_server/lib/src/telemetry/environmental_reading_rollup.spy.yaml`), **sin `table:`**
+      (modelo serializable sin tabla, igual que `EnvironmentalReading` tras D0). Campos:
+      `bucket: DateTime`, `greenhouseId: int`, `measurementType: String`, `avgValue: double`,
+      `minValue: double`, `maxValue: double`, `sampleCount: int`. Regenerar `vertivo_client` y
+      confirmar que el tipo queda expuesto al cliente.
 - [ ] **Ingesta:** migrar `SensorIngestionService._handleMessage` de `insertRow` a
       `session.db.unsafeExecute(INSERT ...)` parametrizado (sin cambiar el flujo MQTT).
-- [ ] **Lectura:** migrar `getReadings` a `session.db.unsafeQuery` contra la tabla cruda (últimas-N).
-- [ ] Encapsular ingesta + lectura tras una **frontera estrecha de telemetría** (la costura hacia
-      `timeseries_core`, §6): solver de resolución/ventana y contratos como **lógica canónica en un
-      solo lugar**, no dispersos por el endpoint.
-- [ ] Variante de lectura por ventana que sirva del CAGG adecuado: última hora→1m · día→5m · semana→1h · **temporada/histórico→1d**.
-- [ ] Definir la política de borde de ventana (R6) dentro de esa frontera canónica.
+- [ ] **Lectura de crudos:** migrar `getReadings` a `session.db.unsafeQuery` contra la tabla cruda
+      (últimas-N), mapeando filas a **`EnvironmentalReading`**.
+- [ ] **Lectura de rollups:** variante por ventana que `unsafeQuery` el CAGG adecuado y mapea filas a
+      **`EnvironmentalReadingRollup`** (NO a `EnvironmentalReading`): última hora→1m · día→5m ·
+      semana→1h · **temporada/histórico→1d**.
+- [ ] Encapsular ingesta + ambas lecturas tras una **frontera estrecha de telemetría** en un módulo
+      único (p.ej. `apps/vertivo_server/lib/src/telemetry/`): solver de resolución/ventana y contratos
+      como **lógica canónica en un solo lugar**, no dispersos por el endpoint (la costura hacia
+      `timeseries_core`, §6).
+- [ ] **(M2) Verificar canonicidad con `rg`** (criterio de aceptación, no narrativo):
+      `rg -n "time_bucket|unsafeQuery|unsafeExecute|environmental_readings_(1m|5m|1h|1d)" apps/vertivo_server/lib`
+      sólo debe arrojar matches **dentro** del módulo de telemetría (cero en `greenhouses/` u otros
+      endpoints); `rg -n "EnvironmentalReadingRollup" apps/vertivo_server/lib` no debe mostrar
+      construcción de rollups fuera del módulo.
+- [ ] Borde de ventana (R6): confirmar que los CAGGs quedan `real_time` (default, A4) — sin
+      `materialized_only = true`.
 - [ ] Verificar: charts del dashboard/app consumen el rollup (sin full-scan de crudos); la vista de temporada usa el 1d.
-- [ ] Commit: `feat(server): raw-SQL telemetry seam (ingest + chart windows from CAGGs)`.
+- [ ] Commit: `feat(server): raw-SQL telemetry seam (ingest + rollup model + chart windows from CAGGs)`.
 
 ## Fase 6 — Bootstrap / orden de migración (dev)
 - [ ] Cablear el Job SQL custom para que corra tras el arranque de Postgres con la extensión
