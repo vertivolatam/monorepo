@@ -1,122 +1,79 @@
-import 'package:jaspr/jaspr.dart';
 import 'package:jaspr/dom.dart';
+import 'package:jaspr/server.dart';
+import 'package:vertivo_client/vertivo_client.dart';
 
 import '../components/alert_item.dart';
+import '../components/async_states.dart';
+import '../data/alerts_repository.dart';
+import '../data/client.dart';
 
-class AlertsPage extends StatelessComponent {
+/// Alerts center — the current admin session's alerts, real data.
+class AlertsPage extends AsyncStatelessComponent {
   const AlertsPage({super.key});
 
   @override
-  Component build(BuildContext context) {
+  Future<Component> build(BuildContext context) async {
+    final repo = AlertsRepository(backendClient);
+    final List<Alert> alerts;
+    try {
+      alerts = await repo.fetch();
+    } catch (e) {
+      return div(classes: 'page', [
+        _header(),
+        errorState(e, title: 'No se pudieron cargar las alertas'),
+      ]);
+    }
+
+    if (alerts.isEmpty) {
+      return div(classes: 'page', [
+        _header(),
+        emptyState('No hay alertas para esta sesión.'),
+      ]);
+    }
+
     return div(classes: 'page', [
-      div(classes: 'page__header', [
-        h1([Component.text('Alertas')]),
-        p(classes: 'page__subtitle', [
-          Component.text('Centro de alertas de todos los invernaderos'),
-        ]),
-      ]),
+      _header(),
+      _summary(alerts),
+      div(classes: 'alert-list', [for (final a in alerts) _item(a)]),
+    ]);
+  }
 
-      // Summary badges
-      div(classes: 'alert-summary', [
-        div(classes: 'alert-summary__item alert-summary__item--critical', [
-          span(classes: 'alert-summary__count', [Component.text('1')]),
-          span([Component.text('Critica')]),
-        ]),
-        div(classes: 'alert-summary__item alert-summary__item--high', [
-          span(classes: 'alert-summary__count', [Component.text('1')]),
-          span([Component.text('Alta')]),
-        ]),
-        div(classes: 'alert-summary__item alert-summary__item--medium', [
-          span(classes: 'alert-summary__count', [Component.text('1')]),
-          span([Component.text('Media')]),
-        ]),
-        div(classes: 'alert-summary__item alert-summary__item--low', [
-          span(classes: 'alert-summary__count', [Component.text('4')]),
-          span([Component.text('Baja')]),
-        ]),
-        div(classes: 'alert-summary__item alert-summary__item--resolved', [
-          span(classes: 'alert-summary__count', [Component.text('23')]),
-          span([Component.text('Resueltas hoy')]),
-        ]),
-      ]),
-
-      // Filters
-      div(classes: 'filters', [
-        div(classes: 'filter-group', [
-          label(
-            attributes: {'for': 'severity-filter'},
-            [Component.text('Severidad')],
-          ),
-          select(classes: 'filter-select', id: 'severity-filter', [
-            option(value: 'all', [Component.text('Todas')]),
-            option(value: 'critical', [Component.text('Critica')]),
-            option(value: 'high', [Component.text('Alta')]),
-            option(value: 'medium', [Component.text('Media')]),
-            option(value: 'low', [Component.text('Baja')]),
-          ]),
-        ]),
-        div(classes: 'filter-group', [
-          label(
-            attributes: {'for': 'alert-status-filter'},
-            [Component.text('Estado')],
-          ),
-          select(classes: 'filter-select', id: 'alert-status-filter', [
-            option(value: 'active', [Component.text('Activas')]),
-            option(value: 'acknowledged', [Component.text('Reconocidas')]),
-            option(value: 'resolved', [Component.text('Resueltas')]),
-            option(value: 'all', [Component.text('Todas')]),
-          ]),
-        ]),
-      ]),
-
-      // Alert list
-      div(classes: 'alert-list', [
-        AlertItem(
-          severity: 'critical',
-          title: 'pH fuera de rango critico',
-          message:
-              'pH 4.2 — Limite inferior 5.5. Invernadero GH-012, Bandeja A3. Posible falla en dosificador de solucion nutritiva.',
-          greenhouse: 'GH-012 — Mi Huerta (Residencial)',
-          timestamp: 'Hace 12 min',
-          isResolved: false,
-        ),
-        AlertItem(
-          severity: 'high',
-          title: 'Sensor DO desconectado',
-          message:
-              'Sin lectura de oxigeno disuelto en 15 min. Ultimo valor: 6.1 mg/L. Verificar conexion I2C (0x61).',
-          greenhouse: 'GH-007 — La Cosecha Fresca (Comercial)',
-          timestamp: 'Hace 34 min',
-          isResolved: false,
-        ),
-        AlertItem(
-          severity: 'medium',
-          title: 'EC elevada persistente',
-          message:
-              'EC 2100 uS/cm — Limite superior 1800. Tendencia ascendente por 2h. Considerar flush del sistema.',
-          greenhouse: 'GH-019 — Hidroponicos Sur (Industrial)',
-          timestamp: 'Hace 1h 12min',
-          isResolved: false,
-        ),
-        AlertItem(
-          severity: 'low',
-          title: 'Humedad por debajo del optimo',
-          message:
-              'Humedad 38% — Limite inferior 40%. Variacion menor, monitorear.',
-          greenhouse: 'GH-003 — Cultivo Express (Comercial)',
-          timestamp: 'Hace 2h 45min',
-          isResolved: false,
-        ),
-        AlertItem(
-          severity: 'medium',
-          title: 'Temperatura nocturna alta',
-          message:
-              'Temperatura 29.1 C a las 02:00. Ciclo nocturno esperaba < 24 C. Verificar ventilacion.',
-          greenhouse: 'GH-015 — Granja Norte (Industrial)',
-          timestamp: 'Hace 6h',
-          isResolved: true,
-        ),
+  Component _header() {
+    return div(classes: 'page__header', [
+      h1([Component.text('Alertas')]),
+      p(classes: 'page__subtitle', [
+        Component.text('Centro de alertas de la sesión'),
       ]),
     ]);
+  }
+
+  Component _summary(List<Alert> alerts) {
+    int count(String s) => alerts.where((al) => al.severity == s).length;
+    final resolved = alerts.where((al) => al.isResolved).length;
+    return div(classes: 'alert-summary', [
+      _badge('critical', count('critical'), 'Crítica'),
+      _badge('high', count('high'), 'Alta'),
+      _badge('medium', count('medium'), 'Media'),
+      _badge('low', count('low'), 'Baja'),
+      _badge('resolved', resolved, 'Resueltas'),
+    ]);
+  }
+
+  Component _badge(String variant, int n, String label) {
+    return div(classes: 'alert-summary__item alert-summary__item--$variant', [
+      span(classes: 'alert-summary__count', [Component.text('$n')]),
+      span([Component.text(label)]),
+    ]);
+  }
+
+  Component _item(Alert a) {
+    return AlertItem(
+      severity: a.severity,
+      title: a.title,
+      message: a.message,
+      greenhouse: a.greenhouseId != null ? 'GH-${a.greenhouseId}' : '—',
+      timestamp: a.createdAt.toIso8601String(),
+      isResolved: a.isResolved,
+    );
   }
 }
