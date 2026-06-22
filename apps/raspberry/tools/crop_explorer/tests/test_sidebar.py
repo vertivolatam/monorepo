@@ -59,5 +59,5 @@ def test_discrepancy_chip_leaves_five(sidebar):
 def test_crop_selected_signal(sidebar):
     received = []
     sidebar.cropSelected.connect(received.append)
-    sidebar.list.setCurrentRow(0)
+    sidebar.tree.setCurrentItem(sidebar.first_crop_item())
     assert received and isinstance(received[0], int)

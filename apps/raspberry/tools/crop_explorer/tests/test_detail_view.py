@@ -77,7 +77,9 @@ def test_save_profile_change_emits_and_audits(view):
     received = []
     dv.classificationSaved.connect(received.append)
 
-    dv.profile_combo.setCurrentText("herb_aromatic")
+    # El combo muestra label_es; el slug va en userData -> seleccionar por data.
+    dv.profile_combo.setCurrentIndex(dv.profile_combo.findData("herb_aromatic"))
+    assert dv.profile_combo.currentData() == "herb_aromatic"
     dv._on_save()
 
     assert received == [cid]

@@ -259,3 +259,59 @@ class CropDB:
         if changed:
             self.conn.commit()
         return changed
+
+    def save_setpoint_range(
+        self,
+        crop_id: int,
+        *,
+        values: dict[str, float | None],
+        changed_by: str = "explorer",
+    ) -> bool:
+        """Edición manual AUDITADA de valores numéricos de setpoint.
+
+        ``values`` mapea nombre-de-campo -> nuevo valor (ej.
+        ``{"ph_min": 5.8, "ph_ideal": 6.2, "ph_max": 6.8}``). Cada campo que
+        cambie actualiza ``setpoints`` y deja un ``setpoint_audit``
+        (source='experiment', supersedes, is_active) para permitir rollback.
+        Campos ``None`` de nombre se ignoran; valores idénticos no escriben.
+
+        Devuelve True si hubo algún cambio persistido.
+        """
+        if self.crop(crop_id) is None:
+            raise ValueError(f"crop_id {crop_id} no existe")
+        cur = self.conn.cursor()
+        changed = False
+        for field, new_val in values.items():
+            if not field:
+                continue
+            row = self.conn.execute(
+                "SELECT value_num FROM setpoints WHERE crop_id = ? AND field = ? LIMIT 1",
+                (crop_id, field),
+            ).fetchone()
+            cur_val = row["value_num"] if row else None
+            if new_val == cur_val:
+                continue
+            if row is None:
+                cur.execute(
+                    "INSERT INTO setpoints (crop_id, field, value_num, value_text) "
+                    "VALUES (?,?,?,NULL)",
+                    (crop_id, field, new_val),
+                )
+            else:
+                cur.execute(
+                    "UPDATE setpoints SET value_num = ? WHERE crop_id = ? AND field = ?",
+                    (new_val, crop_id, field),
+                )
+            self._write_audit(
+                cur,
+                crop_id,
+                field,
+                value_num=new_val,
+                value_text=None,
+                changed_by=changed_by,
+                note=f"edición manual de rango ({cur_val} -> {new_val})",
+            )
+            changed = True
+        if changed:
+            self.conn.commit()
+        return changed

@@ -32,8 +32,8 @@ def test_window_composes_sidebar_and_detail(qapp, temp_db):
     win = crop_explorer.ExplorerWindow(db)
     assert win.sidebar is not None
     assert win.detail is not None
-    # selecting a row in the sidebar should drive the detail view
-    win.sidebar.list.setCurrentRow(0)
+    # selecting a crop in the sidebar should drive the detail view
+    win.sidebar.tree.setCurrentItem(win.sidebar.first_crop_item())
     assert win.detail._crop_id is not None
     db.close()
 

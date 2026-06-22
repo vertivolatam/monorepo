@@ -34,12 +34,13 @@ except ImportError:
     subprocess.run([sys.executable, "-m", "pip", "install", "PySide6"], check=False)
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QFont, QPalette
+from PySide6.QtGui import QAction, QColor, QFont, QPalette
 from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
     QSplitter,
     QStatusBar,
+    QToolBar,
     QWidget,
     QVBoxLayout,
 )
@@ -51,8 +52,28 @@ sys.path.insert(0, str(HERE))
 from db import CropDB, is_discrepant  # noqa: E402
 from widgets.sidebar import Sidebar  # noqa: E402
 from widgets.detail_view import DetailView  # noqa: E402
+import tokens as T  # noqa: E402
 
 DEFAULT_DB = HERE.parent.parent / "config" / "crops.db"
+
+
+def build_palette(dark: bool) -> QPalette:
+    """QPalette derivada de los tokens, para el chrome (ventana, menús, scrollbars)."""
+    T.set_mode("dark" if dark else "light")
+    pal = QPalette()
+    pal.setColor(QPalette.Window, QColor(T.SURFACE_ALT))
+    pal.setColor(QPalette.WindowText, QColor(T.TEXT))
+    pal.setColor(QPalette.Base, QColor(T.SURFACE))
+    pal.setColor(QPalette.AlternateBase, QColor(T.SURFACE_SUNKEN))
+    pal.setColor(QPalette.Text, QColor(T.TEXT))
+    pal.setColor(QPalette.Button, QColor(T.SURFACE_SUNKEN))
+    pal.setColor(QPalette.ButtonText, QColor(T.TEXT))
+    pal.setColor(QPalette.ToolTipBase, QColor(T.SURFACE))
+    pal.setColor(QPalette.ToolTipText, QColor(T.TEXT))
+    pal.setColor(QPalette.PlaceholderText, QColor(T.TEXT_MUTED))
+    pal.setColor(QPalette.Highlight, QColor(T.PRIMARY))
+    pal.setColor(QPalette.HighlightedText, QColor(T.SURFACE if dark else "#FFFFFF"))
+    return pal
 
 
 def _ensure_db(db_path: Path) -> bool:
@@ -77,26 +98,58 @@ class ExplorerWindow(QMainWindow):
         self.setWindowTitle(f"Crop Catalog Explorer — {db.db_path.name}")
         self.resize(1500, 880)
 
+        # Toolbar con toggle de tema (☀/🌙).
+        toolbar = QToolBar("Tema")
+        toolbar.setMovable(False)
+        self.addToolBar(toolbar)
+        self.act_dark = QAction("🌙  Modo oscuro", self)
+        self.act_dark.setCheckable(True)
+        self.act_dark.toggled.connect(self._toggle_theme)
+        toolbar.addAction(self.act_dark)
+
         central = QWidget()
         self.setCentralWidget(central)
         layout = QVBoxLayout(central)
         layout.setContentsMargins(4, 4, 4, 4)
 
-        splitter = QSplitter(Qt.Horizontal)
+        self.splitter = QSplitter(Qt.Horizontal)
         self.sidebar = Sidebar(db)
         self.detail = DetailView(db)
-        splitter.addWidget(self.sidebar)
-        splitter.addWidget(self.detail)
-        splitter.setSizes([360, 1140])
-        layout.addWidget(splitter)
-
-        # Conexiones: selección -> detalle; guardado -> refrescar sidebar.
-        self.sidebar.cropSelected.connect(self.detail.setCrop)
-        self.detail.classificationSaved.connect(self._on_saved)
+        self.splitter.addWidget(self.sidebar)
+        self.splitter.addWidget(self.detail)
+        self.splitter.setSizes([360, 1140])
+        layout.addWidget(self.splitter)
+        self._wire_panels()
 
         self.status = QStatusBar()
         self.setStatusBar(self.status)
         self._update_status()
+
+    def _wire_panels(self):
+        """Conexiones: selección -> detalle; guardado -> refrescar sidebar."""
+        self.sidebar.cropSelected.connect(self.detail.setCrop)
+        self.detail.classificationSaved.connect(self._on_saved)
+
+    def _toggle_theme(self, dark: bool):
+        """Cambia tema: re-aplica paleta + reconstruye paneles (recogen tokens nuevos)."""
+        self.act_dark.setText("☀  Modo claro" if dark else "🌙  Modo oscuro")
+        app = QApplication.instance()
+        if app is not None:
+            app.setPalette(build_palette(dark))
+        else:
+            T.set_mode("dark" if dark else "light")
+        current = self.sidebar.current_crop_id()
+        new_sidebar = Sidebar(self.db)
+        new_detail = DetailView(self.db)
+        self.splitter.replaceWidget(0, new_sidebar)
+        self.splitter.replaceWidget(1, new_detail)
+        self.sidebar.deleteLater()
+        self.detail.deleteLater()
+        self.sidebar, self.detail = new_sidebar, new_detail
+        self.splitter.setSizes([360, 1140])
+        self._wire_panels()
+        if current is not None:
+            self.detail.setCrop(current)
 
     def _on_saved(self, _crop_id: int):
         self.sidebar.refresh()
@@ -122,19 +175,8 @@ def main() -> int:
 
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
-    app.setFont(QFont("Ubuntu", 10))
-
-    palette = QPalette()
-    palette.setColor(QPalette.Window, QColor("#f1f5f9"))
-    palette.setColor(QPalette.WindowText, QColor("#1e293b"))
-    palette.setColor(QPalette.Base, QColor("#ffffff"))
-    palette.setColor(QPalette.AlternateBase, QColor("#f1f5f9"))
-    palette.setColor(QPalette.Text, QColor("#1e293b"))
-    palette.setColor(QPalette.Button, QColor("#e2e8f0"))
-    palette.setColor(QPalette.ButtonText, QColor("#1e293b"))
-    palette.setColor(QPalette.Highlight, QColor("#3b82f6"))
-    palette.setColor(QPalette.HighlightedText, QColor("#ffffff"))
-    app.setPalette(palette)
+    app.setFont(QFont(T.FONT_FAMILY, 10))
+    app.setPalette(build_palette(dark=False))  # arranca en claro (token-based)
 
     window = ExplorerWindow(db)
     window.show()

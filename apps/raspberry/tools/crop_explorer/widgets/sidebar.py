@@ -7,17 +7,23 @@
 # You may obtain a copy of the License at ./LICENSE.md
 # You may not use this file except in compliance with the License.
 
-"""Sidebar — búsqueda por nombre común + filtros reales + lista con estado.
+"""Sidebar — búsqueda + filtros + árbol PIVOT (agrupación multinivel reordenable).
 
-Resuelve la crítica de la v1: filtros como combos multi-select consistentes
-(Aeropónico / Tipo de cosecha / Perfil) + chip-toggle "⚠ solo discrepancias"
-(no botón suelto) + lista con punto de estado (🟢 aeropónico · ⚪ no-aero ·
-🟠 discrepancia) y un contador "N de TOTAL · M ⚠". Emite ``cropSelected(int)``.
+Filtros multi-select en español (Aeropónico / Tipo de cosecha / Perfil, con
+opción "Sin perfil") + chip "⚠ solo discrepancias". La lista es un ``QTreeWidget``
+estilo tabla dinámica de Excel: el usuario activa uno o varios NIVELES de
+agrupación (Prioridad / Tipo de cultivo / Perfil) y los **reordena arrastrando**;
+el árbol se reconstruye anidado y cada grupo es colapsable/expandible (preserva
+el estado al refiltrar). Emite ``cropSelected(int)``.
 """
 
 from __future__ import annotations
 
+import os
+import sys
+
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -27,26 +33,45 @@ from PySide6.QtWidgets import (
     QPushButton,
     QListWidget,
     QListWidgetItem,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QTreeWidgetItemIterator,
+    QAbstractItemView,
 )
 
 from db import is_discrepant
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import tokens as T  # noqa: E402
 
 DOT_AERO = "🟢"
 DOT_NON_AERO = "⚪"
 DOT_DISCREPANT = "🟠"
 
-ANY = "(todos)"
+NO_PROFILE_VALUE = ""  # valor centinela del filtro "Sin perfil"
+
+# Roles de datos en los items del árbol.
+ROLE_CROP_ID = Qt.UserRole       # leaf -> crop_id; grupo -> None
+ROLE_GROUP_PATH = Qt.UserRole + 1  # grupo -> tupla-path (para preservar colapso)
+
+# Dimensiones de agrupación disponibles (label, key).
+GROUP_DIMENSIONS = [
+    ("Prioridad", "priority"),
+    ("Tipo de cultivo", "type"),
+    ("Perfil", "profile"),
+]
 
 
 class _MultiCombo(QComboBox):
-    """ComboBox checkable simple para filtro multi-select."""
+    """ComboBox checkable multi-select. Muestra ``label`` pero filtra por ``value``."""
 
     changed = Signal()
 
-    def __init__(self, placeholder: str, values: list[str], parent=None):
+    def __init__(self, placeholder: str, items: list[tuple[str, str]], parent=None):
         super().__init__(parent)
         self._placeholder = placeholder
-        self._checked: set[str] = set()
+        self._checked: set[str] = set()  # guarda VALUES, no labels
+        self._label_of: dict[str, str] = {}
         self.setEditable(True)
         self.lineEdit().setReadOnly(True)
         self.lineEdit().setText(placeholder)
@@ -54,26 +79,30 @@ class _MultiCombo(QComboBox):
 
         self._model = QStandardItemModel(self)
         self.setModel(self._model)
-        for v in values:
-            item = QStandardItem(v)
+        for label, value in items:
+            item = QStandardItem(label)
             item.setCheckable(True)
             item.setCheckState(Qt.Unchecked)
             item.setEditable(False)
+            item.setData(value, Qt.UserRole)
             self._model.appendRow(item)
+            self._label_of[value] = label
         self.view().pressed.connect(self._toggle)
 
     def _toggle(self, index):
         item = self._model.itemFromIndex(index)
         if not item:
             return
+        value = item.data(Qt.UserRole)
         if item.checkState() == Qt.Checked:
             item.setCheckState(Qt.Unchecked)
-            self._checked.discard(item.text())
+            self._checked.discard(value)
         else:
             item.setCheckState(Qt.Checked)
-            self._checked.add(item.text())
+            self._checked.add(value)
+        labels = [self._label_of.get(v, v) for v in self._checked]
         self.lineEdit().setText(
-            ", ".join(sorted(self._checked)) if self._checked else self._placeholder
+            ", ".join(sorted(labels)) if labels else self._placeholder
         )
         self.changed.emit()
 
@@ -85,7 +114,7 @@ class _MultiCombo(QComboBox):
 
 
 class Sidebar(QWidget):
-    """Panel izquierdo: búsqueda + filtros + lista de cultivos."""
+    """Panel izquierdo: búsqueda + filtros + árbol pivot de cultivos."""
 
     cropSelected = Signal(int)
 
@@ -94,6 +123,12 @@ class Sidebar(QWidget):
         self.db = db
         self.crops = list(db.crops())
         self._discrepant_only = False
+        self._collapsed: set[tuple] = set()  # paths de grupo colapsados
+        self._profile_label = {
+            slug: (p.get("label_es") or slug)
+            for slug, p in db._profiles().items()
+            if isinstance(p, dict)
+        }
         self._build()
         self.refresh()
 
@@ -102,6 +137,7 @@ class Sidebar(QWidget):
         lay = QVBoxLayout(self)
         lay.setContentsMargins(8, 8, 8, 8)
         lay.setSpacing(6)
+        self.setStyleSheet(f"Sidebar {{ font-family:'{T.FONT_FAMILY}'; }}")
 
         self.search = QLineEdit()
         self.search.setPlaceholderText("🔍 Buscar (nombre, familia, especie)…")
@@ -111,30 +147,99 @@ class Sidebar(QWidget):
         types = sorted({c["sheet_harvest_type"] for c in self.crops if c["sheet_harvest_type"]})
         profiles = sorted({c["assigned_profile"] for c in self.crops if c["assigned_profile"]})
 
-        self.combo_aero = _MultiCombo("Aeropónico", ["SI", "NO"], self)
-        self.combo_type = _MultiCombo("Tipo (cosecha)", types, self)
-        self.combo_profile = _MultiCombo("Perfil", profiles, self)
-        for cb in (self.combo_aero, self.combo_type, self.combo_profile):
-            cb.changed.connect(self._apply)
-            lay.addWidget(cb)
+        self.combo_aero = _MultiCombo("Todos", [("Sí", "SI"), ("No", "NO")], self)
+        self.combo_type = _MultiCombo("Todos", [(t, t) for t in types], self)
+        profile_items = [("— Sin perfil —", NO_PROFILE_VALUE)] + [
+            (self._profile_label.get(s, s), s) for s in profiles
+        ]
+        self.combo_profile = _MultiCombo("Todos", profile_items, self)
+
+        def _filter_row(caption: str, combo: _MultiCombo):
+            cap = QLabel(caption)
+            cap.setStyleSheet(
+                f"color:{T.TEXT_MUTED}; font-size:10px; font-weight:bold;"
+                " text-transform:uppercase; padding-top:2px;"
+            )
+            lay.addWidget(cap)
+            combo.changed.connect(self._apply)
+            lay.addWidget(combo)
+
+        _filter_row("Aeropónico", self.combo_aero)
+        _filter_row("Tipo de cosecha", self.combo_type)
+        _filter_row("Perfil asignado", self.combo_profile)
+
+        # --- pivot: niveles de agrupación checkables + reordenables (drag) ---
+        glabel = QLabel("Niveles de agrupación (✓ activa · arrastra para reordenar):")
+        glabel.setWordWrap(True)
+        glabel.setStyleSheet(f"color:{T.TEXT_MUTED}; font-size:11px;")
+        lay.addWidget(glabel)
+
+        self.group_levels = QListWidget()
+        self.group_levels.setDragDropMode(QAbstractItemView.InternalMove)
+        self.group_levels.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.group_levels.setMaximumHeight(92)
+        self.group_levels.setStyleSheet(
+            f"QListWidget {{ border:1px solid {T.BORDER}; border-radius:6px;"
+            f" background:{T.SURFACE}; font-size:12px; }}"
+        )
+        for label, key in GROUP_DIMENSIONS:
+            it = QListWidgetItem(label)
+            it.setData(Qt.UserRole, key)
+            it.setFlags(it.flags() | Qt.ItemIsUserCheckable)
+            it.setCheckState(Qt.Unchecked)
+            self.group_levels.addItem(it)
+        self.group_levels.itemChanged.connect(self._apply)
+        self.group_levels.model().rowsMoved.connect(lambda *a: self._apply())
+        lay.addWidget(self.group_levels)
 
         self.chip_disc = QPushButton("⚠  solo discrepancias")
         self.chip_disc.setCheckable(True)
+        warn_border = T.palette("warning", 60) or "#CC7A07"
+        warn_bg = T.palette("warning", 90) or "#FFDCAA"
+        warn_fg = T.palette("warning", 20) or "#4D2600"
         self.chip_disc.setStyleSheet(
-            "QPushButton { text-align:left; padding:4px 8px; border:1px solid #fca5a5;"
-            "  border-radius:12px; background:#fff; color:#991b1b; }"
-            "QPushButton:checked { background:#fee2e2; font-weight:bold; }"
+            f"QPushButton {{ text-align:left; padding:4px 8px; border:1px solid {warn_border};"
+            f"  border-radius:12px; background:{T.SURFACE}; color:{warn_fg}; }}"
+            f"QPushButton:checked {{ background:{warn_bg}; font-weight:bold; }}"
         )
         self.chip_disc.toggled.connect(self._on_chip)
         lay.addWidget(self.chip_disc)
 
+        # --- expandir/colapsar todo ---
+        exp_row = QVBoxLayout()
+        exp_btns = QWidget()
+        from PySide6.QtWidgets import QHBoxLayout
+
+        h = QHBoxLayout(exp_btns)
+        h.setContentsMargins(0, 0, 0, 0)
+        h.setSpacing(4)
+        self.btn_expand = QPushButton("⊞ Expandir todo")
+        self.btn_collapse = QPushButton("⊟ Colapsar todo")
+        for b in (self.btn_expand, self.btn_collapse):
+            b.setStyleSheet(
+                f"QPushButton {{ font-size:10px; padding:2px 6px; border:1px solid {T.BORDER};"
+                f" border-radius:4px; background:{T.SURFACE}; color:{T.TEXT_MUTED}; }}"
+            )
+            h.addWidget(b)
+        self.btn_expand.clicked.connect(self._expand_all)
+        self.btn_collapse.clicked.connect(self._collapse_all)
+        exp_row.addWidget(exp_btns)
+        lay.addLayout(exp_row)
+
         self.counter = QLabel("")
-        self.counter.setStyleSheet("color:#64748b; font-size:11px; padding:2px;")
+        self.counter.setStyleSheet(f"color:{T.TEXT_MUTED}; font-size:11px; padding:2px;")
         lay.addWidget(self.counter)
 
-        self.list = QListWidget()
-        self.list.currentItemChanged.connect(self._on_select)
-        lay.addWidget(self.list, 1)
+        self.tree = QTreeWidget()
+        self.tree.setHeaderHidden(True)
+        self.tree.setStyleSheet(
+            f"QTreeWidget {{ border:1px solid {T.BORDER}; border-radius:6px;"
+            f" font-family:'{T.FONT_FAMILY}'; }}"
+        )
+        self.tree.currentItemChanged.connect(self._on_select)
+        self.tree.itemExpanded.connect(self._on_expand)
+        self.tree.itemCollapsed.connect(self._on_collapse)
+        lay.addWidget(self.tree, 1)
 
     # --- filtrado ---
     def _matches(self, crop) -> bool:
@@ -154,7 +259,7 @@ class Sidebar(QWidget):
         if types and (crop["sheet_harvest_type"] or "") not in types:
             return False
         profiles = self.combo_profile.checked()
-        if profiles and (crop["assigned_profile"] or "") not in profiles:
+        if profiles and (crop["assigned_profile"] or NO_PROFILE_VALUE) not in profiles:
             return False
         if self._discrepant_only and not is_discrepant(
             crop["assigned_profile"], crop["sheet_harvest_type"]
@@ -167,6 +272,59 @@ class Sidebar(QWidget):
             return DOT_DISCREPANT
         return DOT_AERO if crop["aeroponic"] else DOT_NON_AERO
 
+    def _group_key(self, crop, mode: str) -> str:
+        if mode == "priority":
+            p = crop["priority"]
+            return "Sin prioridad" if p is None else f"Prioridad {p:g}"
+        if mode == "type":
+            return crop["sheet_harvest_type"] or "Sin tipo"
+        if mode == "profile":
+            slug = crop["assigned_profile"]
+            return self._profile_label.get(slug, slug) if slug else "Sin perfil"
+        return ""
+
+    def _active_levels(self) -> list[str]:
+        """Keys de las dimensiones activas, EN EL ORDEN actual de la lista."""
+        out = []
+        for i in range(self.group_levels.count()):
+            it = self.group_levels.item(i)
+            if it.checkState() == Qt.Checked:
+                out.append(it.data(Qt.UserRole))
+        return out
+
+    # --- construcción del árbol ---
+    def _add_leaf(self, parent, crop):
+        # El tipo NUNCA se repite en la fila: o lo cubre el grouping, o es ruido.
+        leaf = QTreeWidgetItem(parent, [f"{self._dot(crop)}  {crop['name_es']}"])
+        leaf.setData(0, ROLE_CROP_ID, crop["id"])
+
+    def _style_group(self, node, depth: int, count: int):
+        font = QFont(T.FONT_FAMILY)
+        font.setBold(True)
+        node.setFont(0, font)
+        palette = [T.PRIMARY, T.ACCENT, T.palette("secondary", 40) or "#5F6A00"]
+        node.setForeground(0, QColor(palette[min(depth, 2)]))
+        node.setBackground(0, QColor(T.SURFACE_SUNKEN))
+
+    def _build_group(self, parent, crops, keys, path):
+        mode = keys[0]
+        groups: dict[str, list] = {}
+        for c in crops:
+            groups.setdefault(self._group_key(c, mode), []).append(c)
+        for key in sorted(groups, key=lambda x: str(x).lower()):
+            sub = groups[key]
+            node = QTreeWidgetItem(parent, [f"{key}   ({len(sub)})"])
+            node.setData(0, ROLE_CROP_ID, None)
+            npath = path + (key,)
+            node.setData(0, ROLE_GROUP_PATH, npath)
+            self._style_group(node, depth=len(path), count=len(sub))
+            if len(keys) > 1:
+                self._build_group(node, sub, keys[1:], npath)
+            else:
+                for c in sorted(sub, key=lambda c: (c["name_es"] or "").lower()):
+                    self._add_leaf(node, c)
+            node.setExpanded(npath not in self._collapsed)
+
     def refresh(self):
         """Re-lee crops desde la DB (tras un Guardar que cambió clasificación)."""
         self.crops = list(self.db.crops())
@@ -174,29 +332,26 @@ class Sidebar(QWidget):
 
     def _apply(self):
         prev_id = self.current_crop_id()
-        self.list.blockSignals(True)
-        self.list.clear()
-        shown = 0
-        n_disc = 0
-        restore_row = None
-        for crop in self.crops:
-            if not self._matches(crop):
-                continue
-            disc = is_discrepant(crop["assigned_profile"], crop["sheet_harvest_type"])
-            if disc:
-                n_disc += 1
-            type_txt = crop["sheet_harvest_type"] or "—"
-            item = QListWidgetItem(f"{self._dot(crop)}  {crop['name_es']}   · {type_txt}")
-            item.setData(Qt.UserRole, crop["id"])
-            self.list.addItem(item)
-            if crop["id"] == prev_id:
-                restore_row = self.list.count() - 1
-            shown += 1
-        self.list.blockSignals(False)
-        total = len(self.crops)
-        self.counter.setText(f"{shown} de {total}  ·  {n_disc} ⚠")
-        if restore_row is not None:
-            self.list.setCurrentRow(restore_row)
+        self.tree.blockSignals(True)
+        self.tree.clear()
+
+        visible = [c for c in self.crops if self._matches(c)]
+        n_disc = sum(
+            1
+            for c in visible
+            if is_discrepant(c["assigned_profile"], c["sheet_harvest_type"])
+        )
+        levels = self._active_levels()
+        if not levels:
+            for c in sorted(visible, key=lambda c: (c["name_es"] or "").lower()):
+                self._add_leaf(self.tree, c)
+        else:
+            self._build_group(self.tree, visible, levels, ())
+
+        self.tree.blockSignals(False)
+        self.counter.setText(f"{len(visible)} de {len(self.crops)}  ·  {n_disc} ⚠")
+        if prev_id is not None:
+            self._select_crop(prev_id)
 
     # --- handlers ---
     def _on_chip(self, on: bool):
@@ -206,16 +361,65 @@ class Sidebar(QWidget):
     def _on_select(self, current, _prev):
         if current is None:
             return
-        crop_id = current.data(Qt.UserRole)
+        crop_id = current.data(0, ROLE_CROP_ID)
         if crop_id is not None:
             self.cropSelected.emit(int(crop_id))
 
+    def _on_expand(self, item):
+        path = item.data(0, ROLE_GROUP_PATH)
+        if path is not None:
+            self._collapsed.discard(path)
+
+    def _on_collapse(self, item):
+        path = item.data(0, ROLE_GROUP_PATH)
+        if path is not None:
+            self._collapsed.add(path)
+
+    def _expand_all(self):
+        self._collapsed.clear()
+        self.tree.expandAll()
+
+    def _collapse_all(self):
+        it = QTreeWidgetItemIterator(self.tree)
+        while it.value():
+            node = it.value()
+            path = node.data(0, ROLE_GROUP_PATH)
+            if path is not None:
+                self._collapsed.add(path)
+            it += 1
+        self.tree.collapseAll()
+
+    def _select_crop(self, crop_id: int):
+        it = QTreeWidgetItemIterator(self.tree)
+        while it.value():
+            node = it.value()
+            if node.data(0, ROLE_CROP_ID) == crop_id:
+                self.tree.setCurrentItem(node)
+                return
+            it += 1
+
     def current_crop_id(self) -> int | None:
-        item = self.list.currentItem()
+        item = self.tree.currentItem()
         if item is None:
             return None
-        return item.data(Qt.UserRole)
+        return item.data(0, ROLE_CROP_ID)
 
     # --- helpers para tests ---
+    def first_crop_item(self) -> QTreeWidgetItem | None:
+        it = QTreeWidgetItemIterator(self.tree)
+        while it.value():
+            node = it.value()
+            if node.data(0, ROLE_CROP_ID) is not None:
+                return node
+            it += 1
+        return None
+
     def visible_count(self) -> int:
-        return self.list.count()
+        """Cuenta de cultivos visibles (leaves; excluye nodos de grupo)."""
+        n = 0
+        it = QTreeWidgetItemIterator(self.tree)
+        while it.value():
+            if it.value().data(0, ROLE_CROP_ID) is not None:
+                n += 1
+            it += 1
+        return n
