@@ -1,4 +1,5 @@
 import 'package:jaspr/jaspr.dart';
+import 'package:jaspr/dom.dart';
 
 /// Real-time sensor time-series chart powered by D3.js.
 /// This component renders an SVG container that D3 populates client-side.
@@ -26,8 +27,8 @@ class SensorChart extends StatefulComponent {
 
 class SensorChartState extends State<SensorChart> {
   @override
-  Iterable<Component> build(BuildContext context) sync* {
-    yield div(
+  Component build(BuildContext context) {
+    return div(
       classes: 'chart-container',
       id: 'chart-container-${component.chartId}',
       attributes: {

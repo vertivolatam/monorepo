@@ -1,1 +1,6 @@
-include: package:jaspr_lints/jaspr.yaml
+# jaspr_lints 0.6.x is configured via the `plugins:` block, which the Dart
+# analyzer only honours at the workspace root. Since vertivo_dashboard lives in
+# a pub workspace, the jaspr_lints plugin must be declared in the monorepo-root
+# analysis_options.yaml (see the team-lead handoff). This file keeps lint
+# defaults so the package still analyzes cleanly on its own.
+include: package:lints/recommended.yaml

@@ -1,4 +1,5 @@
 import 'package:jaspr/jaspr.dart';
+import 'package:jaspr/dom.dart';
 
 import '../components/kpi_card.dart';
 import '../components/alert_item.dart';
@@ -8,12 +9,14 @@ class HomePage extends StatelessComponent {
   const HomePage({super.key});
 
   @override
-  Iterable<Component> build(BuildContext context) sync* {
-    yield div(classes: 'page', [
+  Component build(BuildContext context) {
+    return div(classes: 'page', [
       // Page header
       div(classes: 'page__header', [
-        h1([text('Dashboard')]),
-        p(classes: 'page__subtitle', [text('Monitoreo en tiempo real de todos los invernaderos')]),
+        h1([Component.text('Dashboard')]),
+        p(classes: 'page__subtitle', [
+          Component.text('Monitoreo en tiempo real de todos los invernaderos'),
+        ]),
       ]),
 
       // KPI cards row
@@ -54,12 +57,16 @@ class HomePage extends StatelessComponent {
 
       // Sensor overview charts
       div(classes: 'section', [
-        h2(classes: 'section__title', [text('Lecturas Globales — Ultimas 24h')]),
+        h2(classes: 'section__title', [
+          Component.text('Lecturas Globales — Ultimas 24h'),
+        ]),
         div(classes: 'grid grid--2', [
           div(classes: 'panel', [
             div(classes: 'panel__header', [
-              span(classes: 'panel__title', [text('CO2 (ppm)')]),
-              span(classes: 'panel__badge badge badge--normal', [text('Normal')]),
+              span(classes: 'panel__title', [Component.text('CO2 (ppm)')]),
+              span(classes: 'panel__badge badge badge--normal', [
+                Component.text('Normal'),
+              ]),
             ]),
             SensorChart(
               chartId: 'global-co2',
@@ -71,8 +78,10 @@ class HomePage extends StatelessComponent {
           ]),
           div(classes: 'panel', [
             div(classes: 'panel__header', [
-              span(classes: 'panel__title', [text('Humedad (%)')]),
-              span(classes: 'panel__badge badge badge--normal', [text('Normal')]),
+              span(classes: 'panel__title', [Component.text('Humedad (%)')]),
+              span(classes: 'panel__badge badge badge--normal', [
+                Component.text('Normal'),
+              ]),
             ]),
             SensorChart(
               chartId: 'global-humidity',
@@ -84,8 +93,10 @@ class HomePage extends StatelessComponent {
           ]),
           div(classes: 'panel', [
             div(classes: 'panel__header', [
-              span(classes: 'panel__title', [text('pH')]),
-              span(classes: 'panel__badge badge badge--warning', [text('Atencion')]),
+              span(classes: 'panel__title', [Component.text('pH')]),
+              span(classes: 'panel__badge badge badge--warning', [
+                Component.text('Atencion'),
+              ]),
             ]),
             SensorChart(
               chartId: 'global-ph',
@@ -97,8 +108,12 @@ class HomePage extends StatelessComponent {
           ]),
           div(classes: 'panel', [
             div(classes: 'panel__header', [
-              span(classes: 'panel__title', [text('Temperatura (C)')]),
-              span(classes: 'panel__badge badge badge--normal', [text('Normal')]),
+              span(classes: 'panel__title', [
+                Component.text('Temperatura (C)'),
+              ]),
+              span(classes: 'panel__badge badge badge--normal', [
+                Component.text('Normal'),
+              ]),
             ]),
             SensorChart(
               chartId: 'global-temp',
@@ -114,14 +129,17 @@ class HomePage extends StatelessComponent {
       // Recent alerts
       div(classes: 'section', [
         div(classes: 'section__header', [
-          h2(classes: 'section__title', [text('Alertas Recientes')]),
-          a(href: '/alerts', classes: 'section__link', [text('Ver todas')]),
+          h2(classes: 'section__title', [Component.text('Alertas Recientes')]),
+          a(href: '/alerts', classes: 'section__link', [
+            Component.text('Ver todas'),
+          ]),
         ]),
         div(classes: 'alert-list', [
           AlertItem(
             severity: 'critical',
             title: 'pH fuera de rango critico',
-            message: 'pH 4.2 — Limite inferior 5.5. Invernadero #12, Bandeja A3.',
+            message:
+                'pH 4.2 — Limite inferior 5.5. Invernadero #12, Bandeja A3.',
             greenhouse: 'GH-012 (Residencial)',
             timestamp: 'Hace 12 min',
             isResolved: false,
@@ -137,7 +155,8 @@ class HomePage extends StatelessComponent {
           AlertItem(
             severity: 'medium',
             title: 'EC elevada',
-            message: 'EC 2100 uS/cm — Limite superior 1800. Tendencia ascendente.',
+            message:
+                'EC 2100 uS/cm — Limite superior 1800. Tendencia ascendente.',
             greenhouse: 'GH-019 (Industrial)',
             timestamp: 'Hace 1h 12min',
             isResolved: false,
@@ -148,27 +167,66 @@ class HomePage extends StatelessComponent {
       // Greenhouse status table
       div(classes: 'section', [
         div(classes: 'section__header', [
-          h2(classes: 'section__title', [text('Estado de Invernaderos')]),
-          a(href: '/greenhouses', classes: 'section__link', [text('Ver todos')]),
+          h2(classes: 'section__title', [
+            Component.text('Estado de Invernaderos'),
+          ]),
+          a(href: '/greenhouses', classes: 'section__link', [
+            Component.text('Ver todos'),
+          ]),
         ]),
         div(classes: 'table-wrapper', [
           table(classes: 'data-table', [
             thead([
               tr([
-                th([text('ID')]),
-                th([text('Nombre')]),
-                th([text('Segmento')]),
-                th([text('Sensores')]),
-                th([text('Alertas')]),
-                th([text('Estado')]),
+                th([Component.text('ID')]),
+                th([Component.text('Nombre')]),
+                th([Component.text('Segmento')]),
+                th([Component.text('Sensores')]),
+                th([Component.text('Alertas')]),
+                th([Component.text('Estado')]),
               ]),
             ]),
             tbody([
-              _ghRow('GH-001', 'Invernadero Central', 'industrial', '8/8', '0', 'online'),
-              _ghRow('GH-007', 'La Cosecha Fresca', 'commercial', '7/8', '1', 'warning'),
-              _ghRow('GH-012', 'Mi Huerta', 'residential', '8/8', '1', 'critical'),
-              _ghRow('GH-015', 'Granja Norte', 'industrial', '8/8', '0', 'online'),
-              _ghRow('GH-019', 'Hidroponicos Sur', 'industrial', '8/8', '1', 'warning'),
+              _ghRow(
+                'GH-001',
+                'Invernadero Central',
+                'industrial',
+                '8/8',
+                '0',
+                'online',
+              ),
+              _ghRow(
+                'GH-007',
+                'La Cosecha Fresca',
+                'commercial',
+                '7/8',
+                '1',
+                'warning',
+              ),
+              _ghRow(
+                'GH-012',
+                'Mi Huerta',
+                'residential',
+                '8/8',
+                '1',
+                'critical',
+              ),
+              _ghRow(
+                'GH-015',
+                'Granja Norte',
+                'industrial',
+                '8/8',
+                '0',
+                'online',
+              ),
+              _ghRow(
+                'GH-019',
+                'Hidroponicos Sur',
+                'industrial',
+                '8/8',
+                '1',
+                'warning',
+              ),
             ]),
           ]),
         ]),
@@ -176,14 +234,32 @@ class HomePage extends StatelessComponent {
     ]);
   }
 
-  Component _ghRow(String id, String name, String segment, String sensors, String alerts, String status) {
+  Component _ghRow(
+    String id,
+    String name,
+    String segment,
+    String sensors,
+    String alerts,
+    String status,
+  ) {
     return tr(classes: 'data-table__row data-table__row--$status', [
-      td([a(href: '/greenhouses/${id.replaceAll('GH-', '')}', [text(id)])]),
-      td([text(name)]),
-      td([span(classes: 'badge badge--segment-$segment', [text(segment)])]),
-      td([text(sensors)]),
-      td([text(alerts)]),
-      td([span(classes: 'status-dot status-dot--$status', []), text(' ${status.toUpperCase()}')]),
+      td([
+        a(href: '/greenhouses/${id.replaceAll('GH-', '')}', [
+          Component.text(id),
+        ]),
+      ]),
+      td([Component.text(name)]),
+      td([
+        span(classes: 'badge badge--segment-$segment', [
+          Component.text(segment),
+        ]),
+      ]),
+      td([Component.text(sensors)]),
+      td([Component.text(alerts)]),
+      td([
+        span(classes: 'status-dot status-dot--$status', []),
+        Component.text(' ${status.toUpperCase()}'),
+      ]),
     ]);
   }
 }

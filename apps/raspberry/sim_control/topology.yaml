@@ -1,0 +1,49 @@
+# Copyright (c) 2024 Vertivo Horticultura Urbana Vertical S.R.L.
+# Cédula Jurídica 3-102-815230
+# All Rights Reserved.
+#
+# Wiring topology for the InterLink view (Phase 4). Maps each simulated sensor
+# to the physical InterLink carrier board + port it lives on. The control panel
+# reads this to draw the EZO-node -> InterLink-box -> Raspberry-Pi schematic.
+#
+#   interlink: which InterLink carrier (i3 = 3-port, i4 = 4-port isolated)
+#   board:     which physical board instance (#1, #2, ...)
+#   port:      port number on that carrier
+#
+# Default layout:
+#   i4 #1 (isolated): pH · EC · DO · ORP  — the noise-sensitive nutrient probes
+#   i3 #2:            RTD(temp) · HUM · CO2
+#   TDS is derived from EC on real kits -> no physical node (derived: true).
+
+sensors:
+  ph:
+    interlink: i4
+    board: 1
+    port: 1
+  ec:
+    interlink: i4
+    board: 1
+    port: 2
+  do:
+    interlink: i4
+    board: 1
+    port: 3
+  orp:
+    interlink: i4
+    board: 1
+    port: 4
+  temperature:
+    interlink: i3
+    board: 2
+    port: 1
+  humidity:
+    interlink: i3
+    board: 2
+    port: 2
+  co2:
+    interlink: i3
+    board: 2
+    port: 3
+  tds:
+    derived: true
+    source: ec

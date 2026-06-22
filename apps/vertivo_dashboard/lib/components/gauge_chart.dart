@@ -1,4 +1,5 @@
 import 'package:jaspr/jaspr.dart';
+import 'package:jaspr/dom.dart';
 
 /// Radial gauge component rendered by D3.js client-side.
 /// Shows current sensor value as a Grafana-style arc gauge
@@ -32,8 +33,8 @@ class GaugeChart extends StatefulComponent {
 
 class GaugeChartState extends State<GaugeChart> {
   @override
-  Iterable<Component> build(BuildContext context) sync* {
-    yield div(
+  Component build(BuildContext context) {
+    return div(
       classes: 'gauge-container',
       id: 'gauge-${component.gaugeId}',
       attributes: {

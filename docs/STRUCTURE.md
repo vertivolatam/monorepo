@@ -1,119 +1,106 @@
-# Estructura del Proyecto
+# Estructura del Proyecto — Vertivo Monorepo
 
-> Esta plantilla es **opinionated**: usa **Clean Architecture** + **Atomic Design** como estructura base para la app movil, y recomienda **Riverpod** o **Air Framework** para state management.
+> Documento de **referencia** del layout real del monorepo. Las **decisiones** de
+> arquitectura se registran en `openspec/` (ver
+> [`2026-06-21-canonical-flutter-app`](../openspec/changes/2026-06-21-canonical-flutter-app/)).
+>
+> App Flutter canónica: **`apps/vertivo_flutter`** (mobile + desktop + web). Arquitectura
+> móvil: **Clean Architecture** + **Atomic Design** + **Riverpod**.
 
 ## Arbol de Directorios
 
 ```
-proyecto/
-├── AGENTS.md                          # Documentacion de Agent Skills + taxonomia Linear
+monorepo/
+├── AGENTS.md                          # Contexto de producto, prioridades, skills, taxonomia Linear
+├── CLAUDE.md                          # Entry point auto-cargado (Critical Rules + Quick Nav)
+├── Makefile                           # Automatizacion (env-recurso-verbo): bootstrap-dev, dev-*
 ├── README.md                          # Guia de inicio
 ├── mcp.json                           # Configuracion MCP servers
-├── .gitignore
+├── turbo.json · package.json · pnpm-workspace.yaml · pubspec.lock
 │
 ├── apps/
-│   ├── backend/                       # API backend (NestJS / Express / etc.)
+│   ├── raspberry/                     # Orquestador de monitoreo (Python) — sensores I2C + MQTT
 │   │   ├── src/
-│   │   ├── test/
-│   │   ├── scripts/
-│   │   └── public/
-│   ├── mobile/                        # App movil (Flutter)
-│   │   ├── lib/
-│   │   │   ├── core/                  # Constantes, errores, red, tema, utils
-│   │   │   ├── features/             # Modulos por feature (Clean Architecture)
-│   │   │   │   └── [feature]/
-│   │   │   │       ├── data/         # Datasources, models, repository impl
-│   │   │   │       ├── domain/       # Entities, use cases, repository interfaces
-│   │   │   │       └── presentation/ # Pages, providers/controllers, widgets
-│   │   │   ├── shared/
-│   │   │   │   └── ui/               # Atomic Design
-│   │   │   │       ├── atoms/        # Componentes basicos (botones, inputs, iconos)
-│   │   │   │       ├── molecules/    # Combinaciones simples (labeled input, icon button)
-│   │   │   │       ├── organisms/    # Componentes complejos (forms, cards, app bars)
-│   │   │   │       └── templates/    # Layouts de pagina sin datos
-│   │   │   └── main.dart
-│   │   ├── test/
-│   │   └── assets/
-│   └── widgetbook/                    # Catalogo de widgets (Widgetbook)
-│       ├── lib/
-│       └── test/
+│   │   │   ├── monitors/             # Ambientales + Atlas Scientific (pH, EC, CO2, DO, ORP…)
+│   │   │   ├── orchestrators/        # Coordinacion de monitores
+│   │   │   ├── networking/           # MQTT (mqtt.py) + integracion monitor→MQTT
+│   │   │   ├── simulation/           # Simuladores de sensores (sin hardware)
+│   │   │   ├── cloud_sdk_libs/       # AWS IoT Core / paho-mqtt
+│   │   │   └── visualization/        # Dashboards Grafana-as-code (grafanalib) — ops, NO producto
+│   │   ├── config/                   # defaults/ + current/ (mqtt_dev.json, indoor/outdoor/…)
+│   │   ├── tests/ · Dockerfile.template · .balena/
+│   │
+│   ├── vertivo_server/               # Backend Serverpod (Dart) — :8080 API, :8081 Insights
+│   │   └── lib/src/
+│   │       ├── <dominio>/            # endpoints: greenhouse, alert, anomaly, management,
+│   │       │                         #   harvest_prediction, phytopathology, traceability, users…
+│   │       ├── greenhouses/          # EnvironmentalReading (spy.yaml) + SensorIngestionService
+│   │       ├── data/data_sources/    # mqtt_data_source · mqtt_topics
+│   │       └── generated/            # protocol.yaml + endpoints.dart (Serverpod codegen)
+│   │
+│   ├── vertivo_client/               # Cliente Dart generado por Serverpod (consumido por Flutter)
+│   ├── vertivo_dashboard/            # Dashboard web (Jaspr + D3.js) — :8080
+│   ├── vertivo_flutter/              # ★ App Flutter canonica (android/ios/linux/web/windows)
+│   │   └── lib/                      # Ver "Arquitectura de la App" abajo
+│   └── widgetbook/                   # Catalogo de widgets (Widgetbook)
 │
 ├── infrastructure/
-│   ├── terraform/
-│   │   ├── environments/              # dev / qa / staging / prod
-│   │   └── modules/                   # Modulos reutilizables
-│   ├── helm-charts/
-│   ├── k8s/                           # Manifiestos K8s de infra (gateway, cert-manager)
-│   ├── docker/
-│   ├── kms/                           # Gestion de secretos (Infisical, Vault, SOPS, etc.)
-│   └── scripts/
+│   ├── terraform/                    # environments/ (dev/qa/staging/prod) + modules/
+│   ├── scripts/                      # bootstrap-dev.sh, bootstrap-raspberry.sh, start-minikube.sh…
+│   └── helm-charts/ · docker/ · kms/
 │
-├── k8s/                               # Manifiestos K8s de aplicacion
-│   ├── base/backend/
-│   ├── overlays/                      # dev / qa / staging / prod
-│   └── argocd/                        # GitOps (projects + applications)
+├── k8s/                              # Manifiestos K8s de aplicacion (base/ + overlays/ + argocd/)
 │
-├── skills/                            # Agent Skills (54 skills)
-│   ├── flutter/                       # 28 skills Flutter
-│   ├── cicd/                          # 9 skills CI/CD
-│   ├── backend/                       # Backend skills
-│   ├── system-reliability-engineering/ # 14 skills SRE
-│   ├── figma/
-│   ├── static-analysis/
-│   └── ...
+├── openspec/                         # Decision records (PDR/ADR/tasks) — changes/
+├── srd/                              # Synthetic Reality Development (directivas, gap-audit, journeys)
+├── specs/                            # Especificaciones de requisitos (IEEE 830)
+├── business/                         # Modelo de negocio
+├── skills/                           # Agent Skills (Flutter, CI/CD, SRE, backend, figma…)
+├── style-dictionary/                # Design tokens
+├── docs/                             # content/ (Zensical) + templates/ + monitoring/ + security/
+├── libs/ · scripts/ · logs/ · linear-todo-templates/
 │
-├── docs/
-│   ├── content/                       # Documentacion principal (MkDocs, Docusaurus, etc.)
-│   ├── templates/                     # Plantillas (IEEE 830, ADR, etc.)
-│   ├── versioning/                    # Tracking de versiones
-│   ├── monitoring/                    # Docs de monitoreo
-│   └── security/                      # Docs de seguridad
-│
-├── specs/                             # Especificaciones de requisitos (IEEE 830)
-├── libs/                              # Librerias compartidas
-├── scripts/                           # Scripts de utilidad (admin, setup, validacion)
-├── logs/                              # Logs de aplicacion (backend, mobile)
-├── linear-todo-templates/             # Templates para issues de Linear
-│
-└── .github/
-    └── workflows/                     # CI/CD pipelines
+└── .github/workflows/               # CI/CD pipelines
 ```
 
 ## Descripcion de Directorios
 
 | Directorio | Descripcion |
 |------------|-------------|
-| `apps/` | Aplicaciones del monorepo: backend API, app movil Flutter, y catalogo Widgetbook |
-| `infrastructure/` | Infraestructura como codigo: Terraform, Helm, Docker, KMS, scripts de infra |
-| `k8s/` | Manifiestos Kubernetes de aplicacion con Kustomize overlays y ArgoCD GitOps |
-| `skills/` | Agent Skills para asistentes IA (Flutter, CI/CD, SRE, backend, etc.) |
-| `docs/` | Documentacion del proyecto, plantillas, versionado, monitoreo y seguridad |
-| `specs/` | Especificaciones de requisitos siguiendo estandar IEEE 830 |
-| `libs/` | Librerias y paquetes compartidos entre aplicaciones |
-| `scripts/` | Scripts de utilidad para administracion, setup y validacion |
-| `logs/` | Logs de aplicacion separados por servicio (backend, mobile) |
-| `linear-todo-templates/` | Templates reutilizables para issues en Linear |
-| `.github/workflows/` | Pipelines de CI/CD con GitHub Actions |
+| `apps/raspberry/` | Orquestador de monitoreo en Python: monitores de sensores, MQTT, simuladores, AWS IoT |
+| `apps/vertivo_server/` | Backend Serverpod (Dart): 14 endpoints, modelos, ingestor MQTT→PostgreSQL |
+| `apps/vertivo_client/` | Cliente Dart generado por Serverpod; lo consume `vertivo_flutter` |
+| `apps/vertivo_dashboard/` | Dashboard web con Jaspr + D3.js |
+| `apps/vertivo_flutter/` | App Flutter canonica (mobile/desktop/web) — front del producto |
+| `apps/widgetbook/` | Catalogo de widgets para la UI Flutter |
+| `infrastructure/` | IaC: Terraform, Helm, Docker, KMS, scripts de bootstrap/minikube |
+| `k8s/` | Manifiestos Kubernetes de aplicacion (Kustomize overlays + ArgoCD GitOps) |
+| `openspec/` | Decision records (PDR=`proposal.md`, ADR=`design.md`, `tasks.md`) |
+| `srd/` | Directivas de producto (Synthetic Reality Development): prioridades, gap-audit, journeys |
+| `skills/` | Agent Skills para asistentes IA |
+| `docs/` | Documentacion, plantillas, monitoreo y seguridad |
 
-## Arquitectura de la App Movil
+## Arquitectura de la App (`apps/vertivo_flutter/lib/`)
 
-La estructura de `apps/mobile/lib/` sigue **Clean Architecture** organizada por features, con **Atomic Design** para componentes UI compartidos.
+Sigue **Clean Architecture** organizada por features, con **Atomic Design** para
+componentes UI compartidos. State management: **Riverpod**.
+
+> Migracion **incremental**: las features nuevas (empezando por el monitoreo de pH) se
+> escriben en este layout; las pantallas existentes (`screens/`) migran oportunamente.
+> No hay refactor big-bang. Detalle en el OpenSpec change citado arriba.
 
 ### Clean Architecture (por feature)
-
-Cada feature es un modulo independiente con tres capas:
 
 | Capa | Contenido | Depende de |
 |------|-----------|------------|
 | `domain/` | Entities, use cases, repository interfaces | Nada (capa mas interna) |
-| `data/` | Datasources, models, repository implementations | `domain/` |
-| `presentation/` | Pages, widgets, providers/controllers | `domain/` |
+| `data/` | Datasources, models, repository impl (envuelven `vertivo_client`) | `domain/` |
+| `presentation/` | Pages, providers Riverpod, widgets | `domain/` |
 
-Las dependencias son **unidireccionales**: `presentation/` y `data/` dependen de `domain/`, nunca al reves.
+Las dependencias son **unidireccionales**: `presentation/` y `data/` dependen de `domain/`,
+nunca al reves.
 
-### Atomic Design (UI compartida)
-
-Los componentes UI reutilizables viven en `shared/ui/` y siguen niveles de complejidad creciente:
+### Atomic Design (UI compartida en `lib/shared/ui/`)
 
 | Nivel | Descripcion | Ejemplo |
 |-------|-------------|---------|
@@ -122,9 +109,9 @@ Los componentes UI reutilizables viven en `shared/ui/` y siguen niveles de compl
 | `organisms/` | Secciones funcionales completas | AppBar, Form, Card con acciones |
 | `templates/` | Layouts de pagina (sin datos) | Scaffold con slots, grid layout |
 
-### State Management Recomendado
+### State Management
 
 | Framework | Cuando usarlo | Paquete |
 |-----------|---------------|---------|
-| **Riverpod** | Proyectos de cualquier escala. Providers reactivos, compile-safe, code generation opcional. | [`riverpod`](https://pub.dev/packages/riverpod) |
-| **Air Framework** | Proyectos enterprise/large-scale. Framework modular con state reactivo (`@GenerateState`), DI, routing y DevTools. | [`air_framework`](https://pub.dev/packages/air_framework) |
+| **Riverpod** (adoptado) | Default del proyecto. Providers reactivos, compile-safe. | [`riverpod`](https://pub.dev/packages/riverpod) |
+| Air Framework (opcion futura) | Escala enterprise; no adoptado aun (YAGNI). | [`air_framework`](https://pub.dev/packages/air_framework) |

@@ -2,8 +2,15 @@ import 'package:serverpod/serverpod.dart';
 import '../generated/protocol.dart';
 
 class GreenhouseEndpoint extends Endpoint {
-  /// Create a new greenhouse
+  /// Create a new greenhouse owned by the authenticated user
   Future<Greenhouse> create(Session session, Greenhouse greenhouse) async {
+    final authInfo = session.authenticated;
+    if (authInfo == null) {
+      throw Exception('Authentication required to create a greenhouse');
+    }
+    // Server is the source of truth for ownership — never trust a client-sent
+    // userId. Matches the userIdentifier used by listByUser below.
+    greenhouse.userId = authInfo.userIdentifier;
     greenhouse.createdAt = DateTime.now();
     greenhouse.updatedAt = DateTime.now();
     greenhouse.isActive = true;

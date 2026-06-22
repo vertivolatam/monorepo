@@ -1,4 +1,5 @@
 import 'package:jaspr/jaspr.dart';
+import 'package:jaspr/dom.dart';
 
 class AlertItem extends StatelessComponent {
   final String severity; // critical, high, medium, low
@@ -19,20 +20,26 @@ class AlertItem extends StatelessComponent {
   });
 
   @override
-  Iterable<Component> build(BuildContext context) sync* {
-    yield div(classes: 'alert-item alert-item--$severity${isResolved ? ' alert-item--resolved' : ''}', [
-      div(classes: 'alert-item__indicator', []),
-      div(classes: 'alert-item__content', [
-        div(classes: 'alert-item__header', [
-          span(classes: 'alert-item__title', [text(title)]),
-          span(classes: 'badge badge--$severity', [text(severity.toUpperCase())]),
+  Component build(BuildContext context) {
+    return div(
+      classes:
+          'alert-item alert-item--$severity${isResolved ? ' alert-item--resolved' : ''}',
+      [
+        div(classes: 'alert-item__indicator', []),
+        div(classes: 'alert-item__content', [
+          div(classes: 'alert-item__header', [
+            span(classes: 'alert-item__title', [Component.text(title)]),
+            span(classes: 'badge badge--$severity', [
+              Component.text(severity.toUpperCase()),
+            ]),
+          ]),
+          p(classes: 'alert-item__message', [Component.text(message)]),
+          div(classes: 'alert-item__meta', [
+            span([Component.text(greenhouse)]),
+            span(classes: 'alert-item__time', [Component.text(timestamp)]),
+          ]),
         ]),
-        p(classes: 'alert-item__message', [text(message)]),
-        div(classes: 'alert-item__meta', [
-          span([text(greenhouse)]),
-          span(classes: 'alert-item__time', [text(timestamp)]),
-        ]),
-      ]),
-    ]);
+      ],
+    );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:jaspr/jaspr.dart';
+import 'package:jaspr/dom.dart';
 
 class SensorPanel extends StatelessComponent {
   final String sensorType;
@@ -23,21 +24,24 @@ class SensorPanel extends StatelessComponent {
   });
 
   @override
-  Iterable<Component> build(BuildContext context) sync* {
-    yield div(classes: 'sensor-panel sensor-panel--$status', [
+  Component build(BuildContext context) {
+    return div(classes: 'sensor-panel sensor-panel--$status', [
       div(classes: 'sensor-panel__header', [
-        span(classes: 'sensor-panel__type', [text(sensorType)]),
-        span(classes: 'sensor-panel__status-dot status-dot status-dot--$status', []),
+        span(classes: 'sensor-panel__type', [Component.text(sensorType)]),
+        span(
+          classes: 'sensor-panel__status-dot status-dot status-dot--$status',
+          [],
+        ),
       ]),
       div(classes: 'sensor-panel__gauge', id: 'gauge-$chartId', []),
       div(classes: 'sensor-panel__reading', [
-        span(classes: 'sensor-panel__value', [text(currentValue)]),
-        span(classes: 'sensor-panel__unit', [text(unit)]),
+        span(classes: 'sensor-panel__value', [Component.text(currentValue)]),
+        span(classes: 'sensor-panel__unit', [Component.text(unit)]),
       ]),
-      div(classes: 'sensor-panel__label', [text(label)]),
+      div(classes: 'sensor-panel__label', [Component.text(label)]),
       div(classes: 'sensor-panel__range', [
-        span([text('Min: $min')]),
-        span([text('Max: $max')]),
+        span([Component.text('Min: $min')]),
+        span([Component.text('Max: $max')]),
       ]),
       div(classes: 'sensor-panel__chart', id: 'chart-$chartId', []),
     ]);

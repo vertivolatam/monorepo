@@ -1,4 +1,5 @@
 import 'package:jaspr/jaspr.dart';
+import 'package:jaspr/dom.dart';
 
 class KpiCard extends StatelessComponent {
   final String title;
@@ -19,23 +20,23 @@ class KpiCard extends StatelessComponent {
   });
 
   @override
-  Iterable<Component> build(BuildContext context) sync* {
+  Component build(BuildContext context) {
     final trendClass = switch (trendDirection) {
       'up' => 'kpi__trend--up',
       'down' => 'kpi__trend--down',
       _ => 'kpi__trend--stable',
     };
 
-    yield div(classes: 'kpi', [
+    return div(classes: 'kpi', [
       div(classes: 'kpi__header', [
-        span(classes: 'kpi__title', [text(title)]),
+        span(classes: 'kpi__title', [Component.text(title)]),
       ]),
       div(classes: 'kpi__body', [
-        span(classes: 'kpi__value', [text(value)]),
-        span(classes: 'kpi__unit', [text(unit)]),
+        span(classes: 'kpi__value', [Component.text(value)]),
+        span(classes: 'kpi__unit', [Component.text(unit)]),
       ]),
       div(classes: 'kpi__footer', [
-        span(classes: 'kpi__trend $trendClass', [text(trend)]),
+        span(classes: 'kpi__trend $trendClass', [Component.text(trend)]),
         div(classes: 'kpi__sparkline', id: sparklineId, []),
       ]),
     ]);
