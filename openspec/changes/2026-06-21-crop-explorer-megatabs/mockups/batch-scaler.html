@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Mega-tab 3 — Calculadora (envases QListView + recetas accordions)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; padding:20px; background:#ffffff; color:#1c1a1e; font-family: Inter, Arial, sans-serif; }
+  h2 { color:#772583; margin:0 0 4px; }
+  .sub { color:#555; margin:0 0 16px; }
+  .win { border:1px solid #5E1D6B; border-radius:8px; overflow:hidden; }
+  .tabs { display:flex; background:#2A0033; }
+  .tab { padding:10px 18px; color:#C178CB; }
+  .tab.active { color:#fff; background:#772583; font-weight:600; }
+  .tab.inactive { background:#1A0020; }
+  .body { display:flex; min-height:560px; background:#f6f3f8; }
+
+  .side { width:250px; border-right:1px solid #cbc5d0; background:#fff; }
+  .side .hdr { padding:8px 10px; font-size:11px; font-weight:bold; color:#777; border-bottom:1px solid #eee; }
+  .side .it { padding:9px 12px; border-bottom:1px solid #f2f2f2; display:flex; justify-content:space-between; }
+  .side .it .cap { color:#999; font-size:12px; }
+  .side .it.sel { background:#772583; color:#fff; }
+  .side .it.sel .cap { color:#e9d3f0; }
+
+  .main { flex:1; padding:16px; }
+  .toprow { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+  .pname { font-size:16px; font-weight:bold; color:#772583; }
+  .bottle-sel { border:1px solid #bbb; border-radius:5px; padding:5px 10px; background:#fff; font-size:13px; margin-left:auto; }
+  .callout { display:flex; gap:10px; background:#E0ECF7; border-left:5px solid #2F77C2;
+             border-radius:6px; padding:10px 12px; margin:8px 0 14px; font-size:12px; color:#1c3a5e; }
+  .lbl { font-size:11px; color:#777; text-transform:uppercase; font-weight:bold; margin:4px 0 6px; }
+
+  /* recetas como accordions (color por fase) */
+  .acc { border:1px solid #cbc5d0; border-radius:6px; overflow:hidden; margin-bottom:7px; }
+  .acc-head { padding:9px 12px; font-weight:600; cursor:pointer; display:flex; align-items:center; }
+  .acc-head .ct { margin-left:auto; font-weight:400; opacity:.85; font-size:12px; }
+  .acc.veg .acc-head { background:#6C4FA1; color:#fff; }
+  .acc.rep .acc-head { background:#B03A6E; color:#fff; }
+  .acc.mad .acc-head { background:#2F77C2; color:#fff; }
+  .acc-body { padding:10px; background:#fff; }
+
+  .cards { display:flex; gap:10px; }
+  .card { flex:1; border:1px solid #e4dfe8; border-radius:7px; background:#fff; overflow:hidden; }
+  .card .hd { padding:6px 9px; color:#fff; font-weight:600; font-size:12px; }
+  .card.a .hd { background:#5F6A00; } .card.b .hd { background:#8E4B00; } .card.c .hd { background:#2F77C2; }
+  .card .bd { padding:9px; }
+  .step { font-size:10px; color:#999; text-transform:uppercase; font-weight:bold; margin:6px 0 2px; }
+  .row { display:flex; justify-content:space-between; font-size:12px; margin:3px 0; }
+  .row .k { color:#666; } .row .v { font-weight:600; }
+  .big { background:#f4eff6; border-radius:5px; padding:6px 8px; margin-top:7px; font-size:12px; }
+  .big .v { font-weight:700; color:#772583; }
+</style>
+</head>
+<body>
+  <h2>Mega-tab 3 — envases (QListView) + recetas (accordions)</h2>
+  <p class="sub">La receta ya NO es dropdown: cada perfil×fase es un accordion (color de la hoja). ¿Así?</p>
+
+  <div class="win">
+    <div class="tabs">
+      <div class="tab inactive">🌱 Catálogo de cultivos</div>
+      <div class="tab inactive">🧪 Perfiles &amp; Recetas</div>
+      <div class="tab active">🧮 Calculadora de lote</div>
+    </div>
+    <div class="body">
+      <div class="side">
+        <div class="hdr">ENVASE (VOLUMEN FINAL)</div>
+        <div class="it sel"><span>Pichinga 18 L</span><span class="cap">5 gal</span></div>
+        <div class="it"><span>Pichinga 56 L</span><span class="cap">15 gal</span></div>
+        <div class="it"><span>Tanque 5000 L</span><span class="cap">1321 gal</span></div>
+        <div class="it"><span>Tanque 7500 L</span><span class="cap">1981 gal</span></div>
+        <div class="it"><span>Tanque 10000 L</span><span class="cap">2642 gal</span></div>
+        <div class="it"><span>Tanque 15000 L</span><span class="cap">3963 gal</span></div>
+        <div class="it"><span>Tanque 22000 L</span><span class="cap">5812 gal</span></div>
+        <div class="it"><span>Tanque 27000 L</span><span class="cap">7133 gal</span></div>
+        <div class="it"><span>Personalizado…</span><span class="cap">L</span></div>
+      </div>
+
+      <div class="main">
+        <div class="toprow">
+          <span class="pname">Pichinga 18 L → 18,0 L final</span>
+          <span class="bottle-sel">Envasar en: Botellas 1 L ▾</span>
+        </div>
+        <div class="callout">📐 Elegí la receta abajo (accordion). Para el envase seleccionado, calcula hacia atrás el <b>agua inicial</b> + <b>sal de cada solución</b> para completar 18 L con el desplazamiento (sin aforar).</div>
+
+        <div class="lbl">Receta (perfil × fase)</div>
+
+        <!-- accordion abierto -->
+        <div class="acc veg">
+          <div class="acc-head">▼ Cultivos de Fruto — Vegetativa <span class="ct">para Pichinga 18 L</span></div>
+          <div class="acc-body">
+            <div class="cards">
+              <div class="card a"><div class="hd">A — Nitratos</div><div class="bd">
+                <div class="step">Agua inicial</div><div class="row"><span class="k">Agregar</span><span class="v">13,1 L</span></div>
+                <div class="step">Sales</div>
+                <div class="row"><span class="k">Nitrato de Calcio</span><span class="v">6 838 g</span></div>
+                <div class="row"><span class="k">Nitrato de Potasio</span><span class="v">3 603 g</span></div>
+                <div class="big">→ <span class="v">18,0 L</span> · 🍾 18×1 L</div></div></div>
+              <div class="card b"><div class="hd">B — Fosfatos/Sulfatos</div><div class="bd">
+                <div class="step">Agua inicial</div><div class="row"><span class="k">Agregar</span><span class="v">16,2 L</span></div>
+                <div class="step">Sales</div>
+                <div class="row"><span class="k">Fosfato Monoamoníaco</span><span class="v">1 380 g</span></div>
+                <div class="row"><span class="k">Sulfato de Magnesio</span><span class="v">1 993 g</span></div>
+                <div class="big">→ <span class="v">18,0 L</span> · 🍾 18×1 L</div></div></div>
+              <div class="card c"><div class="hd">C — Micro-Nutrientes</div><div class="bd">
+                <div class="step">Agua inicial</div><div class="row"><span class="k">Agregar</span><span class="v">17,5 L</span></div>
+                <div class="step">Sales</div>
+                <div class="row"><span class="k">Manganeso</span><span class="v">1 083 g</span></div>
+                <div class="row"><span class="k">Hierro · Boro…</span><span class="v">…</span></div>
+                <div class="big">→ <span class="v">18,0 L</span> · 🍾 18×1 L</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- otros perfiles colapsados, coloreados por su fase -->
+        <div class="acc veg"><div class="acc-head">▶ Cultivos de Hoja — Vegetativa</div></div>
+        <div class="acc veg"><div class="acc-head">▶ Hierbas Aromáticas — Vegetativa</div></div>
+        <div class="acc rep"><div class="acc-head">▶ Cultivos de Fruto — Reproductiva <span class="ct">(sin receta)</span></div></div>
+        <div class="acc rep"><div class="acc-head">▶ Frutos de Baya — Reproductiva</div></div>
+        <div class="acc mad"><div class="acc-head">▶ Raíz / Bulbo / Tubérculo — Maduración</div></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="sub" style="margin-top:14px;">Consistencia: envases en QListView (izq) · recetas en accordions coloreados por fase (der). Expandir un accordion = ver el cálculo de lote de ese perfil×fase para el envase elegido.</p>
+</body>
+</html>
