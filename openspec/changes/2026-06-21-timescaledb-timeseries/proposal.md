@@ -2,8 +2,8 @@
 
 **Date:** 2026-06-21
 **Owner:** Andrés (andres@dojocoding.io)
-**Status:** Proposed — pendiente aprobación del usuario (SPEC ONLY, sin implementar)
-**Domain:** `apps/vertivo_server/` (modelo `EnvironmentalReading`, endpoint `getReadings`) + `k8s/` (imagen Postgres del overlay dev)
+**Status:** Open Questions RESUELTAS (OQ1–OQ7, ver §Decisiones cerradas) — pendiente aprobación general de merge del usuario. SPEC ONLY, sin implementar.
+**Domain:** `apps/vertivo_server/` (modelo `EnvironmentalReading`, endpoint `getReadings`) + `k8s/` (imagen Postgres + StatefulSet/PVC en **overlays dev y prod**)
 **Tracking issue:** Linear `VRTV` — `[infra/data] TimescaleDB time-series para telemetría de sensores`
 
 ---
@@ -35,9 +35,9 @@ https://www.tigerdata.com/docs/deploy/self-hosted/migration
 
 | # | Decisión | Racional |
 |---|---|---|
-| 1 | **Habilitar la extensión `timescaledb`** en el Postgres del overlay dev y convertir `environmental_readings` en **hypertable** particionada por `createdAt` (`create_hypertable('environmental_readings','createdAt')`). | Particionado temporal transparente: chunks por intervalo de tiempo, inserts/queries acotados al chunk relevante en vez de a la tabla completa. |
-| 2 | **Continuous aggregates** (materialized views incrementales) para ventanas **1 min / 5 min / 1 hora**, agregando por `(greenhouseId, measurementType)` con `avg/min/max/count` del `value`. | Los charts consultan el rollup pre-downsampleado en vez de hacer full-scan de crudos. `getReadings` (o una variante por ventana) sirve directo del continuous aggregate. |
-| 3 | **Compresión** de los chunks viejos (más allá de una ventana caliente, p.ej. > 7 días) + **retention policy** que dropea chunks crudos antiguos (los rollups sobreviven). | Baja el costo de almacenamiento caliente sin perder la serie agregada; los crudos se conservan solo durante la ventana operativa. |
+| 1 | **Habilitar la extensión `timescaledb`** (imagen `timescale/timescaledb-ha:pg16` + pgvector, OQ1) en el Postgres de **dev y prod** y convertir `environmental_readings` en **hypertable** particionada por `createdAt`, con **chunk interval de 1 día** (OQ2). | Particionado temporal transparente: chunks por intervalo de tiempo, inserts/queries acotados al chunk relevante. Chunk de 1 día (no el default de 7) da **granularidad fina** para comprimir/dropear por antigüedad a nivel de chunk: la frontera de compresión (>7d) y de retención (>90d) cae limpia entre chunks, sin medio-chunk caliente. |
+| 2 | **Continuous aggregates** (materialized views incrementales) para ventanas **1 min / 5 min / 1 hora / 1 día** (OQ6), agregando por `(greenhouseId, measurementType)` con `avg/min/max/count` del `value`. El **1d es un CAGG jerárquico** (se computa sobre el 1h, no sobre crudos). | Los charts consultan el rollup pre-downsampleado en vez de full-scan de crudos. El **1d sobrevive al drop de crudos a 90 días** → habilita la vista de "temporada completa" / histórico largo sin conservar crudos. `getReadings` (o una variante por ventana) sirve directo del CAGG de la resolución adecuada. |
+| 3 | **Compresión** de chunks crudos **> 7 días** + **retention policy** que dropea chunks crudos **> 90 días** (los CAGGs sobreviven, con su propia política más larga o infinita). | Baja el costo de almacenamiento caliente sin perder la serie agregada; los crudos se conservan solo durante la ventana operativa (90d), mientras los rollups —en especial el 1d— preservan el histórico largo. |
 | 4 | **Desacoplar el hypertable del ORM Serverpod.** `EnvironmentalReading` deja de ser una tabla gestionada por Serverpod (se le quita `table:` del `.spy.yaml`); pasa a ser un modelo serializable de la API/`vertivo_client`. **La migración SQL (el Job idempotente) crea y posee el hypertable**, con la estructura amigable a TimescaleDB. Ingesta y `getReadings` usan **SQL crudo** (`session.db.unsafeQuery`/`unsafeExecute`), no el CRUD generado. | Como la tabla deja de ser "de Serverpod", el ORM **nunca intenta ponerle el `id`-PK** → el conflicto de PK con TimescaleDB (R1) **desaparece de raíz**: sin PK compuesta, sin drift, sin cirugía sobre SQL autogenerado. Para telemetría de alta frecuencia, SQL crudo es lo correcto de todos modos. |
 
 El modelo `EnvironmentalReading` (`environmental_reading.spy.yaml`) **conserva su forma**
@@ -69,28 +69,48 @@ Implicaciones de diseño para que la extracción futura no requiera reescribir:
   de verdad de la convención) para que mover el cómputo a un servicio compartido sea un cambio de
   backend de la costura, no una reescritura del dominio.
 
+## Decisiones cerradas (OQ1–OQ7)
+
+El usuario resolvió las open questions. Dejan de ser "abiertas" y pasan a ser decisiones del change:
+
+| OQ | Decisión | Nota |
+|----|----------|------|
+| **OQ1 — Imagen** | `timescale/timescaledb-ha:pg16` + pgvector encima. | La imagen oficial trae `shared_preload_libraries=timescaledb` (R3); pgvector se añade con `CREATE EXTENSION`. |
+| **OQ2 — Chunk interval** | **1 día** (no el default de 7). | Granularidad fina para comprimir/dropear por antigüedad a nivel de chunk; las fronteras 7d/90d caen limpias entre chunks. |
+| **OQ3 — Compresión / retención** | Comprimir crudos **> 7 días**; dropear crudos **> 90 días**. Los CAGGs persisten. | Política idéntica en dev y prod (mismo intervalo); la diferencia dev↔prod es el storage, no la política. |
+| **OQ4 — Vehículo del SQL** | **Kubernetes `Job` idempotente** versionado en `k8s/`. | Mismo Job (kustomize base) aplicado en ambos overlays; idempotente para re-ejecución segura. |
+| **OQ5 — PK de la hypertable (R1)** | **RESUELTA por el desacople del ORM** (decisión 4): se quita `table:`, la tabla deja de ser de Serverpod, el conflicto de PK desaparece de raíz. | Sin cambios respecto al reframe; ver design D0. |
+| **OQ6 — Resoluciones de charts** | **1m / 5m / 1h / 1d**. El **1d** es un CAGG jerárquico (sobre el 1h) **agregado por el usuario** para vistas de temporada completa. | El 1d es el rollup que **sobrevive al drop de crudos a 90d** → habilita el histórico largo. |
+| **OQ7 — Alcance** | **DEV + PROD en este mismo change.** | Amplía el scope: design y tasks cubren el StatefulSet/PVC/storage de prod + la ventana de mantenimiento de la conversión inicial, no sólo dev. |
+
+> El change ya **no** es dev-first: cubre la promoción a producción dentro de su alcance. Lo único
+> que sigue pendiente es la **aprobación general de merge** del usuario.
+
 ## Scope
 
-**In scope (este change):** documentar la decisión (PDR + ADR + tasks); la imagen Postgres
-con `timescaledb` en el overlay dev; el **desacople del modelo `EnvironmentalReading` del ORM
-Serverpod** (quitar `table:`, hypertable poseído por la migración SQL, ingesta + lectura por SQL
-crudo); la migración SQL custom post-deploy (hypertable + continuous aggregates 1m/5m/1h +
-compresión + retention); el impacto en `getReadings` / los charts (servir del continuous
-aggregate); el orden frente a las migraciones Serverpod; dejar la **costura** hacia `timeseries_core`
-limpia (lógica canónica en un solo lugar).
+**In scope (este change):** documentar la decisión (PDR + ADR + tasks); la imagen
+`timescale/timescaledb-ha:pg16` + pgvector en **ambos overlays (dev y prod)**; el **desacople del
+modelo `EnvironmentalReading` del ORM Serverpod** (quitar `table:`, hypertable poseído por la
+migración SQL, ingesta + lectura por SQL crudo); la migración SQL custom (Kubernetes Job
+idempotente: hypertable con chunk de 1 día + continuous aggregates **1m/5m/1h/1d** + compresión >7d
++ retención >90d); el impacto en `getReadings` / los charts (servir del CAGG de la resolución
+adecuada, incl. 1d para temporada); el orden frente a las migraciones Serverpod; el **despliegue a
+producción** (StatefulSet/PVC/storage de prod + ventana de mantenimiento de la conversión inicial,
+R5); dejar la **costura** hacia `timeseries_core` limpia (lógica canónica en un solo lugar).
 
 **Out of scope:** cambiar la **forma de columnas** de `EnvironmentalReading` (la forma se
 conserva; sólo cambia quién posee la tabla); migrar otras tablas a hypertable (sólo telemetría);
 **extraer el microservicio `timeseries_core`** (anticipado, gatillado por el spike #76 de
-`chimeranext/better-microservices`); el overlay de producción (este change es dev-first, la
-promoción a prod es un follow-up); cualquier implementación de código — **este change es SPEC ONLY**.
+`chimeranext/better-microservices`); cualquier implementación de código — **este change es SPEC ONLY**.
 
 ## References
 
 - ADR: [`design.md`](./design.md) · Tasks: [`tasks.md`](./tasks.md)
-- Tocará (en la implementación, no ahora): `k8s/base/database/deployment.yaml` (imagen),
-  un manifiesto/Job de migración SQL custom, y posiblemente una variante de `getReadings`
-  en `apps/vertivo_server/lib/src/greenhouses/greenhouse_endpoint.dart`.
+- Spike `timeseries_core` (gatillo de la extracción): `chimeranext/better-microservices` issue **#76**
+- Tocará (en la implementación, no ahora): `k8s/base/database/` (imagen + StatefulSet/PVC) y los
+  overlays `k8s/overlays/dev/` y `k8s/overlays/prod/`; el `Job` de migración SQL custom (base +
+  ambos overlays); y posiblemente una variante de `getReadings` en
+  `apps/vertivo_server/lib/src/greenhouses/greenhouse_endpoint.dart`.
 - Modelo actual: `apps/vertivo_server/lib/src/greenhouses/environmental_reading.spy.yaml`
 - Ingesta: `apps/vertivo_server/lib/src/greenhouses/sensor_ingestion_service.dart`
 - Migración de referencia TigerData: https://www.tigerdata.com/docs/deploy/self-hosted/migration
