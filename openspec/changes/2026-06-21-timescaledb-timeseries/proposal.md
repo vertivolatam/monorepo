@@ -38,24 +38,52 @@ https://www.tigerdata.com/docs/deploy/self-hosted/migration
 | 1 | **Habilitar la extensión `timescaledb`** en el Postgres del overlay dev y convertir `environmental_readings` en **hypertable** particionada por `createdAt` (`create_hypertable('environmental_readings','createdAt')`). | Particionado temporal transparente: chunks por intervalo de tiempo, inserts/queries acotados al chunk relevante en vez de a la tabla completa. |
 | 2 | **Continuous aggregates** (materialized views incrementales) para ventanas **1 min / 5 min / 1 hora**, agregando por `(greenhouseId, measurementType)` con `avg/min/max/count` del `value`. | Los charts consultan el rollup pre-downsampleado en vez de hacer full-scan de crudos. `getReadings` (o una variante por ventana) sirve directo del continuous aggregate. |
 | 3 | **Compresión** de los chunks viejos (más allá de una ventana caliente, p.ej. > 7 días) + **retention policy** que dropea chunks crudos antiguos (los rollups sobreviven). | Baja el costo de almacenamiento caliente sin perder la serie agregada; los crudos se conservan solo durante la ventana operativa. |
-| 4 | **Migración SQL custom post-deploy** (NO una migración Serverpod). Las migraciones Serverpod (`apps/vertivo_server/migrations/`, aplicadas con `dart bin/main.dart --apply-migrations`, `Makefile:290`) son SQL autogenerado que **desconoce TimescaleDB**: deben seguir creando la tabla; la conversión a hypertable + aggregates + policies va en un paso SQL idempotente que corre **después** de que Serverpod crea la tabla. | Serverpod es la fuente de verdad del esquema relacional; TimescaleDB es una capa de almacenamiento sobre esa misma tabla. El orden (Serverpod crea → SQL custom convierte) es el riesgo central, tratado en el ADR. |
+| 4 | **Desacoplar el hypertable del ORM Serverpod.** `EnvironmentalReading` deja de ser una tabla gestionada por Serverpod (se le quita `table:` del `.spy.yaml`); pasa a ser un modelo serializable de la API/`vertivo_client`. **La migración SQL (el Job idempotente) crea y posee el hypertable**, con la estructura amigable a TimescaleDB. Ingesta y `getReadings` usan **SQL crudo** (`session.db.unsafeQuery`/`unsafeExecute`), no el CRUD generado. | Como la tabla deja de ser "de Serverpod", el ORM **nunca intenta ponerle el `id`-PK** → el conflicto de PK con TimescaleDB (R1) **desaparece de raíz**: sin PK compuesta, sin drift, sin cirugía sobre SQL autogenerado. Para telemetría de alta frecuencia, SQL crudo es lo correcto de todos modos. |
 
-El modelo `EnvironmentalReading` (`environmental_reading.spy.yaml`) y su tabla **no cambian de
-forma** (mismas columnas: `greenhouseId`, `measurementType`, `value`, `unit`, `source`,
-`isAnomaly`, `createdAt`). La hypertable es la misma tabla; sólo cambia cómo Postgres la
-almacena por debajo. El path de ingesta MQTT no cambia.
+El modelo `EnvironmentalReading` (`environmental_reading.spy.yaml`) **conserva su forma**
+(mismas columnas: `greenhouseId`, `measurementType`, `value`, `unit`, `source`, `isAnomaly`,
+`createdAt`) y sigue siendo el tipo de la API y de `vertivo_client`. Lo que cambia es la
+**propiedad** de la tabla: ya no la gestiona Serverpod sino la migración SQL. El path de ingesta
+MQTT mantiene su forma (mismo mensaje, mismo flujo), pero su `insert` pasa a SQL crudo en vez del
+CRUD generado.
+
+## Fase 1 / Costura hacia `timeseries_core`
+
+Esta implementación local en Vertivo es deliberadamente la **costura (strangler seam)** de un
+patrón Strangler Fig hacia un **microservicio compartido de series temporales** — `timeseries_core`,
+cross-producto (no sólo Vertivo). El spike que define ese microservicio vive en
+`chimeranext/better-microservices` **issue #76**.
+
+Implicaciones de diseño para que la extracción futura no requiera reescribir:
+
+- **La lógica canónica (la convención del solver de resolución/ventana, el contrato de ingesta y
+  de lectura) debe vivir en un solo lugar.** Ingesta y `getReadings` van contra SQL crudo detrás
+  de una frontera estrecha y bien nombrada (un servicio/módulo de telemetría), no esparcidos por
+  el endpoint. Esa frontera es la costura: hoy resuelve contra el Postgres+TimescaleDB local de
+  Vertivo; mañana resuelve contra `timeseries_core` sin que el caller cambie.
+- El **desacople del ORM** (decisión 4) refuerza esto: al no atar la tabla al CRUD generado de
+  Serverpod, la telemetría ya queda detrás de una capa de acceso explícita — exactamente lo que
+  un microservicio extraído necesita reemplazar.
+- La **extracción a `timeseries_core` es out-of-scope pero anticipada**: gatillada por el spike
+  #76, no por este change. Aquí sólo dejamos la costura limpia (lógica canónica, una sola fuente
+  de verdad de la convención) para que mover el cómputo a un servicio compartido sea un cambio de
+  backend de la costura, no una reescritura del dominio.
 
 ## Scope
 
 **In scope (este change):** documentar la decisión (PDR + ADR + tasks); la imagen Postgres
-con `timescaledb` en el overlay dev; la migración SQL custom post-deploy (hypertable +
-continuous aggregates 1m/5m/1h + compresión + retention); el impacto en `getReadings` / los
-charts (servir del continuous aggregate); el orden frente a las migraciones Serverpod.
+con `timescaledb` en el overlay dev; el **desacople del modelo `EnvironmentalReading` del ORM
+Serverpod** (quitar `table:`, hypertable poseído por la migración SQL, ingesta + lectura por SQL
+crudo); la migración SQL custom post-deploy (hypertable + continuous aggregates 1m/5m/1h +
+compresión + retention); el impacto en `getReadings` / los charts (servir del continuous
+aggregate); el orden frente a las migraciones Serverpod; dejar la **costura** hacia `timeseries_core`
+limpia (lógica canónica en un solo lugar).
 
-**Out of scope:** cambiar el modelo `EnvironmentalReading` o su forma de columnas; reescribir
-el path de ingesta MQTT (`SensorIngestionService`); migrar otras tablas a hypertable (sólo
-telemetría); el overlay de producción (este change es dev-first, la promoción a prod es un
-follow-up); cualquier implementación de código — **este change es SPEC ONLY**.
+**Out of scope:** cambiar la **forma de columnas** de `EnvironmentalReading` (la forma se
+conserva; sólo cambia quién posee la tabla); migrar otras tablas a hypertable (sólo telemetría);
+**extraer el microservicio `timeseries_core`** (anticipado, gatillado por el spike #76 de
+`chimeranext/better-microservices`); el overlay de producción (este change es dev-first, la
+promoción a prod es un follow-up); cualquier implementación de código — **este change es SPEC ONLY**.
 
 ## References
 
