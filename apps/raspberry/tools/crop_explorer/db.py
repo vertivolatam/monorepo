@@ -63,9 +63,14 @@ class CropDB:
         if self._profiles_cache is None:
             try:
                 data = json.loads(self._crops_json.read_text(encoding="utf-8"))
-                self._profiles_cache = data.get("profiles", {})
-            except Exception:
-                self._profiles_cache = {}
+            except (FileNotFoundError, OSError, json.JSONDecodeError) as exc:
+                # No enmascaramos: re-resolver setpoints sin los perfiles dejaría
+                # el estado inconsistente. Propagamos con contexto del archivo.
+                raise RuntimeError(
+                    f"No se pudieron cargar los perfiles desde {self._crops_json}: "
+                    f"{exc}"
+                ) from exc
+            self._profiles_cache = data.get("profiles", {})
         return self._profiles_cache
 
     # --- lectura ---
@@ -225,20 +230,34 @@ class CropDB:
 
         cur_profile = crop["assigned_profile"]
         if profile is not None and profile != cur_profile:
-            cur.execute(
-                "UPDATE crops SET assigned_profile = ? WHERE id = ?",
-                (profile, crop_id),
-            )
-            self._write_audit(
-                cur,
-                crop_id,
-                "assigned_profile",
-                value_num=None,
-                value_text=profile,
-                changed_by=changed_by,
-                note=f"reasignado desde '{cur_profile}'",
-            )
-            self._resync_setpoints(cur, crop_id, profile)
+            # Validar que el perfil destino EXISTA antes de borrar setpoints: si
+            # no existe, _resync_setpoints dejaría assigned_profile sin setpoints
+            # (estado inconsistente). No borramos: abortamos con mensaje claro.
+            if profile not in self._profiles():
+                raise ValueError(
+                    f"perfil destino '{profile}' no existe en "
+                    f"{self._crops_json}; no se reasigna crop_id {crop_id}"
+                )
+            try:
+                cur.execute(
+                    "UPDATE crops SET assigned_profile = ? WHERE id = ?",
+                    (profile, crop_id),
+                )
+                self._write_audit(
+                    cur,
+                    crop_id,
+                    "assigned_profile",
+                    value_num=None,
+                    value_text=profile,
+                    changed_by=changed_by,
+                    note=f"reasignado desde '{cur_profile}'",
+                )
+                self._resync_setpoints(cur, crop_id, profile)
+            except Exception:
+                # Rollback ante cualquier fallo del borrado+resync para no dejar
+                # el cultivo con assigned_profile actualizado pero sin setpoints.
+                self.conn.rollback()
+                raise
             changed = True
 
         cur_priority = crop["priority"]
