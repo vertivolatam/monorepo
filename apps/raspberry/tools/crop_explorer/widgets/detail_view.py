@@ -99,16 +99,6 @@ SALT_LABELS = {
 # Keys que NO son sales (provenance) y no deben renderizarse como ingredientes.
 _RECIPE_META_KEYS = {"citation", "confidence", "source", "note", "_provenance"}
 
-# Esqueleto estándar A/B/C (sales conocidas) para SEMBRAR una receta inexistente:
-# al editar una receta-stub, el editor parte de esta estructura en ceros.
-RECIPE_SKELETON = {
-    "solucion_a_nitratos": {"nitrato_de_calcio": 0, "nitrato_de_potasio": 0},
-    "solucion_b_fosfatos_sulfatos": {"fosfato_monoamonico": 0, "sulfato_de_magnesio": 0},
-    "solucion_c_micros": {
-        "manganeso": 0, "cobre": 0, "hierro": 0, "zinc": 0, "boro": 0,
-    },
-}
-
 NUTRIENT_LABELS = {
     "energy": "Energía",
     "carbohydrates_sugars": "Carbohidratos (azúcares)",
@@ -581,8 +571,12 @@ class DetailView(QWidget):
         return holder
 
     def _recipe_sidebar(self, crop_id, recipe_json: str | None) -> QWidget:
-        """Sidebar de la receta: árbol A/B/C + botón Editar/Agregar (auditado)."""
-        box = QGroupBox("Receta de nutrientes  ·  g / 1000 ml")
+        """Sidebar de la receta: árbol A/B/C READ-ONLY.
+
+        La receta es del PERFIL×fase, no del cultivo (rediseño mega-tabs): aquí
+        solo se MUESTRA la receta resuelta del perfil. La edición vive en el tab
+        “Perfiles & Recetas” (propaga a todos los cultivos del perfil)."""
+        box = QGroupBox("Receta de nutrientes  ·  g / 1000 ml  ·  (del perfil)")
         box.setStyleSheet(T.groupbox_qss("business"))
         lay = QVBoxLayout(box)
         lay.setContentsMargins(10, 16, 10, 10)
@@ -625,76 +619,14 @@ class DetailView(QWidget):
             tree.expandAll()
             lay.addWidget(tree)
 
-        # Editar/Agregar receta (también para stubs: parte del esqueleto estándar).
-        edit_btn = QPushButton("✏️  Editar / Agregar receta")
-        edit_btn.setStyleSheet(
-            f"QPushButton {{ background:{T.BTN_BG}; color:{T.BTN_FG}; border:none;"
-            f" border-radius:4px; padding:4px 8px; font-size:11px; }}"
-            f" QPushButton:hover {{ background:{T.palette('primary', 30) or T.BTN_BG}; }}"
-        )
-        edit_btn.clicked.connect(lambda: self._edit_recipe(crop_id, recipe_json))
-        lay.addWidget(edit_btn)
+        # La receta se edita en el tab "Perfiles & Recetas" (propaga al perfil).
+        hint = QLabel("✏️ Editá la receta en el tab “Perfiles & Recetas”.")
+        hint.setWordWrap(True)
+        hint.setStyleSheet(f"color:{T.TEXT_MUTED}; font-size:10px;")
+        lay.addWidget(hint)
         if not groups:
             lay.addStretch()
         return box
-
-    def _edit_recipe(self, crop_id, recipe_json: str | None):
-        """Diálogo para editar/crear la receta (JSON A/B/C). Guardado auditado."""
-        from PySide6.QtWidgets import (
-            QDialog,
-            QPlainTextEdit,
-            QDialogButtonBox,
-            QMessageBox,
-        )
-
-        try:
-            existing = json.loads(recipe_json) if recipe_json else {}
-        except Exception:
-            existing = {}
-        groups = {k: v for k, v in existing.items()
-                  if k not in _RECIPE_META_KEYS and isinstance(v, dict)}
-        base = groups if groups else RECIPE_SKELETON
-
-        dlg = QDialog(self)
-        dlg.setWindowTitle("Editar receta de nutrientes (g / 1000 ml)")
-        dlg.resize(480, 440)
-        dl = QVBoxLayout(dlg)
-        info = QLabel(
-            "Edita el JSON: grupos Solución A/B/C → sal → gramos por 1000 ml. "
-            "Si el cultivo no tenía receta, parte del esqueleto estándar en ceros."
-        )
-        info.setWordWrap(True)
-        dl.addWidget(info)
-        editor = QPlainTextEdit()
-        editor.setStyleSheet(f"font-family:monospace; background:{T.SURFACE}; color:{T.TEXT};")
-        editor.setPlainText(json.dumps(base, ensure_ascii=False, indent=2))
-        dl.addWidget(editor, 1)
-        bb = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-        bb.accepted.connect(dlg.accept)
-        bb.rejected.connect(dlg.reject)
-        dl.addWidget(bb)
-        if dlg.exec() != QDialog.Accepted:
-            return
-
-        txt = editor.toPlainText().strip()
-        try:
-            parsed = json.loads(txt)
-        except Exception as exc:
-            QMessageBox.warning(self, "JSON inválido", f"No se pudo parsear:\n{exc}")
-            return
-        try:
-            self.db.save_setpoint_text(
-                crop_id,
-                "nutrient_recipe_json",
-                json.dumps(parsed, ensure_ascii=False),
-                changed_by="explorer",
-            )
-        except Exception as exc:  # pragma: no cover - error path
-            QMessageBox.warning(self, "Error al guardar", str(exc))
-            return
-        crop = self.db.crop(crop_id)
-        if crop is not None:
-            self._fill_tabs(crop_id, crop)  # refresca el árbol de la receta
 
     def _nutrition_widget(self, crop_id) -> QWidget:
         rows = self.db.nutrition(crop_id)

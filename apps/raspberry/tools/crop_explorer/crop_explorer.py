@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QSplitter,
     QStatusBar,
+    QTabWidget,
     QToolBar,
     QWidget,
     QVBoxLayout,
@@ -52,6 +53,8 @@ sys.path.insert(0, str(HERE))
 from db import CropDB, is_discrepant  # noqa: E402
 from widgets.sidebar import Sidebar  # noqa: E402
 from widgets.detail_view import DetailView  # noqa: E402
+from widgets.profiles_view import ProfilesView  # noqa: E402
+from widgets.batch_view import BatchView  # noqa: E402
 import tokens as T  # noqa: E402
 
 DEFAULT_DB = HERE.parent.parent / "config" / "crops.db"
@@ -92,6 +95,9 @@ def _ensure_db(db_path: Path) -> bool:
 
 
 class ExplorerWindow(QMainWindow):
+    """Ventana raíz con 3 mega-tabs (rediseño): Catálogo de cultivos ·
+    Perfiles & Recetas · Calculadora de lote (design.md §1)."""
+
     def __init__(self, db: CropDB):
         super().__init__()
         self.db = db
@@ -107,23 +113,42 @@ class ExplorerWindow(QMainWindow):
         self.act_dark.toggled.connect(self._toggle_theme)
         toolbar.addAction(self.act_dark)
 
+        self.tabs = QTabWidget()
+        self.setCentralWidget(self.tabs)
+        self._build_tabs()
+
+        self.status = QStatusBar()
+        self.setStatusBar(self.status)
+        self._update_status()
+
+    def _build_tabs(self):
+        """Construye las 3 tabs (recogen los tokens vigentes)."""
+        self.catalog_tab = self._build_catalog_tab()
+        self.profiles_tab = ProfilesView(self.db)
+        self.batch_tab = BatchView(self.db)
+        self.tabs.addTab(self.catalog_tab, "🌱  Catálogo de cultivos")
+        # "&&" escapa el ampersand (Qt lo trataría como acelerador de teclado).
+        self.tabs.addTab(self.profiles_tab, "🧪  Perfiles && Recetas")
+        self.tabs.addTab(self.batch_tab, "🧮  Calculadora de lote")
+        # Editar una receta de perfil puede cambiar discrepancias/estado.
+        self.profiles_tab.recipeSaved.connect(lambda *_: self._update_status())
+
+    def _build_catalog_tab(self) -> QWidget:
+        """Tab 1: el explorador ACTUAL (sidebar pivot | detalle del cultivo).
+
+        La receta del detalle quedó READ-ONLY (se edita en el tab Perfiles)."""
         central = QWidget()
-        self.setCentralWidget(central)
         layout = QVBoxLayout(central)
         layout.setContentsMargins(4, 4, 4, 4)
-
         self.splitter = QSplitter(Qt.Horizontal)
-        self.sidebar = Sidebar(db)
-        self.detail = DetailView(db)
+        self.sidebar = Sidebar(self.db)
+        self.detail = DetailView(self.db)
         self.splitter.addWidget(self.sidebar)
         self.splitter.addWidget(self.detail)
         self.splitter.setSizes([360, 1140])
         layout.addWidget(self.splitter)
         self._wire_panels()
-
-        self.status = QStatusBar()
-        self.setStatusBar(self.status)
-        self._update_status()
+        return central
 
     def _wire_panels(self):
         """Conexiones: selección -> detalle; guardado -> refrescar sidebar."""
@@ -131,7 +156,7 @@ class ExplorerWindow(QMainWindow):
         self.detail.classificationSaved.connect(self._on_saved)
 
     def _toggle_theme(self, dark: bool):
-        """Cambia tema: re-aplica paleta + reconstruye paneles (recogen tokens nuevos)."""
+        """Cambia tema: re-aplica paleta + reconstruye las 3 tabs (tokens nuevos)."""
         self.act_dark.setText("☀  Modo claro" if dark else "🌙  Modo oscuro")
         app = QApplication.instance()
         if app is not None:
@@ -139,15 +164,14 @@ class ExplorerWindow(QMainWindow):
         else:
             T.set_mode("dark" if dark else "light")
         current = self.sidebar.current_crop_id()
-        new_sidebar = Sidebar(self.db)
-        new_detail = DetailView(self.db)
-        self.splitter.replaceWidget(0, new_sidebar)
-        self.splitter.replaceWidget(1, new_detail)
-        self.sidebar.deleteLater()
-        self.detail.deleteLater()
-        self.sidebar, self.detail = new_sidebar, new_detail
-        self.splitter.setSizes([360, 1140])
-        self._wire_panels()
+        active = self.tabs.currentIndex()
+        # Reconstruye todas las tabs para que recojan los tokens nuevos.
+        while self.tabs.count():
+            w = self.tabs.widget(0)
+            self.tabs.removeTab(0)
+            w.deleteLater()
+        self._build_tabs()
+        self.tabs.setCurrentIndex(active)
         if current is not None:
             self.detail.setCrop(current)
 

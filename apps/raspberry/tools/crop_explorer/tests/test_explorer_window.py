@@ -46,3 +46,29 @@ def test_saved_signal_refreshes_sidebar(qapp, temp_db):
     win._on_saved(cid)
     assert win.sidebar.visible_count() == 108
     db.close()
+
+
+def test_window_has_three_megatabs(qapp, temp_db):
+    """Rediseño: la ventana raíz es un QTabWidget de 3 tabs (design.md §1)."""
+    from widgets.profiles_view import ProfilesView
+    from widgets.batch_view import BatchView
+
+    db = CropDB(temp_db)
+    win = crop_explorer.ExplorerWindow(db)
+    assert win.tabs.count() == 3
+    assert isinstance(win.profiles_tab, ProfilesView)
+    assert isinstance(win.batch_tab, BatchView)
+    db.close()
+
+
+def test_theme_toggle_rebuilds_tabs(qapp, temp_db):
+    """Alternar tema reconstruye las 3 tabs sin romper y conserva la activa."""
+    db = CropDB(temp_db)
+    win = crop_explorer.ExplorerWindow(db)
+    win.tabs.setCurrentIndex(1)
+    win.act_dark.toggle()  # -> oscuro
+    assert win.tabs.count() == 3
+    assert win.tabs.currentIndex() == 1
+    win.act_dark.toggle()  # -> claro
+    assert win.tabs.count() == 3
+    db.close()
