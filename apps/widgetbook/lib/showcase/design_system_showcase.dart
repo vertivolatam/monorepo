@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vertivo_flutter/core/theme/app_colors.dart';
-import 'package:vertivo_flutter/core/theme/app_typography.dart';
+import 'package:vertivo_ui/vertivo_ui.dart';
 
 /// Showcase del Design System de Vertivo — colores y tipografía reales,
 /// alimentados por style-dictionary/tokens.json vía TokenService.

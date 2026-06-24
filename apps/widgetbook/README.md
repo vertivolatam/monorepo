@@ -27,12 +27,13 @@ flutter run -d chrome
 > (jaspr_lints) fija `analyzer ^7.0.0`, lo que hace imposible la resolución
 > conjunta. Depende de `vertivo_flutter` por path igualmente.
 
-## Gap: Vertivo aún no tiene package UI compartido
+## Package UI compartido: packages/vertivo_ui
 
-Hoy `apps/vertivo_flutter` solo tiene 2 screens (scaffold de Serverpod) y el
-sistema de tokens/tema (`lib/core/theme/`). El único widget reutilizable es
-`ResultDisplay` (extraído a `lib/core/widgets/molecules/`). A medida que se
-construyan las pantallas T0 (ver `srd/gap-audit.md`), cada widget nuevo debe:
+El tema, los design tokens y `ResultDisplay` viven en `packages/vertivo_ui`
+(`lib/src/{theme,molecules}/`); `apps/vertivo_flutter` los re-exporta para
+compatibilidad. A medida que se construyan las pantallas T0 (ver
+`srd/gap-audit.md`), cada widget nuevo debe:
 
-1. Vivir en `apps/vertivo_flutter/lib/core/widgets/{atoms,molecules,organisms}/`.
+1. Vivir en `packages/vertivo_ui/lib/src/{atoms,molecules,organisms}/`
+   y exportarse desde `vertivo_ui.dart`.
 2. Nacer con su story en `lib/use_cases/<nivel>/<widget>_use_case.dart`.

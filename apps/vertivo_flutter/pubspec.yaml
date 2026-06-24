@@ -31,6 +31,8 @@ dependencies:
   flutter_riverpod: ^2.5.1
   vertivo_client:
     path: ../vertivo_client
+  vertivo_ui:
+    path: ../../packages/vertivo_ui
   serverpod_flutter: 3.4.1
   serverpod_auth_idp_flutter: 3.4.1
 
