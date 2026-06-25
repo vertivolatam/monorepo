@@ -57,7 +57,14 @@ monorepo/
 ├── business/                         # Modelo de negocio
 ├── skills/                           # Agent Skills (Flutter, CI/CD, SRE, backend, figma…)
 ├── style-dictionary/                # Design tokens
-├── docs/                             # content/ (Zensical) + templates/ + monitoring/ + security/
+├── docs/                             # content/ (Zensical/MkDocs nav) + referencia/overview
+│   ├── content/                      # Sitio MkDocs (docs_dir): producto, backend, mobile, iot…
+│   ├── architecture/                 # Docs de referencia legibles que ENLAZAN a openspec
+│   │   ├── data-architecture.md      #   ★ arquitectura de datos tri-nodo (libSQL+DuckDB+Timescale)
+│   │   └── eventbus-broker-analysis.md
+│   ├── repo-health/                  # Auditorias de salud (schema drift, etc.) — SCH-audit-*.md
+│   ├── superpowers/plans/            # Planes de brainstorm (ej. multinode-libsql-duckdb)
+│   └── monitoring/ · security/ · templates/ · versioning/ · api/
 ├── libs/ · scripts/ · logs/ · linear-todo-templates/
 │
 └── .github/workflows/               # CI/CD pipelines
@@ -78,7 +85,7 @@ monorepo/
 | `openspec/` | Decision records (PDR=`proposal.md`, ADR=`design.md`, `tasks.md`) |
 | `srd/` | Directivas de producto (Synthetic Reality Development): prioridades, gap-audit, journeys |
 | `skills/` | Agent Skills para asistentes IA |
-| `docs/` | Documentacion, plantillas, monitoreo y seguridad |
+| `docs/` | Documentacion: sitio MkDocs (`content/`), referencia de arquitectura (`architecture/`), auditorias de salud (`repo-health/`), planes de brainstorm (`superpowers/plans/`), plantillas, monitoreo y seguridad. Las **decisiones** viven en `openspec/`; `docs/architecture/` solo enlaza. |
 
 ## Arquitectura de la App (`apps/vertivo_flutter/lib/`)
 

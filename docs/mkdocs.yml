@@ -166,6 +166,7 @@ nav:
     - Vision general: docs/architecture/overview.md
     - Tecnologias: docs/architecture/technologies.md
     - Flujo de datos: docs/architecture/data-flow.md
+    - Datos multi-nodo: docs/architecture/data-multinode.md
   - Despliegue:
     - Kubernetes: docs/deployment/kubernetes.md
     - EMQX Broker: docs/deployment/emqx.md
