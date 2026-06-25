@@ -27,7 +27,7 @@ Misma tecnología, implementaciones políglotas (Python en Pi, Dart en server/m�
 - **Plano de datos = TRES clases distintas al móvil:**
   1. **OLTP operativo/config** (atributos de invernadero, config del agente orquestador, alertas, outbox) → **SQL libSQL/Turso** embedded replica (sync, offline-first). Reemplaza `getReadings` y CRUD por RPC.
   2. **Telemetría live de monitoreo** → **MQTT** (el móvil es **suscriptor**). Fuente = **server (EMQX cloud) o Raspberry (broker local)** según el modo del `ConnectivityManager`. El móvil bufferea el live en un `recent_readings` **local-only** (no sincroniza por Turso → no paga writes de telemetría), ventana **7d default parametrizable (3/7/15/30)**.
-  3. **Histórico OLAP analítico** → **Parquet/rollups** (desde Timescale o desde el Pi) → **DuckDB** on-device para los charts.
+  3. **Histórico OLAP analítico** → **Parquet/rollups** generados por **DuckDB en el server (Timescale→Parquet) o en el Pi (rollups de borde)** → consumidos por el **DuckDB del móvil** para los charts (y por el **DuckDB del Pi** sirviendo analítica directa al móvil en fallback). DuckDB corre en los **tres** nodos (fractal); "on-device" acá = el motor del teléfono.
   
   *Matiz clave:* MQTT lleva **solo el live**, NO el histórico desagregado (eso va por Parquet). Solo config/comandos/alertas sincronizan por Turso; telemetría nunca paga writes de Turso.
 - **Plano de control** = Serverpod RPC reducido a **mintear el JWT que la sync necesita** + ops pesadas puntuales. Los comandos se mueven a un **command-queue-over-sync** (outbox): se encolan local y sincronizan contra cualquier primario alcanzable (cloud o Pi); workers del server/Pi los aplican. Esto es lo que hace el control resiliente a outages.

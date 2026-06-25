@@ -60,8 +60,10 @@ canal correcto**. Éste es el corazón de la arquitectura:
    cloud) o Raspberry (broker local)** según el modo del `ConnectivityManager`. El live se bufferea en un
    `recent_readings` **local-only** (no sincroniza por Turso → no paga writes de telemetría), ventana
    **7 días por defecto, parametrizable (3/7/15/30)** desde la app.
-3. **Histórico OLAP analítico** → **Parquet/rollups** (desde Timescale o desde el Pi) → **DuckDB**
-   on-device para los charts.
+3. **Histórico OLAP analítico** → **Parquet/rollups** generados por **DuckDB en el server**
+   (Timescale→Parquet) **o en el Pi** (rollups de borde) → consumidos por el **DuckDB del móvil** para
+   los charts, y por el **DuckDB del Pi** sirviendo analítica directa al móvil en el fallback de desastre.
+   (DuckDB corre en los **tres** nodos — principio fractal; "on-device" en los charts = el motor del teléfono.)
 
 > **Matiz clave:** MQTT lleva **solo el live**, NO el histórico desagregado (eso va por Parquet). Solo
 > config/comandos/alertas sincronizan por Turso; **la telemetría nunca paga writes de Turso** → el costo
