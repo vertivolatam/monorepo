@@ -550,3 +550,20 @@ dev-dashboard-build: ## Build static dashboard for deployment
 	@echo "$(GREEN)Dashboard built → apps/vertivo_dashboard/build/$(NC)"
 
 .DEFAULT_GOAL := help
+
+# >>> bifrost-review (gestionado por bifrost-keeper) >>>
+# Review local on-demand del diff de la rama actual con BifrostKeeper.
+# Local salvo la inferencia a NVIDIA NIM; no toca GitHub ni CI.
+# Prefiere el bin local `bifrost-review` (instalado con `bun link`); si no está
+# en PATH, cae a `bunx` (requiere red para bajar el package). La NIM key se toma
+# del entorno (.env / env var local), o prefijá la invocación con `infisical run`.
+# Uso:  make bifrost-review            (compara contra merge-base de origin/HEAD)
+#       make bifrost-review BASE=develop
+.PHONY: bifrost-review
+bifrost-review:
+	@if command -v bifrost-review >/dev/null 2>&1; then \
+		bifrost-review diff $(if $(BASE),--base $(BASE),); \
+	else \
+		bunx github:chimeranext/bifrost-keeper@main review diff $(if $(BASE),--base $(BASE),); \
+	fi
+# <<< bifrost-review <<<
