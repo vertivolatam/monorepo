@@ -550,3 +550,27 @@ dev-dashboard-build: ## Build static dashboard for deployment
 	@echo "$(GREEN)Dashboard built → apps/vertivo_dashboard/build/$(NC)"
 
 .DEFAULT_GOAL := help
+
+# >>> bifrost-review (gestionado por bifrost-keeper) >>>
+# Review local on-demand del diff de la rama actual con BifrostKeeper.
+# Local salvo la inferencia a NVIDIA NIM; no toca GitHub ni CI.
+# Requiere el bin local `bifrost-review` (instalado con `bun link` desde el clon de
+# chimeranext/bifrost-keeper). La NIM key se toma del entorno (.env / env var local),
+# o prefijá la invocación con `infisical run`.
+# SEGURIDAD: a propósito NO hay fallback a `bunx github:...@main` — eso ejecutaría
+# código de un ref mutable sin pin ni verificación (riesgo supply-chain / RCE).
+# Falla cerrado con instrucciones si el bin no está.
+# Uso:  make bifrost-review            (compara contra merge-base de origin/HEAD)
+#       make bifrost-review BASE=develop
+.PHONY: bifrost-review
+bifrost-review:
+	@if command -v bifrost-review >/dev/null 2>&1; then \
+		bifrost-review diff $(if $(BASE),--base $(BASE),); \
+	else \
+		echo "bifrost-review no está en PATH."; \
+		echo "Instalalo (local, sin código remoto): cloná github.com/chimeranext/bifrost-keeper,"; \
+		echo "corré 'bun link' dentro del clon, y asegurá que el bin-dir de bun esté en tu PATH."; \
+		echo "Detalle: docs/superpowers/specs/2026-06-25-ready-to-review-mergeable-design.md"; \
+		exit 1; \
+	fi
+# <<< bifrost-review <<<

@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PROJECT_ROOT}/.claude/hooks/stop-prs-green.sh" }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__plugin_linear_linear__save_issue",
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PROJECT_ROOT}/.claude/hooks/pre-linear-save-issue-hygiene.sh" }
+        ]
+      }
+    ]
+  }
+}
