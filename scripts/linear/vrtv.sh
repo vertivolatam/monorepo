@@ -17,11 +17,19 @@ declare -A STATE=( ["In Progress"]="90542e22-d2c6-44c9-9da7-c7bb2179a0b9" \
                    ["In Review"]="4fccc74e-ab0e-46bb-9370-05ccb1b32e2a" \
                    ["Todo"]="53eb903c-97dd-46d0-a1a5-b6e4c1c46897" )
 
-key() { grep -E '^\s*vertivolatam' ~/.config/linear/credentials.toml \
-        | sed -E 's/^[^=]*=\s*"?([^"]+)"?\s*$/\1/'; }
+key() { # LINEAR_API_KEY (env) tiene precedencia; si no, la key 'vertivolatam' del file.
+  if [ -n "${LINEAR_API_KEY:-}" ]; then printf '%s' "$LINEAR_API_KEY"; return; fi
+  local k
+  k=$(grep -E '^\s*vertivolatam' ~/.config/linear/credentials.toml 2>/dev/null \
+      | sed -E 's/^[^=]*=\s*"?([^"]+)"?\s*$/\1/')
+  if [ -z "$k" ]; then
+    echo "[vrtv] FATAL: no hay LINEAR_API_KEY (env) ni key 'vertivolatam' en ~/.config/linear/credentials.toml" >&2
+    exit 4
+  fi
+  printf '%s' "$k"; }
 
-gql() { # $1 = query/mutation json payload
-  curl -s -X POST "$API" -H "Authorization: $(key)" \
+gql() { # $1 = query/mutation json payload. --fail-with-body: errores HTTP salen != 0 (no HTML->jq->null silencioso)
+  curl -s --fail-with-body -X POST "$API" -H "Authorization: $(key)" \
        -H "Content-Type: application/json" -d "$1"; }
 
 issue_id() { # VRTV-XXX -> uuid

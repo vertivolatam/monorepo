@@ -28,7 +28,10 @@ command -v gh >/dev/null 2>&1 || { echo "[stop-prs-green] WARN: gh ausente; no b
 THRESHOLD=$(sed -n '1p' "$STATE_FILE" | tr -d '[:space:]')
 [[ "$THRESHOLD" =~ ^[0-9]+(\.[0-9]+)?$ ]] || THRESHOLD="$DEFAULT_THRESHOLD"
 
-mapfile -t PR_NUMBERS < <(sed -n '2,$p' "$STATE_FILE" | grep -oE '[0-9]+')
+# Contrato linea 2+: UNA linea por PR, exactamente el numero (prefijo '#' opcional),
+# nada mas. Lineas que no son solo-numero se IGNORAN (evita matchear digitos sueltos
+# de texto como 'feat(123): x').
+mapfile -t PR_NUMBERS < <(sed -n '2,$p' "$STATE_FILE" | sed -E 's/^[[:space:]]*#?([0-9]+)[[:space:]]*$/\1/;t;d')
 [[ ${#PR_NUMBERS[@]} -eq 0 ]] && exit 0
 
 block() {

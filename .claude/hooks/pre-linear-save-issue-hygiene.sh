@@ -10,24 +10,22 @@ set -euo pipefail
 INPUT="$(cat)"
 command -v jq >/dev/null 2>&1 || exit 0  # fail-open
 
+# tj <jq-filter> — extrae un campo del tool_input (un solo lugar para el patron printf|jq).
+tj() { printf '%s' "$TOOL_INPUT" | jq -r "$1" 2>/dev/null; }
+
 TOOL_INPUT="$(printf '%s' "$INPUT" | jq -r '.tool_input // empty' 2>/dev/null)" || exit 0
 [ -n "$TOOL_INPUT" ] || exit 0
 
-HAS_ID="$(printf '%s' "$TOOL_INPUT" | jq -r 'has("id")' 2>/dev/null)" || exit 0
-[ "$HAS_ID" = "true" ] && exit 0   # updates fuera de scope
+[ "$(tj 'has("id")')" = "true" ] && exit 0   # updates (con id) fuera de scope
 
 MISSING=()
-PROJECT="$(printf '%s' "$TOOL_INPUT" | jq -r '.project // empty')"
-[ -n "$PROJECT" ] || MISSING+=("project (ej. \"Vertivo → \$500K MRR\")")
-ASSIGNEE="$(printf '%s' "$TOOL_INPUT" | jq -r '.assignee // empty')"
-[ -n "$ASSIGNEE" ] || MISSING+=("assignee (ej. \"me\")")
-PRIORITY="$(printf '%s' "$TOOL_INPUT" | jq -r '.priority // 0')"
-case "$PRIORITY" in 1|2|3|4) : ;; *) MISSING+=("priority (1=Urgent 2=High 3=Medium 4=Low — 0/ausente = vista no-priority)") ;; esac
-LABELS_COUNT="$(printf '%s' "$TOOL_INPUT" | jq -r '(.labels // []) | if type=="array" then length else 0 end' 2>/dev/null)" || LABELS_COUNT=0
+[ -n "$(tj '.project // empty')" ] || MISSING+=("project (ej. \"Vertivo → \$500K MRR\")")
+[ -n "$(tj '.assignee // empty')" ] || MISSING+=("assignee (ej. \"me\")")
+case "$(tj '.priority // 0')" in 1|2|3|4) : ;; *) MISSING+=("priority (1=Urgent 2=High 3=Medium 4=Low — 0/ausente = vista no-priority)") ;; esac
+LABELS_COUNT="$(tj '(.labels // []) | if type=="array" then length else 0 end')" || LABELS_COUNT=0
 [ "${LABELS_COUNT:-0}" -ge 1 ] 2>/dev/null || MISSING+=("labels (al menos Type + Size — ver taxonomia AGENTS.md)")
-MILESTONE="$(printf '%s' "$TOOL_INPUT" | jq -r '.milestone // empty')"
-[ -n "$MILESTONE" ] || MISSING+=("milestone (el milestone del proyecto)")
-STATE="$(printf '%s' "$TOOL_INPUT" | jq -r '.state // empty')"
+[ -n "$(tj '.milestone // empty')" ] || MISSING+=("milestone (el milestone del proyecto)")
+STATE="$(tj '.state // empty')"
 if [ -z "$STATE" ]; then MISSING+=("state (explicito — \"Todo\"/\"In Progress\"; ausente = Backlog huerfano)")
 elif [ "$(printf '%s' "$STATE" | tr '[:upper:]' '[:lower:]')" = "backlog" ]; then
   MISSING+=("state no debe ser \"Backlog\" — usar un estado accionable")

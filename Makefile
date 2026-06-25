@@ -568,8 +568,9 @@ bifrost-review:
 		bifrost-review diff $(if $(BASE),--base $(BASE),); \
 	else \
 		echo "bifrost-review no está en PATH."; \
-		echo "Instalalo (local, sin código remoto): (cd ~/Documentos/GitHub/chimeranext/bifrost-keeper && bun link)"; \
-		echo "y asegurá que ~/.bun/bin esté en tu PATH."; \
+		echo "Instalalo (local, sin código remoto): cloná github.com/chimeranext/bifrost-keeper,"; \
+		echo "corré 'bun link' dentro del clon, y asegurá que el bin-dir de bun esté en tu PATH."; \
+		echo "Detalle: docs/superpowers/specs/2026-06-25-ready-to-review-mergeable-design.md"; \
 		exit 1; \
 	fi
 # <<< bifrost-review <<<
