@@ -174,3 +174,4 @@ examples/**/.packages
 # Preserve .gitkeep files in ignored directories
 !.gitkeep
 *.nvidia.env
+.claude/.implement-prs
