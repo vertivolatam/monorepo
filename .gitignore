@@ -42,7 +42,16 @@ node_modules/
 .windsurf/
 .gemini/
 .idx/
-.claude/
+# .claude/ contiene estado local (projects/, worktrees/, settings.local.json) que NO
+# se comparte, PERO el tooling de equipo (commands/hooks/settings.json) SÍ se versiona.
+# Ignoramos el contenido e re-incluimos solo lo compartido.
+.claude/*
+!.claude/commands/
+!.claude/hooks/
+!.claude/settings.json
+.claude/settings.local.json
+# generado por `bifrost-review install` (regenerable) — no versionar
+.claude/commands/bifrost-local-review.md
 
 # Symlinks de skills para diferentes herramientas
 # Estos se crean localmente con scripts/create-symlinks.*

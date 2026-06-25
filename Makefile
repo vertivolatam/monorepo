@@ -554,9 +554,12 @@ dev-dashboard-build: ## Build static dashboard for deployment
 # >>> bifrost-review (gestionado por bifrost-keeper) >>>
 # Review local on-demand del diff de la rama actual con BifrostKeeper.
 # Local salvo la inferencia a NVIDIA NIM; no toca GitHub ni CI.
-# Prefiere el bin local `bifrost-review` (instalado con `bun link`); si no está
-# en PATH, cae a `bunx` (requiere red para bajar el package). La NIM key se toma
-# del entorno (.env / env var local), o prefijá la invocación con `infisical run`.
+# Requiere el bin local `bifrost-review` (instalado con `bun link` desde el clon de
+# chimeranext/bifrost-keeper). La NIM key se toma del entorno (.env / env var local),
+# o prefijá la invocación con `infisical run`.
+# SEGURIDAD: a propósito NO hay fallback a `bunx github:...@main` — eso ejecutaría
+# código de un ref mutable sin pin ni verificación (riesgo supply-chain / RCE).
+# Falla cerrado con instrucciones si el bin no está.
 # Uso:  make bifrost-review            (compara contra merge-base de origin/HEAD)
 #       make bifrost-review BASE=develop
 .PHONY: bifrost-review
@@ -564,6 +567,9 @@ bifrost-review:
 	@if command -v bifrost-review >/dev/null 2>&1; then \
 		bifrost-review diff $(if $(BASE),--base $(BASE),); \
 	else \
-		bunx github:chimeranext/bifrost-keeper@main review diff $(if $(BASE),--base $(BASE),); \
+		echo "bifrost-review no está en PATH."; \
+		echo "Instalalo (local, sin código remoto): (cd ~/Documentos/GitHub/chimeranext/bifrost-keeper && bun link)"; \
+		echo "y asegurá que ~/.bun/bin esté en tu PATH."; \
+		exit 1; \
 	fi
 # <<< bifrost-review <<<
