@@ -54,6 +54,9 @@ codex/
 # Environment variables (nunca commitear tokens)
 .env
 .env.local
+# NVIDIA keys separadas (nunca commitear)
+.nvidia.env
+*.nvidia.env
 
 # Backend build artifacts
 apps/backend/dist/
