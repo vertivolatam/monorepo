@@ -11,3 +11,5 @@ path = "src/main.rs"
 [dependencies]
 vertivo-domain = { path = "../domain" }
 vertivo-app = { path = "../app" }
+rumqttc = "0.24"
+serde_json = { workspace = true }
