@@ -26,3 +26,10 @@
 - [ ] Keep using `infrastructure/scripts/lib/common.sh` logging (ported from altrupets) for all new messages (`log_step`/`log_warn`).
 - [ ] Final: a from-zero `make bootstrap-dev` on a clean host reaches a green dev env end-to-end.
 - [ ] Link the OpenSpec PR + the Linear `VRTV` issue + the `fix/serverpod-dockerfile-pub-workspace` PR to each other.
+
+## H4 — Rename `apps/vertivo_server` → `apps/backend` (PENDIENTE post-E2E, no ejecutar antes del demo)
+> Decisión 2026-09-21 (Rol Servidor-Minikube): se mantiene el nombre actual para lograr el E2E ESP32→Minikube→Flutter. Status: **pendiente**.
+- [ ] `git mv apps/vertivo_server apps/backend` + actualizar `pubspec.yaml` (workspace member).
+- [ ] Actualizar `apps/backend/Dockerfile` (rutas `COPY` + `WORKDIR`), `infrastructure/scripts/build-backend-image-minikube.sh` (`SERVER_DIR`), `Makefile` (targets `dev-backend-*`, `dev-flutter-build`, `generate`, `migrate`), `apps/backend/pubspec.yaml` (scripts `flutter_build`), `.dockerignore`.
+- [ ] Decidir si el package Dart sigue como `vertivo_server` (solo renombre de carpeta, imports intactos) o se renombra a `backend` (reescribir `package:vertivo_server/...` + `serverpod generate` + regenerar clientes).
+- [ ] Verify: `dart pub get` + `serverpod generate` + `podman build` + `dev-backend-deploy` en verde + E2E MQTT vigente.
