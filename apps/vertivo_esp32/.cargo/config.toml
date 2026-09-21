@@ -1,3 +1,4 @@
-# Sin toolchain C de sistema en esta máquina: zig como linker (ver README).
+# Sin toolchain C de sistema: zig como linker (ver README).
+# "zig-cc" debe resolverse por PATH (wrapper a `zig cc`).
 [target.x86_64-unknown-linux-gnu]
-linker = "/home/kvttvrsis/.local/bin/zig-cc"
+linker = "zig-cc"
