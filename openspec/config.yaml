@@ -1,0 +1,24 @@
+schema: spec-driven
+
+# Vertivo monorepo — project context injected into all OpenSpec artifacts.
+context: |
+  Vertivo: autonomous aeroponic (nebuponía — NEVER hydroponic) urban micro-greenhouses.
+  Monorepo: apps/vertivo_flutter (Flutter + Riverpod + Serverpod client),
+  apps/vertivo_server (Serverpod + PostgreSQL + EMQX MQTT), apps/vertivo_dashboard
+  (Jaspr SSR), apps/raspberry (Python orchestrator), k8s/ (ArgoCD GitOps).
+  MQTT topic tree: vertivo/{userId}/greenhouse/{greenhouseId}/sensor/{measurementType}.
+  Rules: billing first (latam_payments only, no Stripe/PayPal); connect before
+  create (reuse existing Serverpod endpoints, no new ones without approval);
+  Rosa test (usable by a 63-year-old WhatsApp-only user); no hardcoded dashboards;
+  T0 before T1 before T2. Conventional commits. flutter analyze + tests before build.
+
+rules:
+  proposal:
+    - State intent, scope in/out, and approach; flag which tier (T0/T1/T2) it belongs to
+    - Never propose new Serverpod endpoints without justifying why existing ones can't be reused
+  specs:
+    - Use Given/When/Then for scenarios touching money or sensor actuation
+  design:
+    - Reuse existing MQTT topic tree and Serverpod models where possible
+  tasks:
+    - Include flutter analyze/test/build verification steps for Flutter changes

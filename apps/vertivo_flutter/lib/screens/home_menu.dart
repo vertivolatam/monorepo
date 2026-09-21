@@ -3,6 +3,7 @@ import 'package:vertivo_client/vertivo_client.dart';
 
 import '../main.dart';
 import '../features/monitoring/presentation/ph_monitor_screen.dart';
+import '../features/telemetry/presentation/telemetry_screen.dart';
 
 class HomeMenu extends StatelessWidget {
   const HomeMenu({super.key});
@@ -45,6 +46,13 @@ class HomeMenu extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const MonitorPhScreen()),
             ),
             child: const Text('Monitoreo de pH'),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const TelemetryScreen()),
+            ),
+            child: const Text('Canales de telemetría'),
           ),
           const SizedBox(height: 16),
           OutlinedButton(
