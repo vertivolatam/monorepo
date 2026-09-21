@@ -42,10 +42,36 @@ class DashboardScreen extends ConsumerWidget {
 
   /// Span estilo Win8 por métrica: (columnas, filas) sobre grid denso.
   /// temperature grande (2x2), ph ancho (2x1), resto celdas (1x1).
-  static const _spans = {
-    'temperature': (2, 2),
-    'ph': (2, 1),
+  /// Jerarquía Win8: RTD (temperature) grande 2x2, PH ancho 2x1, resto 1x1.
+  /// La escala global se controla con TileSize (S/M/L/XL).
+  /// Todos los tiles 2x2 parejos.
+  static const _spans = <String, (int, int)>{};
+  /// Etiqueta corta estilo sim_control (PH/EC/DO/ORP/TDS/CO2/HUM/RTD).
+  static const _labels = {
+    'temperature': 'RTD',
+    'nutrient_temperature': 'NUTRIENT TEMP',
+    'humidity': 'HUM',
+    'co2': 'CO2',
+    'ph': 'PH',
+    'ec': 'EC',
+    'tds': 'TDS',
+    'do': 'DO',
+    'orp': 'ORP',
   };
+
+  /// Rango ideal por metrica (panel sim_control) para la banda del gauge.
+  static const _ideal = {
+    'temperature': (23.0, 33.0),
+    'nutrient_temperature': (23.0, 33.0),
+    'humidity': (70.0, 100.0),
+    'co2': (400.0, 1000.0),
+    'ph': (6.0, 7.4),
+    'ec': (250.0, 450.0),
+    'tds': (400.0, 900.0),
+    'do': (5.0, 8.0),
+    'orp': (300.0, 500.0),
+  };
+
   static const _ranges = {
     'temperature': (-10.0, 50.0),
     'nutrient_temperature': (0.0, 40.0),
@@ -58,11 +84,27 @@ class DashboardScreen extends ConsumerWidget {
     'orp': (-1000.0, 1000.0),
   };
 
+  /// Decimales compactos por metrica (nada de 10 decimales sobre la aguja).
+  static int _decimals(String type) {
+    return switch (type) {
+      'ph' => 2,
+      'temperature' || 'nutrient_temperature' || 'do' => 1,
+      _ => 0,
+    };
+  }
+
+  static String formatValue(String type, double value) =>
+      value.toStringAsFixed(_decimals(type));
+
   /// Punto medio del rango (aguja en reposo cuando no hay datos).
   static double _rangeMid(String type) {
     final range = DashboardScreen._ranges[type] ?? (0.0, 100.0);
     return (range.$1 + range.$2) / 2;
   }
+
+  /// Ideal (min, max) con fallback amplio si el tipo es desconocido.
+  static (double, double) _idealOf(String type) =>
+      _ideal[type] ?? (0.0, 100.0);
 
   /// Unidad por defecto cuando aún no llegó ninguna lectura.
   static String _defaultUnit(String type) {
@@ -142,7 +184,17 @@ class DashboardScreen extends ConsumerWidget {
       if (v == null) continue;
       series.putIfAbsent(type, () => []).add(v);
     }
-    final types = TelemetryRepository.defaultMeasurementTypes.toList();
+    // Orden exacto del panel sim_control, izq -> der.
+    // RTD = temperature; nutrient_temperature (duplicado Edge) va al final.
+    const displayOrder = [
+      'ph', 'ec', 'do', 'orp', 'tds', 'co2', 'humidity', 'temperature',
+      'nutrient_temperature',
+    ];
+    final types = [
+      ...displayOrder,
+      ...TelemetryRepository.defaultMeasurementTypes
+          .where((t) => !displayOrder.contains(t)),
+    ];
     // Densidad Win8: columnas según tamaño de celda elegido (S/M/L/XL).
     final width = MediaQuery.sizeOf(context).width;
     final cellWidth = ref.watch(tileSizeProvider).cellWidth;
@@ -172,8 +224,8 @@ class DashboardScreen extends ConsumerWidget {
                 for (final type in types)
                   StaggeredGridTile.count(
                     crossAxisCellCount:
-                        (_spans[type]?.$1 ?? 1).clamp(1, columns),
-                    mainAxisCellCount: _spans[type]?.$2 ?? 1,
+                        (_spans[type]?.$1 ?? 2).clamp(1, columns),
+                    mainAxisCellCount: _spans[type]?.$2 ?? 2,
                     child: _SensorTile(
                       type: type,
                       payload: latest[type],
@@ -249,7 +301,7 @@ class _SensorTile extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    type.replaceAll('_', ' ').toUpperCase(),
+                    DashboardScreen._labels[type] ?? type.toUpperCase(),
                     style: Theme.of(context).textTheme.labelMedium,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -266,6 +318,13 @@ class _SensorTile extends StatelessWidget {
                   axis: GaugeAxis(
                     min: range.$1,
                     max: range.$2,
+                    zones: [
+                      GaugeZone(
+                        from: DashboardScreen._idealOf(type).$1,
+                        to: DashboardScreen._idealOf(type).$2,
+                        color: tileColor.withValues(alpha: 0.45),
+                      ),
+                    ],
                     pointer: NeedlePointer(
                                 width: 5,
                                 height: radius * 0.85,
@@ -276,7 +335,8 @@ class _SensorTile extends StatelessWidget {
                   builder: (context, _, value) => Text(
                     p == null
                         ? '— $unit'.trim()
-                        : '${p.body['value']} $unit'.trim(),
+                        : '${DashboardScreen.formatValue(type, (p.body['value'] as num).toDouble())} $unit'
+                            .trim(),
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -286,10 +346,17 @@ class _SensorTile extends StatelessWidget {
                 ),
               ),
             ),
-            Sparkline(values: series, color: tileColor),
+            Sparkline(
+                        values: series,
+                        color: tileColor,
+                        min: range.$1,
+                        max: range.$2,
+                      ),
             const SizedBox(height: 2),
             Text(
-              p == null ? 'Sin datos' : DashboardScreen._formatTime(p.timestamp),
+              p == null
+                        ? 'Sin datos'
+                        : 'ideal ${DashboardScreen._idealOf(type).$1}-${DashboardScreen._idealOf(type).$2} $unit · ${DashboardScreen._formatTime(p.timestamp)}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
