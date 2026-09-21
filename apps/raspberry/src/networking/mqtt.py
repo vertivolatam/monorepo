@@ -115,7 +115,11 @@ class MQTTManager:
         else:
             topic_template = self.mqtt_topics.get(topic_key, f"device/{self.device_id}/{topic_key}")
         
-        return topic_template.format(device_id=self.device_id)
+        return topic_template.format(
+            device_id=self.device_id,
+            user_id=self.config.get("user_id", "1"),
+            greenhouse_id=self.config.get("greenhouse_id", "1"),
+        )
 
     def _on_message_callback(self, topic: str, payload: str) -> None:
         """Callback for when a message is received."""
@@ -402,85 +406,70 @@ class MQTTManager:
         """
         return self.subscribe("commands", callback, qos)
 
+    def _sensor_payload(self, value, unit, metric: str) -> Dict[str, Any]:
+        """EDGE payload contract (matches server example): value + unit + sensorId + timestamp."""
+        return {
+            "value": value,
+            "unit": unit,
+            "sensorId": f"{self.device_id}/{metric}",
+            "timestamp": time.time(),
+        }
+
     # Environmental monitor methods
     def update_environmental_temperature(self, temperature: float) -> None:
         """Update environmental temperature data."""
-        self.monitors_data["environmental"]["temperature"] = {
-            "value": temperature,
-            "timestamp": time.time()
-        }
+        self.monitors_data["environmental"]["temperature"] = self._sensor_payload(temperature, "C", "temperature")
 
     def update_environmental_humidity(self, humidity: float) -> None:
         """Update environmental humidity data."""
-        self.monitors_data["environmental"]["humidity"] = {
-            "value": humidity,
-            "timestamp": time.time()
-        }
+        self.monitors_data["environmental"]["humidity"] = self._sensor_payload(humidity, "%", "humidity")
 
     def update_environmental_co2(self, co2: float) -> None:
         """Update environmental CO2 data."""
-        self.monitors_data["environmental"]["co2"] = {
-            "value": co2,
-            "timestamp": time.time()
-        }
+        self.monitors_data["environmental"]["co2"] = self._sensor_payload(co2, "ppm", "co2")
 
     def update_environmental_air_quality(self, air_quality_data: Dict[str, Any]) -> None:
         """Update environmental air quality data."""
         air_quality_data["timestamp"] = time.time()
+        air_quality_data.setdefault("sensorId", f"{self.device_id}/air_quality")
         self.monitors_data["environmental"]["air_quality"] = air_quality_data
 
     def update_environmental_gases(self, gases_data: Dict[str, Any]) -> None:
         """Update environmental gases data."""
         gases_data["timestamp"] = time.time()
+        gases_data.setdefault("sensorId", f"{self.device_id}/gases")
         self.monitors_data["environmental"]["gases"] = gases_data
 
     def update_environmental_particulate_matter(self, pm_data: Dict[str, Any]) -> None:
         """Update environmental particulate matter data."""
         pm_data["timestamp"] = time.time()
+        pm_data.setdefault("sensorId", f"{self.device_id}/particulate_matter")
         self.monitors_data["environmental"]["particulate_matter"] = pm_data
 
     # Nutrient solution monitor methods
     def update_nutrient_solution_temperature(self, temperature: float) -> None:
         """Update nutrient solution temperature data."""
-        self.monitors_data["nutrient_solution"]["temperature"] = {
-            "value": temperature,
-            "timestamp": time.time()
-        }
+        self.monitors_data["nutrient_solution"]["temperature"] = self._sensor_payload(temperature, "C", "nutrient_temperature")
 
     def update_nutrient_solution_ph(self, ph: float) -> None:
         """Update nutrient solution pH data."""
-        self.monitors_data["nutrient_solution"]["ph"] = {
-            "value": ph,
-            "timestamp": time.time()
-        }
+        self.monitors_data["nutrient_solution"]["ph"] = self._sensor_payload(ph, "pH", "ph")
 
     def update_nutrient_solution_ec(self, ec: float) -> None:
         """Update nutrient solution EC data."""
-        self.monitors_data["nutrient_solution"]["ec"] = {
-            "value": ec,
-            "timestamp": time.time()
-        }
+        self.monitors_data["nutrient_solution"]["ec"] = self._sensor_payload(ec, "uS/cm", "ec")
 
     def update_nutrient_solution_tds(self, tds: float) -> None:
         """Update nutrient solution TDS data."""
-        self.monitors_data["nutrient_solution"]["tds"] = {
-            "value": tds,
-            "timestamp": time.time()
-        }
+        self.monitors_data["nutrient_solution"]["tds"] = self._sensor_payload(tds, "mg/L", "tds")
 
     def update_nutrient_solution_do(self, do: float) -> None:
         """Update nutrient solution DO data."""
-        self.monitors_data["nutrient_solution"]["do"] = {
-            "value": do,
-            "timestamp": time.time()
-        }
+        self.monitors_data["nutrient_solution"]["do"] = self._sensor_payload(do, "mg/L", "do")
 
     def update_nutrient_solution_orp(self, orp: float) -> None:
         """Update nutrient solution ORP data."""
-        self.monitors_data["nutrient_solution"]["orp"] = {
-            "value": orp,
-            "timestamp": time.time()
-        }
+        self.monitors_data["nutrient_solution"]["orp"] = self._sensor_payload(orp, "mV", "orp")
 
     def publish_environmental_data(self, qos: int = 0) -> bool:
         """

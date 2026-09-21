@@ -1,0 +1,14 @@
+[package]
+name = "vertivo-app"
+version = "0.1.0"
+edition = "2021"
+license = "BUSL-1.1"
+
+[lib]
+name = "vertivo_app"
+path = "src/lib.rs"
+
+[dependencies]
+vertivo-domain = { path = "../domain" }
+serde = { workspace = true }
+serde_json = { workspace = true }

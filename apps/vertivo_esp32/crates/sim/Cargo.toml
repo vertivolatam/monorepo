@@ -1,0 +1,15 @@
+[package]
+name = "vertivo-sim"
+version = "0.1.0"
+edition = "2021"
+license = "BUSL-1.1"
+
+[[bin]]
+name = "vertivo-sim"
+path = "src/main.rs"
+
+[dependencies]
+vertivo-domain = { path = "../domain" }
+vertivo-app = { path = "../app" }
+rumqttc = "0.24"
+serde_json = { workspace = true }
