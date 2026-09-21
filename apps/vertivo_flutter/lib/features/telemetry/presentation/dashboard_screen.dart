@@ -218,14 +218,23 @@ class _SensorTile extends StatelessWidget {
         (p?.body['value'] as num?)?.toDouble() ?? DashboardScreen._rangeMid(type);
     final unit = '${p?.body['unit'] ?? DashboardScreen._defaultUnit(type)}';
     return Card(
+      margin: EdgeInsets.zero,
       color: isAnomaly
           ? Theme.of(context).colorScheme.errorContainer
           : tileColor.withValues(alpha: 0.15),
       child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // El gauge escala con el tile: radio = 32% del lado menor.
+            final side = constraints.maxWidth < constraints.maxHeight
+                ? constraints.maxWidth
+                : constraints.maxHeight;
+            final radius = (side * 0.32).clamp(28.0, 110.0);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
             Row(
               children: [
                 Icon(
@@ -247,16 +256,21 @@ class _SensorTile extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Expanded(
               child: Center(
                 child: AnimatedRadialGauge(
                   duration: const Duration(milliseconds: 600),
                   value: value.clamp(range.$1, range.$2),
-                  radius: 44,
+                  radius: radius,
                   axis: GaugeAxis(
                     min: range.$1,
                     max: range.$2,
+                    pointer: NeedlePointer(
+                                width: 5,
+                                height: radius * 0.85,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                     progressBar: GaugeProgressBar.basic(color: tileColor),
                   ),
                   builder: (context, _, value) => Text(
@@ -279,6 +293,8 @@ class _SensorTile extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
+        );
+          },
         ),
       ),
     );
