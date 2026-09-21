@@ -13,11 +13,9 @@ class TelemetryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final payloads = ref.watch(telemetryPayloadsProvider);
     final filter = ref.watch(telemetryFilterProvider);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Canales de telemetría')),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
           _ChannelBar(
             active: filter,
             onSelect: (pattern) =>
@@ -62,8 +60,7 @@ class TelemetryScreen extends ConsumerWidget {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   static String _formatTime(DateTime t) {

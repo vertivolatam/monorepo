@@ -289,6 +289,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.8"
+  cupertino_ui:
+    dependency: transitive
+    description:
+      name: cupertino_ui
+      sha256: c6747018d37d32feeeb858a1d7043831cb541460ebe1a890a995cdb8df8ea5a5
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   dart_jsonwebtoken:
     dependency: transitive
     description:
@@ -377,6 +385,78 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
+  fluent_2:
+    dependency: transitive
+    description:
+      name: fluent_2
+      sha256: "5b0b70411212bddca5cbefac4f9ba4ae3c076676f3acbb63ba7f79d6f1804fab"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.5"
+  fluent_2_core:
+    dependency: transitive
+    description:
+      name: fluent_2_core
+      sha256: "3a645f78515b66b35bfcdee63d1439b3e4150530feab5547eeff36ee06a1a83b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.3"
+  fluent_2_fonts:
+    dependency: transitive
+    description:
+      name: fluent_2_fonts
+      sha256: "91f86c016def15c29d7d5191276bdf1f0092a56eebfe6f52ee06efb71a1c6afe"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
+  fluent_2_fonts_android:
+    dependency: transitive
+    description:
+      name: fluent_2_fonts_android
+      sha256: e08ad6e63699401994b402faeeddaf21287f3d8027e048e180f1aa9a2a3c77de
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
+  fluent_2_fonts_ios:
+    dependency: transitive
+    description:
+      name: fluent_2_fonts_ios
+      sha256: c002c9b975d3215167265140ed7918923b14cf3d9c1989b4bacf069dd4491454
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
+  fluent_2_fonts_macos:
+    dependency: transitive
+    description:
+      name: fluent_2_fonts_macos
+      sha256: "90a65a3ded60c3306111395c0dc4682621df815a6926e4ec8788f5f2e9ff435c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
+  fluent_2_fonts_web:
+    dependency: transitive
+    description:
+      name: fluent_2_fonts_web
+      sha256: "469520621cf12d275b2d7e16d499f34877e9781118951d5e9c27417fcd10e0c6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
+  fluent_2_fonts_windows:
+    dependency: transitive
+    description:
+      name: fluent_2_fonts_windows
+      sha256: "7281ade428abf80dec54b6f730e72091d4091a65c0e43db791baf670c0efcb37"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
+  fluentui_system_icons:
+    dependency: transitive
+    description:
+      name: fluentui_system_icons
+      sha256: "1592ae32dae75fb66741ab2c0607bc6554ef086f1c457e27ef937fb4901d33da"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.273"
   flutter:
     dependency: transitive
     description: flutter
@@ -451,6 +531,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
+  flutter_staggered_grid_view:
+    dependency: transitive
+    description:
+      name: flutter_staggered_grid_view
+      sha256: "19e7abb550c96fbfeb546b23f3ff356ee7c59a019a651f8f102a4ba9b7349395"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.0"
   flutter_svg:
     dependency: transitive
     description:
@@ -493,6 +581,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  gauge_indicator:
+    dependency: transitive
+    description:
+      name: gauge_indicator
+      sha256: c1d4b35dc24c47faea682df54fe202efbd8902d9de2d7148becf19718047ac71
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.0"
   glob:
     dependency: transitive
     description:
@@ -757,6 +853,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.13.0"
+  material_ui:
+    dependency: transitive
+    description:
+      name: material_ui
+      sha256: "6d056d60ce745335fcf1c726a4fc46a481a62229f202b65dbc2db5edbbabc7e2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.0"
   meta:
     dependency: transitive
     description:
@@ -1165,6 +1269,71 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.4.1"
+  shared_preferences:
+    dependency: transitive
+    description:
+      name: shared_preferences
+      sha256: c3025c5534b01739267eb7d76959bbc25a6d10f6988e1c2a3036940133dd10bf
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.5.5"
+  shared_preferences_android:
+    dependency: transitive
+    description:
+      name: shared_preferences_android
+      sha256: "1e12aafe408aa50da80edfd679a2a6bf63ba7ab37c7fa98286da459a757b3399"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.28"
+  shared_preferences_foundation:
+    dependency: transitive
+    description:
+      name: shared_preferences_foundation
+      sha256: "2ec3934efa51e46117f23031cc141b8fc878e8525b94ec1ea4f7f586cf1b47ea"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.5.7"
+  shared_preferences_linux:
+    dependency: transitive
+    description:
+      name: shared_preferences_linux
+      sha256: "580abfd40f415611503cae30adf626e6656dfb2f0cee8f465ece7b6defb40f2f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.1"
+  shared_preferences_platform_interface:
+    dependency: transitive
+    description:
+      name: shared_preferences_platform_interface
+      sha256: "649dc798a33931919ea356c4305c2d1f81619ea6e92244070b520187b5140ef9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.2"
+  shared_preferences_web:
+    dependency: transitive
+    description:
+      name: shared_preferences_web
+      sha256: c49bd060261c9a3f0ff445892695d6212ff603ef3115edbb448509d407600019
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.3"
+  shared_preferences_windows:
+    dependency: transitive
+    description:
+      name: shared_preferences_windows
+      sha256: "94ef0f72b2d71bc3e700e025db3710911bd51a71cefb65cc609dd0d9a982e3c1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.1"
+  shared_ui_core:
+    dependency: transitive
+    description:
+      path: "packages/shared_ui_core"
+      ref: b76844b646e01b87a5761dc78a916a8990ca126a
+      resolved-ref: b76844b646e01b87a5761dc78a916a8990ca126a
+      url: "https://github.com/chimeranext/flutter_shared_ui"
+    source: git
+    version: "0.1.0"
   shelf:
     dependency: transitive
     description:
@@ -1498,6 +1667,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.3"
+  vertivolatam_ui:
+    dependency: transitive
+    description:
+      path: "packages/vertivolatam_ui"
+      ref: main
+      resolved-ref: b76844b646e01b87a5761dc78a916a8990ca126a
+      url: "https://github.com/chimeranext/flutter_shared_ui"
+    source: git
+    version: "0.1.0"
   vm_service:
     dependency: transitive
     description:
@@ -1596,4 +1774,4 @@ packages:
     version: "2.2.4"
 sdks:
   dart: ">=3.13.0-107.0.dev <3.14.0-z"
-  flutter: ">=3.38.4"
+  flutter: ">=3.44.0"

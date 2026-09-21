@@ -15,13 +15,18 @@ class TelemetryRepository {
   /// `+` = wildcard MQTT: el userId no viaja en EnvironmentalReading.
   final String userIdSegment;
 
+  /// Topics reales publicados por el Edge (thread 2026-09-20, reply 10):
+  /// 9 metrics cada ~5s en vertivo/1/greenhouse/1/sensor/*.
   static const defaultMeasurementTypes = [
     'temperature',
     'humidity',
     'co2',
+    'nutrient_temperature',
     'ph',
-    'light',
-    'soil_moisture',
+    'ec',
+    'tds',
+    'do',
+    'orp',
   ];
 
   final List<String> measurementTypes;
