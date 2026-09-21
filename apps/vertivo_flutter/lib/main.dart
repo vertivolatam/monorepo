@@ -5,7 +5,9 @@ import 'package:serverpod_flutter/serverpod_flutter.dart';
 import 'package:serverpod_auth_idp_flutter/serverpod_auth_idp_flutter.dart';
 
 import 'core/theme/app_theme.dart';
-import 'core/theme/token_service.dart';
+import 'core/theme/theme_provider.dart';
+import 'package:vertivolatam_ui/vertivolatam_ui.dart';
+import 'screens/app_tabs.dart';
 import 'screens/home_menu.dart';
 import 'screens/sign_in_screen.dart';
 
@@ -24,8 +26,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize design tokens from style-dictionary/tokens.json
-  await TokenService.initialize();
-
+  await VertivoTokens.initialize();
   // When you are running the app on a physical device, you need to set the
   // server URL to the IP address of your computer. You can find the IP
   // address by running `ipconfig` on Windows or `ifconfig` on Mac/Linux.
@@ -46,17 +47,35 @@ void main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+/// Demo mode (compile-time): `--dart-define=DEMO_MODE=true` skips the
+/// sign-in gate and lands straight on the HomeMenu. The read endpoints used
+/// by the demo screens (`greenhouse.getReadings`) require no session; all
+/// write/user-scoped endpoints still enforce auth server-side.
+/// NEVER enable in release builds.
+const bool demoMode = bool.fromEnvironment('DEMO_MODE', defaultValue: false);
+
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Hidrata el tema guardado una vez que SharedPreferences resuelve.
+    ref.listen(sharedPreferencesProvider, (_, next) {
+      next.whenData(
+        (prefs) => ref.read(themeNotifierProvider.notifier).init(prefs),
+      );
+    });
+    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp(
       title: 'Vertivo',
       theme: AppTheme.lightTheme(),
       darkTheme: AppTheme.darkTheme(),
-      themeMode: ThemeMode.system,
-      home: const MyHomePage(title: 'Vertivo'),
+      themeMode: themeMode,
+      home: demoMode
+          ? const Scaffold(
+              body: AppTabs(),
+            )
+          : const MyHomePage(title: 'Vertivo'),
     );
   }
 }

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'token_service.dart';
-import 'design_token_model.dart';
+import 'package:vertivolatam_ui/vertivolatam_ui.dart';
 
 /// Light theme color system — driven by style-dictionary/tokens.json
 class AppColors {
-  static DesignTokenModel get _tokens => TokenService.instance.tokens;
+  static DesignTokenModel get _tokens => VertivoTokens.tokens;
 
   // Brand Colors (Light)
   static Color get primary => _tokens.brand.primary;
@@ -87,7 +86,7 @@ class AppColors {
 
 /// Dark theme color system — driven by style-dictionary/tokens.json
 class AppColorsDark {
-  static DesignTokenModel get _tokens => TokenService.instance.tokens;
+  static DesignTokenModel get _tokens => VertivoTokens.tokens;
 
   // Primary (Dark)
   static Color get primary => _tokens.palette.primary[80]!;

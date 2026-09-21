@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:vertivolatam_ui/vertivolatam_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'token_service.dart';
 
 /// Tipografia del Design System de Vertivo
 /// M3 Expressive type scale — Inter font family
 class AppTypography {
   static String get headerFontFamily =>
-      TokenService.instance.tokens.typography.headerFamily;
+      VertivoTokens.tokens.typography.headerFamily;
   static String get bodyFontFamily =>
-      TokenService.instance.tokens.typography.primaryFamily;
+      VertivoTokens.tokens.typography.primaryFamily;
   static String get uiFontFamily =>
-      TokenService.instance.tokens.typography.tertiaryFamily;
+      VertivoTokens.tokens.typography.tertiaryFamily;
 
   static TextTheme textTheme({bool isDark = false}) {
     final baseColor = isDark
