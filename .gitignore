@@ -177,3 +177,6 @@ examples/**/.packages
 
 # Preserve .gitkeep files in ignored directories
 !.gitkeep
+# Docusaurus (sitio nuevo en paralelo, ver FASES en README del scaffold)
+docs/docusaurus/build/
+docs/docusaurus/.docusaurus/
