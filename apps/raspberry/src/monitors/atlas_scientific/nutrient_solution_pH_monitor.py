@@ -73,6 +73,7 @@ class NutrientSolutionPhMonitor:
         Actualiza el valor actual de pH llamando al método read_ph del sensor.
         """
         self.current_ph = self.sensor.read_ph()
+        return self.current_ph
 
     def debug_print(self):
         print("===================")

@@ -73,6 +73,7 @@ class NutrientSolutionORPMonitor:
         Actualiza el valor actual de ORP llamando al método read_orp del sensor.
         """
         self.current_orp = self.sensor.read_orp()
+        return self.current_orp
 
     def debug_print(self):
         print("===================")

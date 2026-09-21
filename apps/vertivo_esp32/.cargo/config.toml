@@ -1,0 +1,3 @@
+# Sin toolchain C de sistema en esta máquina: zig como linker (ver README).
+[target.x86_64-unknown-linux-gnu]
+linker = "/home/kvttvrsis/.local/bin/zig-cc"

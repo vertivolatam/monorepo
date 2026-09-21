@@ -160,6 +160,9 @@ class Simulator:
         """Register all monitors with MQTT integration."""
         self.mqtt_integration.register_environmental_co2_monitor(self.co2_monitor)
         self.mqtt_integration.register_environmental_humidity_monitor(self.humidity_monitor)
+        # EDGE TEST: el backend espera .../sensor/temperature (ejemplo del servidor).
+        # No hay sensor de aire dedicado en el sim: se duplica el RTD como temperatura ambiental.
+        self.mqtt_integration.register_environmental_temperature_monitor(self.temp_monitor)
         self.mqtt_integration.register_nutrient_solution_temperature_monitor(self.temp_monitor)
         self.mqtt_integration.register_nutrient_solution_ph_monitor(self.ph_monitor)
         self.mqtt_integration.register_nutrient_solution_ec_monitor(self.ec_monitor)

@@ -1,0 +1,14 @@
+[package]
+name = "vertivo-hal"
+version = "0.1.0"
+edition = "2021"
+license = "BUSL-1.1"
+
+[lib]
+name = "vertivo_hal"
+path = "src/lib.rs"
+
+[dependencies]
+vertivo-domain = { path = "../domain" }
+embedded-hal = { workspace = true }
+embedded-hal-bus = { workspace = true }

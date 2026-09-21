@@ -73,6 +73,7 @@ class HumidityMonitor:
         Actualiza el valor actual de humedad llamando al método read_humidity del sensor.
         """
         self.current_humidity = self.sensor.read_humidity()
+        return self.current_humidity
 
     def debug_print(self):
         print("===================")
