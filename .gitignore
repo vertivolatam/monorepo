@@ -57,6 +57,7 @@ codex/
 # NVIDIA keys separadas (nunca commitear)
 .nvidia.env
 *.nvidia.env
+nvidia.env
 
 # Backend build artifacts
 apps/backend/dist/
@@ -176,3 +177,6 @@ examples/**/.packages
 
 # Preserve .gitkeep files in ignored directories
 !.gitkeep
+# Docusaurus (sitio nuevo en paralelo, ver FASES en README del scaffold)
+docs/docusaurus/build/
+docs/docusaurus/.docusaurus/
