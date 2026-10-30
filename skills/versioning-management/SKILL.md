@@ -58,10 +58,11 @@ Seguimos el estándar [SemVer 2.0.0](https://semver.org/):
 
 ## 📂 Estructura de Archivos
 
-La documentación de versiones se almacena en `docs/versioning/`:
+La documentación de versiones se almacena en el handbook interno privado
+(`vertivolatam/vertivolatam-internal-handbook` → `docs/internal/versioning/`):
 
 ```
-docs/versioning/
+docs/internal/versioning/
 ├── backend/
 │   ├── CHANGELOG-vX.Y.Z.md
 │   └── ...
