@@ -178,3 +178,9 @@ examples/**/.packages
 
 # Preserve .gitkeep files in ignored directories
 !.gitkeep
+
+# Agent / git worktrees (transient, never committed)
+.agents/
+.agents/worktrees/
+.worktrees/
+.claude/worktrees/
