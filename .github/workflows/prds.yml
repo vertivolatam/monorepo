@@ -1,0 +1,14 @@
+name: prds
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+jobs:
+  prds:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PRDS check
+        uses: chimeranext/github-actions-templates@v1
+        with:
+          title: ${{ github.event.pull_request.title }}
+          pr-body: ${{ github.event.pull_request.body }}
