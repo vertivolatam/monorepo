@@ -40,7 +40,48 @@ sequenceDiagram
 
 El orchestrator del Raspberry Pi lee el sensor Atlas EZO via I2C. El valor raw se parsea segun el tipo de sensor y se valida contra rangos esperados.
 
-### 2. Publicacion MQTT
+### Contrato de payload MQTT (SSOT)
+
+> Fuente de verdad implementada en `apps/raspberry/src/networking/mqtt.py::_sensor_payload`
+> (verificado en el broker el 2026-09-20). Solo `sensor/*` se persiste en Postgres;
+> la ingesta ignora `/telemetry` y `/status`.
+
+### Topic
+
+```text
+vertivo/{userId}/greenhouse/{greenhouseId}/sensor/{measurementType}
+vertivo/{userId}/greenhouse/{greenhouseId}/telemetry   # agregado, NO se persiste
+vertivo/{userId}/greenhouse/{greenhouseId}/status      # presencia, NO se persiste
+```
+
+### Schema por lectura
+
+```jsonc
+{
+  "value": 22.59,          // f64, lectura parseada del EZO
+  "unit": "C",             // ver tabla de unidades
+  "sensorId": "<deviceId>/<metric>",  // ej. "rpi-01/nutrient_temperature"
+  "timestamp": 1789964162.4  // epoch segundos (f64)
+}
+```
+
+### Unidades por métrica
+
+| Topic `sensor/*` | Unidad | Origen |
+|---|---|---|
+| `temperature` | `C` | Duplica el RTD (sin sensor de aire dedicado en el sim) |
+| `humidity` | `%` | EZO-HUM `0x6F` |
+| `co2` | `ppm` | EZO-CO2 `0x69` |
+| `nutrient_temperature` | `C` | EZO-RTD `0x66` |
+| `ph` | `pH` | EZO-pH `0x63` (slot aislado) |
+| `ec` | `uS/cm` | EZO-EC `0x64` (slot aislado) |
+| `tds` | `mg/L` | Derivado de EC |
+| `do` | `mg/L` | EZO-DO `0x61` (slot aislado) |
+| `orp` | `mV` | EZO-ORP `0x62` (slot aislado) |
+
+Ritmo: cada métrica en su topic cada ~5s (`--sim-interval 5`).
+
+## 2. Publicacion MQTT
 
 El Raspberry Pi serializa la lectura en un payload JSON y la publica al topic correspondiente en EMQX: `vertivo/{userId}/greenhouse/{ghId}/sensor/{type}`.
 

@@ -57,6 +57,7 @@ codex/
 # NVIDIA keys separadas (nunca commitear)
 .nvidia.env
 *.nvidia.env
+nvidia.env
 
 # Backend build artifacts
 apps/backend/dist/

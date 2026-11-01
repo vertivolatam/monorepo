@@ -73,6 +73,7 @@ class NutrientSolutionTempMonitor:
         Actualiza el valor actual de temperatura llamando al método read_temperature del sensor.
         """
         self.current_temperature = self.sensor.read_temperature()
+        return self.current_temperature
 
     def debug_print(self):
         print("===================")

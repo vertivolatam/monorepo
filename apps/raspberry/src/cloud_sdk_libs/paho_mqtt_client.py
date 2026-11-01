@@ -58,24 +58,28 @@ class PahoMQTTClient:
         self.port = port
         self.keepalive = keepalive
         
-        # Verify certificate files exist
-        self._verify_cert_files()
-        
+        # TEST-ONLY (EDGE LAN pre-Rust): allow plain MQTT when certs are absent.
+        # Revert before production: require TLS certs again.
+        self.use_tls = self._verify_cert_files()
+
         # Initialize MQTT client
         self.client = mqtt.Client(client_id=self.client_id)
         self.client.on_connect = self._on_connect
         self.client.on_disconnect = self._on_disconnect
         self.client.on_message = self._on_message
         self.client.on_publish = self._on_publish
-        
-        # Configure TLS/SSL
-        self.client.tls_set(
-            ca_certs=self.root_ca_path,
-            certfile=self.cert_path,
-            keyfile=self.key_path,
-            cert_reqs=ssl.CERT_REQUIRED,
-            tls_version=ssl.PROTOCOL_TLSv1_2
-        )
+
+        # Configure TLS/SSL only when certs exist; otherwise plain MQTT (EMQX LAN test).
+        if self.use_tls:
+            self.client.tls_set(
+                ca_certs=self.root_ca_path,
+                certfile=self.cert_path,
+                keyfile=self.key_path,
+                cert_reqs=ssl.CERT_REQUIRED,
+                tls_version=ssl.PROTOCOL_TLSv1_2
+            )
+        else:
+            logger.warning("EDGE TEST-ONLY: certs missing, using plain MQTT (no TLS)")
         
         # Topic callbacks dictionary
         self.topic_callbacks: Dict[str, List[Callable]] = {}
@@ -85,11 +89,13 @@ class PahoMQTTClient:
         self.reconnect_thread = None
         self.should_reconnect = False
 
-    def _verify_cert_files(self) -> None:
-        """Verify that all certificate files exist."""
-        for file_path in [self.cert_path, self.key_path, self.root_ca_path]:
-            if not os.path.isfile(file_path):
-                raise FileNotFoundError(f"Certificate file not found: {file_path}")
+    def _verify_cert_files(self) -> bool:
+        """Verify that all certificate files exist. Returns True if TLS usable."""
+        missing = [p for p in [self.cert_path, self.key_path, self.root_ca_path] if not os.path.isfile(p)]
+        if missing:
+            logger.warning(f"EDGE TEST-ONLY: missing cert files, plain MQTT: {missing}")
+            return False
+        return True
 
     def _on_connect(self, client, userdata, flags, rc):
         """Callback for when the client connects to the broker."""

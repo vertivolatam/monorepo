@@ -73,6 +73,7 @@ class NutrientSolutionDOMonitor:
         Actualiza el valor actual de DO llamando al método read_do del sensor.
         """
         self.current_do = self.sensor.read_do()
+        return self.current_do
 
     def debug_print(self):
         print("===================")
