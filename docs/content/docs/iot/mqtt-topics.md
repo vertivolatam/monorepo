@@ -20,7 +20,7 @@ vertivo/{userId}/greenhouse/{ghId}/sensor/{type}
 | `greenhouse` | Literal que indica el recurso |
 | `{ghId}` | ID del greenhouse |
 | `sensor` | Literal que indica lectura de sensor |
-| `{type}` | Tipo de sensor: `co2`, `humidity`, `ph`, `ec`, `do`, `orp`, `tds`, `temperature` |
+| `{type}` | Tipo de sensor: `co2`, `humidity`, `temperature`, `nutrient_temperature`, `ph`, `ec`, `do`, `orp`, `tds` |
 
 ## Categorias de sensores
 
@@ -44,13 +44,23 @@ Topics relacionados con las mediciones de la solucion nutritiva:
 
 ## Formato del payload
 
-Cada mensaje MQTT transporta un payload JSON con la lectura del sensor, timestamp y metadatos del dispositivo. El formato exacto del payload se detallara una vez estabilizada la interfaz de ingesta.
+Cada mensaje `sensor/*` transporta este JSON (contrato verificado contra el
+broker; solo `sensor/*` se persiste — `/telemetry` y `/status` los ignora la ingesta).
+Ver también [Flujo de datos](../architecture/data-flow.md#contrato-de-payload-mqtt-ssot).
 
 ```json
 {
-  "value": 6.8,
-  "unit": "pH",
-  "timestamp": "2026-03-09T12:00:00Z",
-  "device_id": "rpi-001"
+  "value": 22.59,
+  "unit": "C",
+  "sensorId": "rpi-01/nutrient_temperature",
+  "timestamp": 1789964162.4
 }
+```
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `value` | f64 | Lectura parseada del EZO |
+| `unit` | string | `C`, `%`, `ppm`, `pH`, `uS/cm`, `mg/L`, `mV` según métrica |
+| `sensorId` | string | `<deviceId>/<metric>` (ej. `rpi-01/ph`) |
+| `timestamp` | f64 | Epoch en segundos |
 ```

@@ -73,6 +73,7 @@ class NutrientSolutionTDSMonitor:
         Actualiza el valor actual de TDS llamando al método read_tds del sensor.
         """
         self.current_tds = self.sensor.read_tds()
+        return self.current_tds
 
     def debug_print(self):
         print("===================")

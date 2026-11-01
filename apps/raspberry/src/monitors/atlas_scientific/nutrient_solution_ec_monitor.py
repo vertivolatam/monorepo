@@ -73,6 +73,7 @@ class NutrientSolutionECMonitor:
         Actualiza el valor actual de EC llamando al método read_ec del sensor.
         """
         self.current_ec = self.sensor.read_ec()
+        return self.current_ec
     
     def debug_print(self):
         print("===================")

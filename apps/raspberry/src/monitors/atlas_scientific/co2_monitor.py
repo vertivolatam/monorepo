@@ -73,6 +73,7 @@ class CO2Monitor:
         Actualiza el valor actual de CO2 llamando al método read_co2 del sensor.
         """
         self.current_co2 = self.sensor.read_co2()
+        return self.current_co2
 
     def debug_print(self):
         print("===================")

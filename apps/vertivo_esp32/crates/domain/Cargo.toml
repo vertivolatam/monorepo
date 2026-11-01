@@ -1,0 +1,9 @@
+[package]
+name = "vertivo-domain"
+version = "0.1.0"
+edition = "2021"
+license = "BUSL-1.1"
+
+[lib]
+name = "vertivo_domain"
+path = "src/lib.rs"
