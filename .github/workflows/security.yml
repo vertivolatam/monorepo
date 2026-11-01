@@ -74,6 +74,19 @@ jobs:
           ignore-unfixed: true
           severity: 'CRITICAL,HIGH'
 
+      - name: Run Trivy vulnerability scanner (dependencies)
+        uses: aquasecurity/trivy-action@master
+        with:
+          # Scan dependency manifests at the repo root: package.json + pnpm-lock.yaml
+          # (pnpm workspace) and pubspec.lock (Dart/Flutter).
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'vuln'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
       - name: Scan Infrastructure as Code
         uses: aquasecurity/trivy-action@master
         with:
