@@ -1,10 +1,10 @@
-import 'token_service.dart';
+import 'package:vertivolatam_ui/vertivolatam_ui.dart';
 
 class AppMotion {
   static Duration get short =>
-      Duration(milliseconds: TokenService.instance.tokens.motion.short);
+      Duration(milliseconds: VertivoTokens.tokens.motion.short);
   static Duration get medium =>
-      Duration(milliseconds: TokenService.instance.tokens.motion.medium);
+      Duration(milliseconds: VertivoTokens.tokens.motion.medium);
   static Duration get long =>
-      Duration(milliseconds: TokenService.instance.tokens.motion.long);
+      Duration(milliseconds: VertivoTokens.tokens.motion.long);
 }

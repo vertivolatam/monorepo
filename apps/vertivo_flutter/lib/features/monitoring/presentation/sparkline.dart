@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 
 /// Minimal sparkline: draws [values] (oldest→newest) as a polyline.
+/// Pass [min]/[max] to pin the y-scale (e.g. the metric range); otherwise it
+/// auto-scales to the data, which exaggerates tiny noise into big waves.
 class Sparkline extends StatelessWidget {
   final List<double> values;
   final Color color;
-  const Sparkline({super.key, required this.values, required this.color});
+  final double? min;
+  final double? max;
+  const Sparkline({
+    super.key,
+    required this.values,
+    required this.color,
+    this.min,
+    this.max,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 60,
       width: double.infinity,
-      child: CustomPaint(painter: _SparklinePainter(values, color)),
+      child: CustomPaint(painter: _SparklinePainter(values, color, min, max)),
     );
   }
 }
@@ -19,13 +29,17 @@ class Sparkline extends StatelessWidget {
 class _SparklinePainter extends CustomPainter {
   final List<double> values;
   final Color color;
-  _SparklinePainter(this.values, this.color);
+  final double? minBound;
+  final double? maxBound;
+  _SparklinePainter(this.values, this.color, this.minBound, this.maxBound);
 
   @override
   void paint(Canvas canvas, Size size) {
     if (values.length < 2) return;
-    final min = values.reduce((a, b) => a < b ? a : b);
-    final max = values.reduce((a, b) => a > b ? a : b);
+    final dataMin = values.reduce((a, b) => a < b ? a : b);
+    final dataMax = values.reduce((a, b) => a > b ? a : b);
+    final min = minBound ?? dataMin;
+    final max = maxBound ?? dataMax;
     final span = (max - min).abs() < 1e-6 ? 1.0 : (max - min);
     final dx = size.width / (values.length - 1);
     final path = Path();
